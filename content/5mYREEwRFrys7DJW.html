@@ -2,6 +2,7 @@
 <html>
 <head>
 <title>uniapp实现在微信H5中使用支付宝支付 - 王维的博客</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-section=no">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
@@ -132,13 +133,18 @@ _AP.pay(gotoUrl)</pre>
     }
 &lt;/script&gt;</pre>
                 <p>4、css保持原样不动</p>
-                <p>经过以上步骤，就能正常调起支付宝支付了！</p>
-                <p>本文所有代码都是实际项目中拷贝出来的，实际测试正常可以直接复制使用，如果出现问题，请按如下步骤排查：</p>
+                <h3>说明：</h3>
+                <p>本文所有代码都是线上运营项目中拷贝出来的，如果直接复制使用，请确保严格按照上述指引修改，如果出现问题，请按如下步骤排查：</p>
                 <p>1、一定要仔细看支付宝返回的错误提示！并根据指引进行相关排查；</p>
                 <p>2、检查支付宝SDK版本是否最新，（我就遇到某个有问题的版本，更新到最新就正常了）；</p>
                 <p>3、项目运行中是否有JS报错，如果有需先排除；</p>
-                <p>4、ap.js和alipay.vue放置目录是否正确，且里面代码是否按上文正确修改；</p>
-                <p>以上就是全部内容。</p>
+                <p>4、ap.js和alipay.vue放置目录是否正确，且里面代码是否按上文正确修改。</p>
+                <h3>文末总结</h3>
+                <p>1、下载支付宝官方提供的微信中使用支付宝插件；</p>
+                <p>2、ap.js复制到项目/common/目录中，并修改location.href；</p>
+                <p>3、pay.htm复制到项目/pages/payment/目录中，重名为alipay.vue，引入ap.js，并把域名修改为自己的域名；</p>
+                <p>4、修改你的订单支付提交页/pages/payment/pay.vue，引入ap.js，选择支付宝支付后请求后台支付信息，并跳转到/pages/payment/alipay.vue；</p>
+                <p>5、完工！</p>
             </div>
         </div>
     </div>
