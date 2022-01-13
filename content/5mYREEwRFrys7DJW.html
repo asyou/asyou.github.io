@@ -41,8 +41,8 @@
             <h1>uniapp实现在微信H5中使用支付宝支付</h1>
             <span class="date"><small>2022-01-11</small></span>
             <div class="mt-4">
-                <p>本文讨论的是在微信公众号（即网页版H5）中实现支付宝支付的方法，其他端如小程序、APP不在本文讨论范围内。</p>
-                <h3>本文要实现的功能流程</h3>
+                <p>本文解决的是使用uniapp开发的在微信公众号内实现支付宝支付的方法，其他端如小程序、APP不适用。</p>
+                <h3>本文要实现的功能及流程</h3>
                 <p>1、用户提交订单后，跳转到/pages/payment/pay.vue订单支付页；</p>
                 <p>2、订单支付页有微信支付、支付宝支付两个选项；</p>
                 <p>3、选择支付宝方式后，点击确定按钮向后台请求支付信息；</p>
@@ -54,20 +54,24 @@
                 </p>
                 <p>以上是支付宝官方提供的一个在微信H5中使用支付宝支付的插件，<a href="https://gw.alipayobjects.com/os/bmw-prod/aefe726f-6363-4bfb-9141-4e4bb75d56fb.zip" target="_blank">点击下载</a>，先下载好解压备用。</p>
                 <p>以上方式在非前后端分离的项目中非常好实现，照着Demo基本都能成功，接下来要做的是，如何在用uniapp开发的网页项目中实现。</p>
-                <p>本文假定你的项目后端接口正常，能正常返回支付宝支付串，本文作者用的是支付宝EasySDK，alipayFactory::payment()->wap()->optional()方法返回的支付串（实际是带支付参数的html表单数据）</p>
-                <h3>第一步，下载的压缩包解压后，里面的ap.js和pay.htm需要用到</h3>
+                <p>本文假定你的项目后端接口正常，能正常返回支付宝支付串，我用的是支付宝官方EasySDK，alipayFactory::payment()->wap()->optional()方法返回的支付串（实际是带支付参数的form表单数据）。</p>
+                <h3>第一步，下载的压缩包解压后，需要用到里面的ap.js和pay.htm两个文件</h3>
                 <p>1、先复制ap.js到/common/目录中，放其他目录也可以，但一定要保证接下来2处的引用路径正确；</p>
                 <p>2、修改ap.js，在文件里面找到：</p>
-                <pre><code class="javascript">location.href="pay.htm?goto="</code></pre>
+<pre><code class="javascript">// /common/ap.js
+location.href="pay.htm?goto="</code></pre>
                 <p>修改成：</p>
-                <pre><code class="javascript">location.href="/pages/payment/alipay?goto="</code></pre>
+<pre><code class="javascript">// /common/ap.js
+location.href="/pages/payment/alipay?goto="</code></pre>
                 <h3>第二步，编辑你的pay.vue，引入ap.js</h3>
-<pre><code class="javascript">// #ifdef H5
+<pre><code class="javascript">// /pages/payment/pay.vue
+// #ifdef H5
 import ap from '@/common/ap.js'
 // #endif</code></pre>
                 <p>1、ap.js只支持H5，所以必须使用条件编译；</p>
-                <p>2、然后，在选择支付宝支付时，向后台请求支付信息，返回后执行以下代码：</p>
-<pre><code class="javascript">const payform = document.createElement('payform')
+                <p>2、然后，在pay.vue中选择支付宝支付时，向后台请求支付信息，返回后执行以下代码：</p>
+<pre><code class="javascript">// /pages/payment/pay.vue
+const payform = document.createElement('payform')
 payform.innerHTML = res.data.paystring
 document.body.appendChild(payform) // 注意，这三行代码跟demo不一样
 let queryParam = ''
@@ -81,7 +85,8 @@ _AP.pay(gotoUrl)</code></pre>
                 <h3>第三步，把pay.htm复制到/pages/payment/目录中，并重命名为alipay.vue，注意需要在pages.json中注册一下；</h3>
                 <p>1、编辑alipay.vue文件，代码如下：</p>
                 <p>2、模板</p>
-<pre><code class="html">&lt;template&gt;
+<pre><code class="html">&lt;!--/pages/payment/alipay.vue--&gt;
+&lt;template&gt;
     &lt;view class="container"&gt;
         &lt;view class="J-weixin-tip weixin-tip"&gt;
             &lt;view class="weixin-tip-content"&gt;
@@ -94,9 +99,8 @@ _AP.pay(gotoUrl)</code></pre>
 &lt;/template&gt;
 &lt;!--注意我把demo原标签统一修改成适应uniapp的view标签--&gt;</code></pre>
                 <p>3、JS</p>
-<pre><code class="javascript">// #ifdef H5
+<pre><code class="javascript">// /pages/payment/alipay.vue
 import ap from '@/common/ap.js'
-// #endif
 export default {
     data() {
         return {}
@@ -132,19 +136,20 @@ export default {
     }
 }
 </code></pre>
-                <p>4、css中以.weixin开头的class需要保留，其它的都可以删除</p>
+                <p>4、css中以.weixin开头的class需要保留，其它的都可以删除。</p>
                 <h3>说明：</h3>
                 <p>本文所有代码都是线上运营项目中拷贝出来的，如果直接复制使用，请确保严格按照上述指引修改，如果出现问题，请按如下步骤排查：</p>
                 <p>1、一定要仔细看支付宝返回的错误提示！并根据指引进行相关排查；</p>
-                <p>2、检查支付宝SDK版本是否最新，（我就遇到某个有问题的版本，更新到最新就正常了）；</p>
+                <p>2、检查支付宝SDK版本是否最新，（之前遇到某个有问题的版本，更新到最新就正常了）；</p>
                 <p>3、项目运行中是否有JS报错，如果有需先排除；</p>
-                <p>4、ap.js和alipay.vue放置目录是否正确，且里面代码是否按上文正确修改。</p>
+                <p>4、ap.js和alipay.vue放置目录是否正确，且里面代码是否按上文正确修改；</p>
+                <p>5、在pay.vue中需要自行判断平台类型以决定是否可选择支付宝支付。</p>
                 <h3>文末总结</h3>
                 <p>1、下载支付宝官方提供的微信中使用支付宝插件；</p>
                 <p>2、ap.js复制到项目/common/目录中，并修改location.href路径；</p>
-                <p>3、pay.htm复制到项目/pages/payment/目录中，重名为alipay.vue，引入ap.js，并把域名修改为自己的域名；</p>
-                <p>4、修改你的订单支付提交页/pages/payment/pay.vue，引入ap.js，选择支付宝支付后请求后台支付信息，并跳转到/pages/payment/alipay.vue；</p>
-                <p>5、完工！</p>
+                <p>3、pay.htm复制到项目/pages/payment/目录中，重命名为alipay.vue，引入ap.js，并把域名修改为自己的域名；</p>
+                <p>4、修改你的订单支付提交页/pages/payment/pay.vue，引入ap.js，选择支付宝支付后请求后台支付信息，然后跳转到/pages/payment/alipay.vue；</p>
+                <p>5、支付后业务逻辑需自行处理（含支付成功和取消支付等）。</p>
             </div>
         </div>
     </div>
