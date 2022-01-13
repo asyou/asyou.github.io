@@ -81,7 +81,7 @@
                     <tr><td>createtime</td><td>integer(11)</td><td>创建时间</td></tr>
                 </table>
                 <br/>
-<pre><code class="php">/**
+<pre><code>/**
  * 抽奖请求
  * @param string $token
  * @return array
@@ -94,20 +94,23 @@ public function get_lottery_result()
     }
     $rid = $this->get_lottery_rand($prize_arr);
     if ($rid) {
-        if ($rid == $prize_arr['id']) {
-            $lottery = [
-                'user_id' => '用户ID',
-                'lottery_id' => $prize_arr['id'],
-                'type' => $prize_arr['type'],
-                'icon' => $prize_arr['icon'],
-                'name' => $prize_arr['name']
-            ];
-            $this->lotteryUserModel->save($lottery);
-            $this->lotteryModel->where(['id'=>$rid])->setDec('numbers',1);
-            return ['msg'=>'成功', 'data'=>$lottery];
-        } else {
-            return ['msg'=>'出现错误'];
+        $lottery = [];
+        foreach ($prize_arr as $k=>$v) {
+            if ($rid == $v['id']) {
+                $lottery = [
+                    'user_id' => '用户ID',
+                    'lottery_id' => $v['id'],
+                    'type' => $v['type'],
+                    'icon' => $v['icon'],
+                    'name' => $v['name']
+                ];
+            }
         }
+        $this->lotteryUserModel->save($lottery);
+        $this->lotteryModel->where(['id'=>$rid])->setDec('numbers',1);
+        return ['msg'=>'成功', 'data'=>$lottery];
+    } else {
+        return ['msg'=>'出现错误'];
     }
 }
 
