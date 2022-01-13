@@ -16,6 +16,9 @@
     p {
         font-size: 14px;
     }
+    pre,code {
+        overflow-x: auto;
+    }
     table {
         width: 100%;
         border-collapse: collapse;
@@ -52,19 +55,19 @@
                 <p>抽奖功能在项目中很常见，本文提供一个抽奖随机算法，实际运用非常稳定高效。</p>
                 <h3>本文要实现的功能及流程</h3>
                 <p>1、用户在手机端抽奖转盘点击抽奖，向后台发送一次抽奖请求，并返回中奖信息；</p>
-                <p>2、后台根据概率随机生成抽奖奖品，返回给前端；</p>
-                <p>3、前端跑马灯或转盘最终停在后台返回的奖项上面，并提示中奖结果。</p>
+                <p>2、后台根据概率随机给出中奖奖品，返回给前端；</p>
+                <p>3、前端跑马灯或转盘最终停留在后台返回的中奖奖品上面，并提示中奖结果。</p>
                 <h3>数据库表设计</h3>
                 <table>
                     <tr><th colspan="3">1、lottery表结构</th></tr>
                     <tr><th>ID</th><th>类型</th><th>注释</th></tr>
-                    <tr><td>id</td><td>integer(11)</td><td>自增ID</td></tr>
+                    <tr><td>id</td><td>int(11)</td><td>自增ID</td></tr>
                     <tr><td>type</td><td>tinyint(1)</td><td>类型:0=谢谢参与,1=实物奖项</td></tr>
                     <tr><td>name</td><td>varchar(32)</td><td>奖品名称</td></tr>
                     <tr><td>short_name</td><td>varchar(6)</td><td>奖品短名称（抽奖盘能放的字数有限）</td></tr>
                     <tr><td>icon</td><td>varchar(100)</td><td>奖品图标</td></tr>
                     <tr><td>range</td><td>decimal(9,2)</td><td>中奖概率，百分比</td></tr>
-                    <tr><td>numbers</td><td>integer(11)</td><td>奖品数量</td></tr>
+                    <tr><td>numbers</td><td>int(11)</td><td>奖品数量</td></tr>
                     <tr><td>status</td><td>tinyint(1)</td><td>状态</td></tr>
                     <tr><td>weigh</td><td>iinteger(11)</td><td>权重</td></tr>
                 </table>
@@ -72,16 +75,17 @@
                 <table>
                     <tr><th colspan="3">2、lottery_user表结构</th></tr>
                     <tr><th>ID</th><th>类型</th><th>注释</th></tr>
-                    <tr><td>id</td><td>integer(11)</td><td>自增ID</td></tr>
-                    <tr><td>user_id</td><td>integer(11)</td><td>用户ID</td></tr>
-                    <tr><td>lottery_id</td><td>integer(11)</td><td>奖品ID</td></tr>
+                    <tr><td>id</td><td>int(11)</td><td>自增ID</td></tr>
+                    <tr><td>user_id</td><td>int(11)</td><td>用户ID</td></tr>
+                    <tr><td>lottery_id</td><td>int(11)</td><td>奖品ID</td></tr>
                     <tr><td>type</td><td>tinyint(1)</td><td>类型:0=谢谢参与,1=实物奖项</td></tr>
                     <tr><td>icon</td><td>varchar(100)</td><td>奖品图标</td></tr>
                     <tr><td>name</td><td>varchar(32)</td><td>奖品名称</td></tr>
-                    <tr><td>createtime</td><td>integer(11)</td><td>创建时间</td></tr>
+                    <tr><td>createtime</td><td>int(11)</td><td>创建时间</td></tr>
                 </table>
                 <br/>
-<pre><code>/**
+                <h3>PHP代码</h3>
+<pre><code class="php">/**
  * 抽奖请求
  * @param string $token
  * @return array
@@ -90,7 +94,7 @@ public function get_lottery_result()
 {
     $prize_arr = $this->lotteryModel->field(['id','name','icon','type','range'])->order(['id'=>'ASC'])->where(['range'=>['GT','0'],'numbers'=>['GT','0'],'status'=>'1'])->select();
     if (count($prize_arr) <= 0) {
-        return ['msg'=>'所有奖项都没有库存了！'];
+        return ['msg'=>'所有奖品都没有库存了！'];
     }
     $rid = $this->get_lottery_rand($prize_arr);
     if ($rid) {
@@ -137,7 +141,8 @@ private function get_lottery_rand($prize)
                 <h3>说明：</h3>
                 <p>1、lottery表包含若干条“谢谢参与”奖项，range字段为0或numbers字段为0或status不等于1的奖项不会参与抽奖（比如iPhone13 pro max放在抽奖盘上，但range为0你就永远抽不中，哈哈哈～）；</p>
                 <p>2、lottery_user存放用户抽奖结果记录；</p>
-                <p>3、本例代码每次先获取所有符合条件的奖项，按照概率设置从大到小给出中奖结果，直到所有奖项的数量归0为止。</p>
+                <p>3、本例代码每次先获取所有符合条件的奖项，按照概率设置从大到小给出中奖结果，直到所有奖项的数量归0为止；</p>
+                <p>4、代码稍加改动，就可以用于圆式转盘抽奖。</p>
             </div>
         </div>
     </div>
