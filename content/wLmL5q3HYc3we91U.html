@@ -13,6 +13,9 @@
 <script >hljs.initHighlightingOnLoad();</script>
 <style type="text/css">
     h1 {
+        font-size: 18px;
+    }
+    h3 {
         font-size: 16px;
     }
     p {
@@ -68,7 +71,7 @@
                     <tr><td>range</td><td>decimal(9,2)</td><td>中奖概率，百分比</td></tr>
                     <tr><td>numbers</td><td>int(11)</td><td>奖品数量</td></tr>
                     <tr><td>status</td><td>tinyint(1)</td><td>状态</td></tr>
-                    <tr><td>weigh</td><td>iinteger(11)</td><td>权重</td></tr>
+                    <tr><td>weigh</td><td>int(11)</td><td>权重</td></tr>
                 </table>
                 <br/>
                 <table>
@@ -139,7 +142,7 @@ private function get_lottery_rand($prize)
 }</code></pre>
                 <h3>说明：</h3>
                 <p>1、lottery表包含若干条“谢谢参与”奖项，range字段为0或numbers字段为0或status不等于1的奖项不会参与抽奖（比如iPhone13 pro max放在抽奖盘上，但range为0你就永远抽不中，哈哈哈～）；</p>
-                <p>2、lottery_user存放用户抽奖结果记录；</p>
+                <p>2、lottery_user表存放用户抽奖结果记录；</p>
                 <p>3、本例代码每次先获取所有符合条件的奖项，按照概率设置从大到小给出中奖结果，直到所有奖项的数量归0为止；</p>
                 <p>4、本例代码是后台代码，前端可以使用跑马灯式抽奖盘，也可以使用旋转式抽奖盘，稍加修改也可以用于后台统一抽奖（比如定时开奖）。</p>
             </div>
