@@ -46,7 +46,7 @@
             <h1>uniapp封装微信h5支付、分享等功能</h1>
             <span class="date"><small>2022-01-18</small></span>
             <div class="mt-4">
-                <p>移动端微信h5开发经常需要用到支付、分享等功能，本文提供一个JS封装好的js模块，适用Vue开发的h5项目，拿来即用。</p>
+                <p>移动端微信h5开发经常需要用到支付、分享等功能，本文提供一个封装好的js模块，适用于Vue开发的h5项目，拿来即用。</p>
                 <p>移动端Vue开发微信h5相关功能依赖微信jweixin-module插件，github地址：<a href="https://github.com/zhetengbiji/jweixin-module" target="_blank">https://github.com/zhetengbiji/jweixin-module</a>，先下载或安装好，本例是直接将jweixin-module.js放置于/common/目录。</p>
                 <h3>直接上代码</h3>
 <pre><code class="javascript">// /common/wechat.js
@@ -314,10 +314,10 @@ if (this.$wechat && this.$wechat.isWechat()) {
     })
 }
 // #endif</code></pre>
-                <div>同样需要使用条件编译</div>
+                <p>同样需要使用条件编译</p>
                 <h3>注意事项</h3>
-                <p>1、h5网页版在ios设备上获取到的当前页面栈是首次进入的页面的URL，常规的uni.navigateTo()方法并不会让其自动更新，所以进入支付页面需要使用js的window.location.href方式，安卓则无此问题；</p>
-                <p>2、本例代码全部运行在微信h5端，即微信内置浏览器中，其他端无效（会报错）。</p>
+                <p>1、h5网页版在ios设备上获取到的当前页面栈是首次进入的页面的URL，常规的uni.navigateTo()方法并不会让其自动更新，所以进入支付页面或需要分享的页面需要使用js的window.location.href方式，安卓则无此问题；</p>
+                <p>2、本例代码全部运行在微信h5端，即微信内置浏览器中，其他端无效（强行使用会报错）。</p>
             </div>
         </div>
     </div>
