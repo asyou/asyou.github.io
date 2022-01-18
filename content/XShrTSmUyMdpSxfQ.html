@@ -48,7 +48,7 @@
             <div class="mt-4">
                 <p>移动端微信h5开发经常需要用到支付、分享等功能，本文提供一个封装好的js模块，适用于Vue开发的h5项目，拿来即用。</p>
                 <p>移动端Vue开发微信h5相关功能依赖微信jweixin-module插件，github地址：<a href="https://github.com/zhetengbiji/jweixin-module" target="_blank">https://github.com/zhetengbiji/jweixin-module</a>，先下载或安装好，本例是直接将jweixin-module.js放置于/common/目录。</p>
-                <h3>直接上代码</h3>
+                <h3>一、封装代码</h3>
 <pre><code class="javascript">// /common/wechat.js
 import Vue from "vue"
 var jweixin = require('./jweixin-module')
@@ -267,7 +267,8 @@ export default {
     }
 }
 </code></pre>
-                <h3>在main.js中注册全局</h3>
+                <p>initJssdk里面的$http.post是请求后台初始化（分享功能每次必须先带上分享页的URL请求一下微信服务器，否则会分享失败），因为模块封装的原因会导致除分享以外的其他功能也会请求一次，所以后台要判断一下非分享时则不请求微信服务器。</p>
+                <h3>二、在main.js中注册全局</h3>
 <pre><code class="javascript">// /main.js
 // #ifdef H5
 import wechat from './common/wechat.js'
@@ -275,8 +276,8 @@ Vue.prototype.$wechat = wechat
 // #endif
 </code></pre>
                 <p>jweixin-module.js只支持H5，所以要用条件编译</p>
-                <h3>使用示例</h3>
-                <p>支付：</p>
+                <h3>三、使用示例</h3>
+                <p>1、支付：</p>
 <pre><code class="javascript">// /payment/pay.vue
 this.$wechat.wxpay(paystring, function(ret) {
     switch (ret.errMsg) {
@@ -304,7 +305,7 @@ this.$wechat.wxpay(paystring, function(ret) {
     }
 })</code></pre>
                 <p>上面paystring是后台返回的微信支付加密串</p>
-                <p>分享：</p>
+                <p>2、分享：</p>
 <pre><code class="javascript">// #ifdef H5
 if (this.$wechat && this.$wechat.isWechat()) {
     this.$wechat.share({
@@ -315,7 +316,7 @@ if (this.$wechat && this.$wechat.isWechat()) {
 }
 // #endif</code></pre>
                 <p>同样需要使用条件编译</p>
-                <h3>注意事项</h3>
+                <h3>四、注意事项</h3>
                 <p>1、h5网页版在ios设备上获取到的当前页面栈是首次进入的页面的URL，常规的uni.navigateTo()方法并不会让其自动更新，所以进入支付页面或需要分享的页面需要使用js的window.location.href方式，安卓则无此问题；</p>
                 <p>2、本例代码全部运行在微信h5端，即微信内置浏览器中，其他端无效（强行使用会报错）。</p>
             </div>
