@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>uniapp封装微信h5支付、分享等功能 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
+<link href="../highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="../highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+        <div class="container">
+            <span class="navbar-brand">王维的博客</span>
+            <div id="navbar" class="collapse navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a href="../index.html" class="nav-link">主页</a></li>
+                    <li class="nav-item"><a href="../html/php.html" class="nav-link">PHP</a></li>
+                    <li class="nav-item active"><a href="../html/uniapp.html" class="nav-link">Uniapp</a></li>
+                    <li class="nav-item"><a href="../html/notes.html" class="nav-link">随手笔记</a></li>
+                </ul>
+                <form action="" class="form-inline ml-auto">
+                    <input type="text" class="form-control mr-2" placeholder="关键字">
+                    <button class="btn btn-outline-secondary my-2">搜索</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>uniapp封装微信h5支付、分享等功能</h1>
+            <span class="date"><small>2022-01-18</small></span>
+            <div class="mt-4">
+                <p>移动端微信h5开发经常需要用到支付、分享等功能，本文提供一个JS封装好的js模块，适用Vue开发的h5项目，拿来即用。</p>
+                <p>移动端Vue开发微信h5相关功能依赖微信jweixin-module插件，github地址：<a href="https://github.com/zhetengbiji/jweixin-module" target="_blank">https://github.com/zhetengbiji/jweixin-module</a>，先下载或安装好，本例是直接将jweixin-module.js放置于/common/目录。</p>
+                <h3>直接上代码</h3>
+<pre><code class="javascript">// /common/wechat.js
+import Vue from "vue"
+var jweixin = require('./jweixin-module')
+export default {
+    // 调试模式
+    debug: false,
+    // api列表
+    jsApiList: [
+        'updateAppMessageShareData',
+        'updateTimelineShareData',
+        'closeWindow',
+        'getLocation',
+        'openLocation',
+        'openAddress',
+        'scanQRCode',
+        'chooseImage',
+        'chooseWXPay'
+    ],
+    // 判断是否在微信中
+    isWechat: function() {
+        var ua = window.navigator.userAgent.toLowerCase()
+        return ua.match(/micromessenger/i) == 'micromessenger' ? true : false
+    },
+    // 初始化sdk配置
+    initJssdk: function(callback) {
+        if (this.isWechat()) {
+            Vue.prototype.$http.post('/wechat/share', {
+                url: window.location.href
+            }).then(res => {
+                var share = JSON.parse(res.data.share)
+                jweixin.config({
+                    debug: share.debug || this.debug,
+                    appId: share.appId,
+                    timestamp: share.timestamp,
+                    nonceStr: share.nonceStr,
+                    signature: share.signature,
+                    jsApiList: share.jsApiList || this.jsApiList
+                })
+                if (typeof callback === 'function') {
+                    callback(share)
+                }
+            })
+        }
+    },
+    // 关闭页面事件
+    closeWindow: function(callback) {
+        if (this.isWechat()) {
+            this.initJssdk(function(init) {
+                jweixin.ready(function(wx) {
+                    wx.closeWindow()
+                    if (typeof callback === 'function') {
+                        callback(jweixin)
+                    }
+                })
+            })
+        }
+    },
+    // 微信分享
+    share: function(data, callback) {
+        if (this.isWechat()) {
+            this.initJssdk(function(init) {
+                jweixin.ready(function() {
+                    var shareData = {
+                        title: data.title,
+                        desc: data.desc,
+                        link: window.location.href,
+                        imgUrl: data.image,
+                        success: function(res) {
+                            callback(res)
+                        },
+                        cancel: function(res) {
+                            callback(res)
+                        }
+                    }
+                    jweixin.updateAppMessageShareData(shareData)
+                    jweixin.updateTimelineShareData(shareData)
+                })
+            })
+        }
+    },
+    // 获取位置信息
+    getLocation: function(callback) {
+        if (this.isWechat()) {
+            this.initJssdk(function(init) {
+                jweixin.ready(function() {
+                    jweixin.getLocation({
+                        type: 'gcj02',
+                        success: function(res) {
+                            callback(res)
+                        },
+                        fail: function(err) {
+                            callback(err)
+                        }
+                    })
+                })
+            })
+        }
+    },
+    // 查看位置信息
+    openLocation: function(data, callback) {
+        if (this.isWechat()) {
+            this.initJssdk(function(init) {
+                jweixin.ready(function() {
+                    jweixin.openLocation({
+                        latitude: data.latitude,
+                        longitude: data.longitude
+                    })
+                })
+            })
+        }
+    },
+    // 获取微信收货地址
+    openAddress: function(callback) {
+        if (this.isWechat()) {
+            this.initJssdk(function(init) {
+                jweixin.ready(function() {
+                    jweixin.openAddress({
+                        success: function(res) {
+                            callback(res)
+                        },
+                        fail: function(err) {
+                            callback(err)
+                        }
+                    })
+                })
+            })
+        }
+    },
+    // 微信扫码
+    scanQRCode: function(callback) {
+        if (this.isWechat()) {
+            this.initJssdk(function(init) {
+                jweixin.ready(function() {
+                    jweixin.scanQRCode({
+                        needResult: 1, // 0:微信处理|1:返回扫描结果
+                        scanType: ["qrCode", "barCode"],
+                        success: function(res) {
+                            let durl = /https:\/\/([^\/]+)\//i
+                            let domain
+                            res.resultStr.replace(durl, (e) => {
+                                domain = e
+                            })
+                            callback(res)
+                        },
+                        fail: function(err) {
+                            callback(err)
+                        }
+                    })
+                })
+            })
+        }
+    },
+    // 选择图片
+    chooseImage: function(callback) {
+        if (this.isWechat()) {
+            this.initJssdk(function(init) {
+                jweixin.ready(function() {
+                    jweixin.chooseImage({
+                        count: 1,
+                        sizeType: ['compressed'],
+                        sourceType: ['album'],
+                        success: function(res) {
+                            callback(res)
+                        }
+                    })
+                })
+            })
+        }
+    },
+    // 微信支付
+    wxpay: function(data, callback) {
+        if (this.isWechat()) {
+            this.initJssdk(function(init) {
+                jweixin.ready(function() {
+                    jweixin.chooseWXPay({
+                        timestamp: data.timeStamp,
+                        nonceStr: data.nonceStr,
+                        package: data.package,
+                        signType: data.signType,
+                        paySign: data.paySign,
+                        success: function(res) {
+                            callback(res)
+                        },
+                        cancel: function(res) {
+                            callback(res)
+                        },
+                        fail: function(err) {
+                            callback(err)
+                        }
+                    })
+                })
+            })
+        }
+    },
+    // 微信支付 另一种方式
+    wxpayBridge: function(data, callback) {
+        if (this.isWechat()) {
+            this.initJssdk(function(init) {
+                jweixin.ready(function() {
+                    WeixinJSBridge.invoke(
+                        'getBrandWCPayRequest', {
+                            "appId": data.appId,
+                            "timeStamp": data.timeStamp,
+                            "nonceStr": data.nonceStr,
+                            "package": data.package,
+                            "signType": "MD5",
+                            "paySign": data.paySign
+                        },
+                        function(res) {
+                            callback(res)
+                        }
+                    )
+                })
+            })
+        }
+    }
+}
+</code></pre>
+                <h3>在main.js中注册全局</h3>
+<pre><code class="javascript">// /main.js
+// #ifdef H5
+import wechat from './common/wechat.js'
+Vue.prototype.$wechat = wechat
+// #endif
+</code></pre>
+                <p>jweixin-module.js只支持H5，所以要用条件编译</p>
+                <h3>使用示例</h3>
+                <p>支付：</p>
+<pre><code class="javascript">// /payment/pay.vue
+this.$wechat.wxpay(paystring, function(ret) {
+    switch (ret.errMsg) {
+        case 'chooseWXPay:ok':
+            uni.showModal({
+                content: '支付成功',
+                showCancel: false,
+                success: (ret) => {
+                    // 跳转或做些其他事情
+                }
+            })
+            break
+        case 'chooseWXPay:cancel':
+            uni.showModal({
+                content: '已取消，您可以重新支付',
+                showCancel: false
+            })
+            break
+        case 'chooseWXPay:fail':
+            uni.showModal({
+                content: '支付失败',
+                showCancel: false
+            })
+            break
+    }
+})</code></pre>
+                <p>上面paystring是后台返回的微信支付加密串</p>
+                <p>分享：</p>
+<pre><code class="javascript">// #ifdef H5
+if (this.$wechat && this.$wechat.isWechat()) {
+    this.$wechat.share({
+        title: '分享的标题',
+        desc: '分享的描述',
+        image: '分享的图片链接地址'
+    })
+}
+// #endif</code></pre>
+                <div>同样需要使用条件编译</div>
+                <h3>注意事项</h3>
+                <p>1、h5网页版在ios设备上获取到的当前页面栈是首次进入的页面的URL，常规的uni.navigateTo()方法并不会让其自动更新，所以进入支付页面需要使用js的window.location.href方式，安卓则无此问题；</p>
+                <p>2、本例代码全部运行在微信h5端，即微信内置浏览器中，其他端无效（会报错）。</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

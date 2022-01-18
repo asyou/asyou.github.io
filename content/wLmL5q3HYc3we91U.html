@@ -29,9 +29,6 @@
         padding:  5px;
         border: 1px solid #eee;
     }
-    pre span {
-        display: inline-block;
-    }
 </style>
 </head>
 <body>
@@ -64,7 +61,7 @@
                 <p>3、前端跑马灯或转盘最终停留在后台返回的中奖奖品上面，并提示中奖结果。</p>
                 <h3>数据库表设计</h3>
                 <table>
-                    <tr><th colspan="3">1、lottery表结构</th></tr>
+                    <tr><th colspan="3">1、lottery表结构，存放抽奖奖项</th></tr>
                     <tr><th>主要字段</th><th>类型</th><th>注释</th></tr>
                     <tr><td>id</td><td>int(11)</td><td>自增ID</td></tr>
                     <tr><td>type</td><td>tinyint(1)</td><td>类型:0=谢谢参与,1=实物奖项</td></tr>
@@ -78,7 +75,7 @@
                 </table>
                 <br/>
                 <table>
-                    <tr><th colspan="3">2、lottery_user表结构</th></tr>
+                    <tr><th colspan="3">2、lottery_user表结构，存放抽奖记录</th></tr>
                     <tr><th>主要字段</th><th>类型</th><th>注释</th></tr>
                     <tr><td>id</td><td>int(11)</td><td>自增ID</td></tr>
                     <tr><td>user_id</td><td>int(11)</td><td>用户ID</td></tr>
@@ -144,9 +141,9 @@ private function get_lottery_rand($prize)
     return $rid;
 }</code></pre>
                 <h3>说明：</h3>
-                <p>1、lottery表包含若干条“谢谢参与”奖项，range字段为0或numbers字段为0或status不等于1的奖项不会参与抽奖（比如iPhone13 pro max放在抽奖盘上，但range为0你就永远抽不中，哈哈哈～）；</p>
-                <p>2、lottery_user表存放用户抽奖结果记录；</p>
-                <p>3、本例代码每次先获取所有符合条件的奖项，按照概率设置从大到小给出中奖结果，直到所有奖项的数量归0为止；</p>
+                <p>1、lottery表包含若干条“谢谢参与”奖项，range字段为0、numbers字段为0或status不等于1的奖项不会参与抽奖（比如iPhone13 pro max放在抽奖盘上，但range为0你就永远抽不中，哈哈哈～）；</p>
+                <p>2、本例代码每次先获取所有符合条件的奖项，按照概率设置从大到小随机给出中奖结果，直到所有奖项的数量归0为止；</p>
+                <p>3、当大概率的奖品抽完后，继续抽奖会从符合条件的小概率奖品中抽取，比如有三个奖品A、B和C，A概率为99%，B概率是0.9%，C概率是0.1%，当A数量为0时，则下一次抽奖会从B和C中抽取，优先抽取概率更大的，依此类推，直到B或C数量也等于0为止；</p>
                 <p>4、本例代码是后台代码，前端可以使用跑马灯式抽奖盘，也可以使用旋转式抽奖盘，稍加修改也可以用于后台统一抽奖（比如定时开奖）。</p>
             </div>
         </div>
