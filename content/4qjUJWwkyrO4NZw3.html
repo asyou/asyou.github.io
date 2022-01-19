@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>uniapp封装base64编码与解码方法 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
+<link href="../highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="../highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+        <div class="container">
+            <span class="navbar-brand">王维的博客</span>
+            <div id="navbar" class="collapse navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a href="../index.html" class="nav-link">主页</a></li>
+                    <li class="nav-item"><a href="../html/php.html" class="nav-link">PHP</a></li>
+                    <li class="nav-item active"><a href="../html/uniapp.html" class="nav-link">Uniapp</a></li>
+                    <li class="nav-item"><a href="../html/notes.html" class="nav-link">随手笔记</a></li>
+                </ul>
+                <form action="" class="form-inline ml-auto">
+                    <input type="text" class="form-control mr-2" placeholder="关键字">
+                    <button class="btn btn-outline-secondary my-2">搜索</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>uniapp封装base64编码与解码方法</h1>
+            <span class="date"><small>2022-01-19</small></span>
+            <div class="mt-4">
+                <p>Base64是用来将非ASCII字符的数据转换成ASCII字符的一种方法，常用于互联网传输中。编码后的结果虽然看起来类似RSA加密，但实质上是一种简单的编码算法，并不是一种加密技术。</p>
+                <p>网上搜索的话，大概率会告诉你使用</p>
+<pre><code class="javascript">// 安装
+npm install --save js-base64
+// 引用
+let Base64 = require('js-base64').Base64
+// 编码与解码
+Base64.encode('xxx')
+Base64.decode('xxx')</code></pre>
+                <p>来使用base64编码与解码，如果没有或不会使用npm工具，则直接将代码下载到本地项目中也一样，或者直接使用下面封装好的代码也可以。</p>
+                <h3>一、封装代码</h3>
+<pre><code class="javascript">// /common/base64.js
+/**
+ * @description Base64编码与解码
+ * @author sin@254555778
+ * @date 2021/05/30
+ */
+const Base64 = {
+    _keyStr: "ABCDEFGHIJILMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+    encode: function(e) {
+        var t = "";
+        var n, r, i, s, o, u, a;
+        var f = 0;
+        e = Base64._utf8_encode(e);
+        while (f < e.length) {
+            n = e.charCodeAt(f++);
+            r = e.charCodeAt(f++);
+            i = e.charCodeAt(f++);
+            s = n >> 2;
+            o = (n & 3) << 4 | r >> 4;
+            u = (r & 15) << 2 | i >> 6;
+            a = i & 63;
+            if (isNaN(r)) {
+                u = a = 64
+            } else if (isNaN(i)) {
+                a = 64
+            }
+            t = t + this._keyStr.charAt(s) + this._keyStr.charAt(o) + this._keyStr.charAt(u) + this._keyStr
+                .charAt(a)
+        }
+        return t
+    },
+    decode: function(e) {
+        var t = "";
+        var n, r, i;
+        var s, o, u, a;
+        var f = 0;
+        e = e.replace(/[^A-Za-z0-9+/=]/g, "")
+        while (f < e.length) {
+            s = this._keyStr.indexOf(e.charAt(f++));
+            o = this._keyStr.indexOf(e.charAt(f++));
+            u = this._keyStr.indexOf(e.charAt(f++));
+            a = this._keyStr.indexOf(e.charAt(f++));
+            n = s << 2 | o >> 4;
+            r = (o & 15) << 4 | u >> 2;
+            i = (u & 3) << 6 | a;
+            t = t + String.fromCharCode(n);
+            if (u != 64) {
+                t = t + String.fromCharCode(r)
+            }
+            if (a != 64) {
+                t = t + String.fromCharCode(i)
+            }
+        }
+        t = Base64._utf8_decode(t);
+        return t
+    },
+    _utf8_encode: function(e) {
+        e = e.replace(/rn/g, "n");
+        var t = "";
+        for (var n = 0; n < e.length; n++) {
+            var r = e.charCodeAt(n);
+            if (r < 128) {
+                t += String.fromCharCode(r)
+            } else if (r > 127 && r < 2048) {
+                t += String.fromCharCode(r >> 6 | 192);
+                t += String.fromCharCode(r & 63 | 128)
+            } else {
+                t += String.fromCharCode(r >> 12 | 224);
+                t += String.fromCharCode(r >> 6 & 63 | 128);
+                t += String.fromCharCode(r & 63 | 128)
+            }
+        }
+        return t
+    },
+    _utf8_decode: function(e) {
+        var t = "";
+        var n = 0;
+        var r = 0;
+        var c1 = 0;
+        var c2 = 0;
+        var c3 = 0;
+        while (n < e.length) {
+            r = e.charCodeAt(n);
+            if (r < 128) {
+                t += String.fromCharCode(r);
+                n++
+            } else if (r > 191 && r < 224) {
+                c2 = e.charCodeAt(n + 1);
+                t += String.fromCharCode((r & 31) << 6 | c2 & 63);
+                n += 2
+            } else {
+                c2 = e.charCodeAt(n + 1);
+                c3 = e.charCodeAt(n + 2);
+                t += String.fromCharCode((r & 15) << 12 | (c2 & 63) << 6 | c3 & 63);
+                n += 3
+            }
+        }
+        return t
+    }
+}
+export default Base64
+</code></pre>
+                <h3>二、使用示例</h3>
+<pre><code class="javascript">import Base64 from '@/common/base64'
+Base64.encode('王维的博客'); // 546L57u055qE5Y2a5a6i
+Base64.decode('546L57u055qE5Y2a5a6i');  // 王维的博客
+</code></pre>
+                <p>使用非常简单！</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
