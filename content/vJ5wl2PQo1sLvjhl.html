@@ -63,15 +63,17 @@
                 <p>3、点击确认登录，则PC端自动识别到该用户并登录。</p>
                 <br/>
                 <h3>流程很简单，但实现原理并不是想象中那么简单</h3>
-                <p>1、PC端生成的二维码，服务器如何知道谁扫了该码？什么时候扫的？</p>
-                <p>2、同样的，手机端扫码后，服务器又是如何知道这个二维码被哪个用户微信扫了？什么时候扫的？</p>
+                <p>问题一：PC端生成的二维码，服务器如何知道谁扫了该码？什么时候扫的？</p>
+                <p>问题二：同样的，手机端扫码后，服务器又是如何知道这个二维码被哪个用户微信扫了？什么时候扫的？</p>
                 <h3>可见，要实现上述完整的扫码登录流程，一定要有一个中间方协助处理，即服务器，不然两边都是抓瞎。</h3>
                 <p>基本原理其实分2条线，一是PC端，另一个是手机端</p>
-                <p>1、PC端请求服务器生成一个二维码并在数据库保存一条记录，然后把码展示出来等待用户扫码；</p>
-                <p>2、用户手机扫描二维码后，跳转到手机端页面，通过URL参数确定二维码ID，然后在手机端获取用户信息并请求服务器，以ID去查询对应的二维码记录表；</p>
-                <p>3、接下来的操作就简单了，查到记录后，判断一下该操作是登录还是啥，写对应的代码逻辑就行了。</p>
+                <h3>1、PC端</h3>
+                <p>PC端在服务器上先在数据库创建一条记录，获取ID后生成一个二维码，展示出来等待用户扫码（该二维码内容是手机端页面URL+ID）；</p>
+                <h3>2、手机端</h3>
+                <p>用户手机扫描二维码后，跳转到对应的手机端页面，通过URL参数确定二维码ID，然后在手机端获取用户信息并请求服务器，以ID去查询对应的二维码记录表；</p>
                 <h3>由此可见，PC端生成二维码后，在二维码内容中携带ID是关键！</h3>
-                <p>接下来就是技术实现了，先设计一下二维码表结构</p>
+                <p>接下来的操作就简单了，轮询查到记录后，判断一下该操作是登录还是啥，写对应的代码逻辑就行了。</p>
+                <p>先设计一下二维码表结构</p>
                 <table class="table">
                     <thead class="thead-dark"><tr><th colspan="3">qrcode_login表结构，存放二维码基本信息</th></tr></thead>
                     <tr><th>主要字段</th><th>类型</th><th>注释</th></tr>
@@ -88,47 +90,49 @@
 // 二维码内容可不放入数据库，只需要一个ID即可
 $this->qrcodeModel->save(['login_ip'=>$this->request->ip(),'expire_in'=>time()+300,'status'=>'0']);
 $this->view->assign('qrcode',createQrcode64('http://m.xxx.com/pages/auth/qrcodeLogin?id='.$this->qrcodeModel->id));</code></pre>
-                <h3>第二步，在模板中调用JS轮询</h3>
+                <h3>第二步，模板展示二维码后，立即调用JS轮询</h3>
 <pre><code class="js">// login.js
-qrlogin: function() {
-    var id = Config.qrcode_id;  // 二维码ID
+qrlogin() {
+    var id = 'qrcode_id';  // 二维码ID
     var timer = setInterval(function() {
-        Fast.api.ajax({
+        $.ajax({
             url: 'login/qrLogin',
-            loading: false,
+            method: 'POST',
             data: {
                 id
+            },
+            success(data) {
+                switch(data.status) {
+                    case 0:
+                        $('#status').text(data.msg)
+                        break;
+                    case 1:
+                        $('#status').text(data.msg)
+                        break;
+                    case 2:
+                        clearInterval(timer)
+                        $('#status').text(data.msg)
+                        setTimeout(function() {
+                            location.href = "/index/ucenter.html"
+                        }, 2000)
+                        break;
+                    case 3:
+                        $('#status').text(data.msg)
+                        setTimeout(function() {
+                            location.reload()
+                        }, 2000)
+                        break;
+                }
+                return false;
+            },
+            error(err) {
+                Layer.msg(err.msg)
+                return false;
             }
-        }, function(data, ret) {
-            switch(ret.status) {
-                case 0:
-                    $('#status').text(ret.msg)
-                    break;
-                case 1:
-                    $('#status').text(ret.msg)
-                    break;
-                case 2:
-                    clearInterval(timer)
-                    $('#status').text(ret.msg)
-                    setTimeout(function() {
-                        location.href = "/index/ucenter.html"
-                    }, 2000)
-                    break;
-                case 3:
-                    $('#status').text(ret.msg)
-                    setTimeout(function() {
-                        location.reload()
-                    }, 2000)
-                    break;
-            }
-            return false;
-        }, function(data, ret) {
-            Layer.msg(ret.msg)
-            return false;
         })
     }, 1000)
 },</code></pre>
-                <h3>第三步，被轮询的方法</h3>
+                <h3>第三步，轮询请求的方法</h3>
 <pre><code class="php">// Login.php
 public function qrLogin()
 {
@@ -155,7 +159,7 @@ public function qrLogin()
             break;
     }
 }</code></pre>
-                <h3>第四步，前端扫码进入后的页面</h3>
+                <h3>第四步，前端扫码进入确认登录页面</h3>
 <pre><code class="javascript">// /pages/auth/qrcodeLogin.vue
 // onLoad()方法中获取到ID，即二维码ID
 // 进入页面后需要授权获取用户信息并登录手机端
@@ -234,11 +238,14 @@ public function qrlogin()
 }</code></pre>
                 <p>以上就是微信扫码登录的完整代码了，原理简单，但实现起来并不简单，需要反复请求接口来实现。</p>
                 <h3>流程梳理</h3>
-                <p>1、PC端生成二维码并保存在数据库后返回ID，二维码内容URL中带上ID，展示二维码后开始JS轮询请求login/qrLogin查询二维码状态；</p>
+                <p>1、PC端创建二维码记录并以URL+ID生成二维码，展示二维码后开始JS轮询请求login/qrLogin查询二维码状态；</p>
                 <p>2、手机端扫码后进入登录确认页面，页面首先判断用户是否登录，未登录则跳去登录并返回来，已登录则携带用户信息请求服务器user/qrCheck接口，无问题则把user_id写入被扫的二维码表中并返回用户信息；</p>
                 <p>3、前端接收到后台用户信息后，展示确认登录按钮，点击后携带二维码ID请求后台，修改二维码状态为已确认登录；</p>
                 <p>4、PC端JS轮询当查询到二维码状态为已登录时，清除定时器终止轮询，并跳转到用户中心，即完成整个扫码登录流程。</p>
-                <p>缺点：PC端展示二维码后，即开始执行JS轮询，但其实并不推荐这种方式（会大量消耗http请求数，在用户数巨量的应用中会很致命），而应该采用更为推荐的WebSocket方式，这能极大地减少http的开销，减轻服务器负担。</p>
+                <p>5、以上思路不仅可以实现扫码登录，稍微修改一下还可以实现扫码绑定系统管理员、客服等，非常方便！</p>
+                <p>6、缺点：PC端展示二维码后，即开始执行JS轮询，但其实并不推荐这种方式（会大量消耗http请求数，在用户数巨量的应用中会很致命），而应该采用更为推荐的WebSocket方式，这能极大地减少http的开销，减轻服务器负担。</p>
+                <h3>注意事项</h3>
+                <p style="color: red;">PC端一定要对轮询方法加以限制，合理使用，例如关闭二维码或二维过期时及时清除定时器，或者在一定时间内没有检测到扫码动作自动清除定时器，以免造成服务器资源浪费。</p>
             </div>
         </div>
     </div>
