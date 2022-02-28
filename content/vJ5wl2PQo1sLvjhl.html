@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>电脑端使用微信扫码登录原理及代码实现 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
+<link href="../highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="../highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    table tr th,table tr td {
+        padding:  5px;
+        border: 1px solid #eee;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">王维的博客</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="../index.html">主页</a></li>
+                    <li class="nav-item active"><a class="nav-link" href="../html/php.html">PHP</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../html/vue.html">Vue</a></li> 
+                    <li class="nav-item"><a class="nav-link" href="../html/notes.html">随手笔记</a></li> 
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>电脑端使用微信扫码登录原理及代码实现</h1>
+            <span class="date"><small>2022-02-28</small></span>
+            <div class="mt-4">
+                <p>时下很多网站都支持使用他们自家的APP扫码登录PC端网站，这个功能是非常实用的，本文就来讲解下扫码登录原理以及如何写代码实现。</p>
+                <h3>先分析扫码登录的流程和基本原理</h3>
+                <p>1、PC端登录页面调出一个登录二维码；</p>
+                <p>2、用户使用手机微信扫描二维码后，手机弹出一个确认登录页面；</p>
+                <p>3、点击确认登录，则PC端自动识别到该用户并登录。</p>
+                <br/>
+                <h3>流程很简单，但实现原理并不是想象中那么简单</h3>
+                <p>1、PC端生成的二维码，服务器如何知道谁扫了该码？什么时候扫的？</p>
+                <p>2、同样的，手机端扫码后，服务器又是如何知道这个二维码被哪个用户微信扫了？什么时候扫的？</p>
+                <h3>可见，要实现上述完整的扫码登录流程，一定要有一个中间方协助处理，即服务器，不然两边都是抓瞎。</h3>
+                <p>基本原理其实分2条线，一是PC端，另一个是手机端</p>
+                <p>1、PC端请求服务器生成一个二维码并在数据库保存一条记录，然后把码展示出来等待用户扫码；</p>
+                <p>2、用户手机扫描二维码后，跳转到手机端页面，通过URL参数确定二维码ID，然后在手机端获取用户信息并请求服务器，以ID去查询对应的二维码记录表；</p>
+                <p>3、接下来的操作就简单了，查到记录后，判断一下该操作是登录还是啥，写对应的代码逻辑就行了。</p>
+                <h3>由此可见，PC端生成二维码后，在二维码内容中携带ID是关键！</h3>
+                <p>接下来就是技术实现了，先设计一下二维码表结构</p>
+                <table class="table">
+                    <thead class="thead-dark"><tr><th colspan="3">qrcode_login表结构，存放二维码基本信息</th></tr></thead>
+                    <tr><th>主要字段</th><th>类型</th><th>注释</th></tr>
+                    <tr><td>id</td><td>int(11)</td><td>自增ID</td></tr>
+                    <tr><td>user_id</td><td>int(11)</td><td>用户ID</td></tr>
+                    <tr><td>expire_in</td><td>int(11)</td><td>过期时间</td></tr>
+                    <tr><td>scan_time</td><td>int(11)</td><td>扫码时间</td></tr>
+                    <tr><td>login_time</td><td>int(11)</td><td>登录时间</td></tr>
+                    <tr><td>login_ip</td><td>varchar(20)</td><td>登录IP</td></tr>
+                    <tr><td>status</td><td>tinyint(1)</td><td>状态:0=待扫码,1=已扫码</td></tr>
+                </table>
+                <h3>第一步，生成二维码</h3>
+<pre><code class="php">// Login.php
+// 二维码内容可不放入数据库，只需要一个ID即可
+$this->qrcodeModel->save(['login_ip'=>$this->request->ip(),'expire_in'=>time()+300,'status'=>'0']);
+$this->view->assign('qrcode',createQrcode64('http://m.xxx.com/pages/auth/qrcodeLogin?id='.$this->qrcodeModel->id));</code></pre>
+                <h3>第二步，在模板中调用JS轮询</h3>
+<pre><code class="js">// login.js
+qrlogin: function() {
+    var id = Config.qrcode_id;  // 二维码ID
+    var timer = setInterval(function() {
+        Fast.api.ajax({
+            url: 'login/qrLogin',
+            loading: false,
+            data: {
+                id
+            }
+        }, function(data, ret) {
+            switch(ret.status) {
+                case 0:
+                    $('#status').text(ret.msg)
+                    break;
+                case 1:
+                    $('#status').text(ret.msg)
+                    break;
+                case 2:
+                    clearInterval(timer)
+                    $('#status').text(ret.msg)
+                    setTimeout(function() {
+                        location.href = "/index/ucenter.html"
+                    }, 2000)
+                    break;
+                case 3:
+                    $('#status').text(ret.msg)
+                    setTimeout(function() {
+                        location.reload()
+                    }, 2000)
+                    break;
+            }
+            return false;
+        }, function(data, ret) {
+            Layer.msg(ret.msg)
+            return false;
+        })
+    }, 1000)
+},</code></pre>
+                <h3>第三步，被轮询的方法</h3>
+<pre><code class="php">// Login.php
+public function qrLogin()
+{
+    $params = $this->request->param();
+    $qrcode = $this->qrcodeModel->field(['id','user_id','status'])->where(['id'=>$params['id']])->find();
+    switch($qrcode['status']) {
+        case '0':
+            return ['code'=>1,'msg'=>'微信扫一扫，在手机上确认登录','status'=>$qrcode['status']];
+            break;
+        case '1':
+            return ['code'=>1,'msg'=>'扫码成功，请在微信中确认登录','status'=>$qrcode['status']];
+            break;
+        case '2':
+            $this->qrcodeModel->isUpdate(true)->save(['login_time'=>time(),'login_ip'=>$this->request->ip()],['id'=>$params['id']]);
+            $ret = $this->auth->direct($qrcode['user_id']); // 此处是确认成功后自动登录
+            if ($ret) {
+                return ['code'=>1,'msg'=>'登录成功','status'=>$qrcode['status']];
+            } else {
+                return ['code'=>0,'msg'=>'登录失败','status'=>$qrcode['status']];
+            }
+            break;
+        case '3':
+            return ['code'=>1,'msg'=>'二维码已过期','status'=>$qrcode['status']];
+            break;
+    }
+}</code></pre>
+                <h3>第四步，前端扫码进入后的页面</h3>
+<pre><code class="javascript">// /pages/auth/qrcodeLogin.vue
+// onLoad()方法中获取到ID，即二维码ID
+// 进入页面后需要授权获取用户信息并登录手机端
+// 然后要请求一下后端，判断二维码是否存在/是否过期/是否被使用等
+loadData() {
+    this.$http.post('/user/qrcheck', {
+        id: this.qrcode_id,
+        openid: this.openid
+    }).then(res => {
+        if (res.code == 1) {
+            this.canBeLogin = true
+            this.info = res.data.info // 返回微信信息
+        }
+    })
+},
+// 以上都没有问题，则点击按钮执行如下方法确认登录
+onQrcodeLogin() {
+    this.$http.post('/user/qrlogin', {
+        id: this.qrcode_id
+    }).then(res => {
+        uni.switchTab({
+            url: '/'
+        })
+    }).catch(err => {
+        uni.showModal({
+            content: err.msg,
+            showCancel: false
+        })
+    })
+}</code></pre>
+                <h3>第五步，向后台发送确认登录信息</h3>
+<pre><code class="php">// /api/user.php：
+/**
+ * 扫码确认
+ * @param integer $id 二维码ID
+ * @param string $openid 微信ID
+ * @return array
+ */
+public function qrcheck()
+{
+    $params = $this->request->param();
+    $qrcode = $this->qrcodeModel->where(['id'=>$params['id']])->find();
+    if (!$qrcode) {
+        $this->error('二维码错误');
+    }
+    if ($qrcode['expire_in'] <= time()) {
+        $this->qrcodeModel->isUpdate(true)->save(['scan_time'=>time(),'status'=>'3'],['id'=>$params['id']]);
+        $this->error('二维码已过期');
+    }
+    if ($qrcode['status'] == '2') {
+        $this->error('二维码已被使用');
+    }
+    $this->qrcodeModel->isUpdate(true)->save(['scan_time'=>time(),'status'=>'1'],['id'=>$params['id']]);
+    $member = $this->memberModel->field(['id','user_id','nickname','headimgurl'])->where(['openid'=>$params['openid']])->find();
+    if (!$member) {
+        $this->error('未关注公众号');
+    }
+    if (!$member['user_id']) {
+        $this->error('该微信未绑定账号');
+    }
+    $this->qrcodeModel->isUpdate(true)->save(['user_id'=>$member['user_id']],['id'=>$params['id']]);
+    $data['info'] = $this->model->field(['id','username','realname'])->where(['id'=>$member['user_id']])->find();
+    $this->success('请求成功',$data);
+}
+
+/**
+ * 确认登录
+ * @param integer $id 二维码ID
+ * @return mix
+ */
+public function qrlogin()
+{
+    $params = $this->request->param();
+    $this->qrcodeModel->save(['status'=>'2'],['id'=>$params['id']]);
+    $this->success('确认成功');
+}</code></pre>
+                <p>以上就是微信扫码登录的完整代码了，原理简单，但实现起来并不简单，需要反复请求接口来实现。</p>
+                <h3>流程梳理</h3>
+                <p>1、PC端生成二维码并保存在数据库后返回ID，二维码内容URL中带上ID，展示二维码后开始JS轮询请求login/qrLogin查询二维码状态；</p>
+                <p>2、手机端扫码后进入登录确认页面，页面首先判断用户是否登录，未登录则跳去登录并返回来，已登录则携带用户信息请求服务器user/qrCheck接口，无问题则把user_id写入被扫的二维码表中并返回用户信息；</p>
+                <p>3、前端接收到后台用户信息后，展示确认登录按钮，点击后携带二维码ID请求后台，修改二维码状态为已确认登录；</p>
+                <p>4、PC端JS轮询当查询到二维码状态为已登录时，清除定时器终止轮询，并跳转到用户中心，即完成整个扫码登录流程。</p>
+                <p>缺点：PC端展示二维码后，即开始执行JS轮询，但其实并不推荐这种方式（会大量消耗http请求数，在用户数巨量的应用中会很致命），而应该采用更为推荐的WebSocket方式，这能极大地减少http的开销，减轻服务器负担。</p>
+            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+        <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2022 254555778@qq.com</div>
+    </footer>
+</body>
+</html>
