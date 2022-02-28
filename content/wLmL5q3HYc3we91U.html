@@ -12,6 +12,9 @@
 <script src="../highlight/highlight.min.js"></script>
 <script >hljs.initHighlightingOnLoad();</script>
 <style type="text/css">
+    body {
+        margin-top: 70px;
+    }
     h1 {
         font-size: 18px;
     }
@@ -32,7 +35,7 @@
 </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-md bg-dark navbar-dark">
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
         <div class="container">
             <a class="navbar-brand" href="#">王维的博客</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
@@ -147,5 +150,8 @@ private function get_lottery_rand($prize)
             </div>
         </div>
     </div>
+    <footer class="footer mt-3 bg-dark">
+        <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2022 254555778@qq.com</div>
+    </footer>
 </body>
 </html>
