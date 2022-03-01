@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Thinkphp5使用Workman搭建WebSocket聊天服务 - 王维的博客</title>
+<title>Thinkphp5使用Workman搭建WebSocket即时聊天服务 - 王维的博客</title>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -36,16 +36,16 @@
             <div class="collapse navbar-collapse" id="collapsibleNavbar">
                 <ul class="navbar-nav">
                     <li class="nav-item"><a class="nav-link" href="../index.html">主页</a></li>
-                    <li class="nav-item"><a class="nav-link" href="../html/php.html">PHP</a></li>
+                    <li class="nav-item active"><a class="nav-link" href="../html/php.html">PHP</a></li>
                     <li class="nav-item"><a class="nav-link" href="../html/vue.html">Vue</a></li> 
-                    <li class="nav-item active"><a class="nav-link" href="../html/notes.html">随手笔记</a></li> 
+                    <li class="nav-item"><a class="nav-link" href="../html/notes.html">随手笔记</a></li> 
                 </ul>
             </div>
         </div>
     </nav>
     <div class="container">
         <div class="content mt-3">
-            <h1>Thinkphp5使用Workman搭建WebSocket聊天服务</h1>
+            <h1>Thinkphp5使用Workman搭建WebSocket即时聊天服务</h1>
             <span class="date"><small>2022-03-01</small></span>
             <div class="mt-4">
                 <h3>本文要实现的功能和流程</h3>
@@ -53,7 +53,7 @@
                 <p>2、如客服在线，则可以双向实时聊天；</p>
                 <p>3、保存所有客服与客户的聊天记录到数据库；</p>
                 <p>4、聊天内容同时通过个推推送给对方（App才有）。</p>
-                <p style="color: red;">本文要实现的并非简单的“聊天室”功能，是需要用户登录的一对一聊天（或群聊），与用户无需登录即能聊天的实现逻辑不同。</p>
+                <p style="color: red;">本文要实现的并非简单的“聊天室”功能，是需要用户登录的一对一聊天（或群聊），与无需登录的临时聊天实现逻辑不同。</p>
                 <p>Thinkphp官方提供了Workman的扩展包，但经实际测试过于简单，无法实现我想要达到的功能，所以采用了GatewayWorker插件，官方网站：<a href="https://www.workerman.net/doc/gateway-worker/" target="_blank">点击前往</a>，Github地址：<a href="https://github.com/walkor/GatewayClient" target="_blank">点击前往</a>，推荐使用composer方式安装。</p>
                 <h3>本文实例使用Thinkphp5作为服务端，前端使用uniapp作为用户端。</h3>
                 <p>主要几个表的结构</p>
@@ -63,7 +63,7 @@
                     <tr><td>id</td><td>int(11)</td><td>自增ID</td></tr>
                     <tr><td>name</td><td>varchar(32)</td><td>会话组名称</td></tr>
                     <tr><td>user_id</td><td>int(11)</td><td>创建者ID</td></tr>
-                    <tr><td>thumbnail</td><td>int(11)</td><td>群头像</td></tr>
+                    <tr><td>thumbnail</td><td>varchar(100)</td><td>会话组头像</td></tr>
                 </table>
                 <table class="table">
                     <thead class="thead-dark"><tr><th colspan="3">chat_group_user表结构，记录所有会话组的成员</th></tr></thead>
@@ -154,7 +154,7 @@ class Events extends Controller
     public static function onMessage($client_id, $data)
     {
         $sysUserModel   = new \app\admin\model\User;
-        $userModel      = new \app\admin\model\chat\User;     // 会话级用户
+        $userModel      = new \app\admin\model\chat\User;     // 会话组用户
         $groupModel     = new \app\admin\model\chat\Group;    // 会话组表
         $clientModel    = new \app\admin\model\chat\Client;   // 会话ID表
         $contentModel   = new \app\admin\model\chat\Content;  // 会话内容表
@@ -207,7 +207,7 @@ class Events extends Controller
                     Gateway::sendToUid(array_column($group_users,'user_id'),json_encode($rsp));
                     // 此处往下是个推App消息推送（用不上可删除）
                     $clients = [];
-                    for ($i=0;$i<count($group_users);$i++) {
+                    for ($i=0;$i&lt;count($group_users);$i++) {
                         $clientid = $sysUserModel->where(['id'=>$group_users[$i]['user_id']])->value('clientid');
                         // 如果有clientid，则放入数组
                         if ($clientid) array_push($clients,$clientid);
@@ -329,7 +329,7 @@ class Chat extends Api
             ->limit($offset,$limit)
             ->order(['b.updatetime'=>'DESC'])
             ->select();
-        for ($i=0;$i<count($data['list']);$i++) {
+        for ($i=0;$i&lt;count($data['list']);$i++) {
             // 处理群聊头像和群名称
             $checkChat = $this->userModel->where(['chat_group_id'=>$data['list'][$i]['id']])->count();
             if ($checkChat <= 2) {
@@ -493,11 +493,12 @@ socketConnectInit() {
 }</code></pre>
                 <p>前端主要代码就写完了！</p>
                 <h3>五、注意事项</h3>
-                <p>1、用户每次连接会话，其都会产生新的client_id，类似于用户同时在手机上、电脑上登录会有不同的token，但都是同一个人，这在Workman中是允许的；</p>
+                <p>1、用户每次连接会话，其都会产生新的client_id，类似于用户同时在手机、电脑上登录会有不同的token，但都是同一个人；</p>
                 <p>2、本例实现了用户一对一聊天，其实跟多人群聊原理是一样的（会话组成员是2个和多个的区别），只不过前端对于2人私聊和群聊的UI逻辑不同；</p>
-                <p>3、本例同时也集成了个推消息推送，这个是App才支持，下一篇专门来讲App的消息推送；</p>
-                <p>4、文章开始提到用户无需登录即可聊天实现的逻辑不一样，是因为业务需要保存用户聊天记录，希望用户下一次（可能N年后）再次进入聊天还能加载历史聊天记录，而如果是用户无需登录的临时聊天是无法长期保存的，即使保存起来也无法对应上用户；</p>
-                <p>5、由于涉及到的表比较多，本文只给出了基本的几个表结构，如需其他表结构或有问题要咨询可以通过底部QQ邮箱联系我（如果想挖我去当CTO也欢迎，哈哈哈～～）。</p>
+                <p>3、本例聊天可以发送聊天表情（表类型必须为utf8mb4），但并未实现发送聊天图片，可自行扩展；</p>
+                <p>4、本例同时也集成了个推消息推送，这个是App才支持，下一篇专门来写App的消息推送；</p>
+                <p>5、文章开始提到用户无需登录即可聊天实现的逻辑不一样，是因为业务需要保存用户聊天记录，希望用户下一次（可能N年后）再次进入聊天还能加载历史聊天记录，而如果是用户无需登录的临时聊天是无法长期保存的，即使保存起来也无法对应具体用户；</p>
+                <p>6、由于涉及到的表比较多，本文只给出了基本的几个表结构，如需其他表结构或有问题要咨询可以通过底部QQ邮箱联系我（如果想挖我做CTO也欢迎，哈哈哈～～）。</p>
             </div>
         </div>
     </div>
