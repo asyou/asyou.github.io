@@ -89,8 +89,8 @@ user2 = 123456
 // 保存退出</code></pre>
 
 				<h3>4、启动SVN服务（二选一），如果已启动则跳过此步</h3>
-<pre><code class="javascript">svnserve -d -r /usr/local/repos/www.xxx.com // 单版本库启动
-svnserve -d -r /usr/local/repos // 多版本库启动</code></pre>
+<pre><code class="javascript">svnserve -d -r /home/www/repos/www.xxx.com // 单版本库启动
+svnserve -d -r /home/www/repos // 多版本库启动</code></pre>
 				<h3>5、设置SVN自动同步到网站目录</h3>
 <pre><code class="javascript">cd /home/www/repos/www.xxx.com/hooks/ // 进入版本库目录
 cp post-commit.tmpl post-commit	// 复制并另存
