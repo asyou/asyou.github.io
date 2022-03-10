@@ -73,7 +73,7 @@ third	https://gitee.com/xxx/third.git (push)
 origin	git@github.com:gitname/www.xxx.com.git (fetch)
 origin	git@github.com:gitname/www.xxx.com.git (push)</code></pre>
 				<p>如上，我本地项目连接了两个远程仓库，third是gitee上的开源项目，我可以不时地从上面拉取代码到我本地进行同步/合并，然后推送到我自己的origin远程仓库。</p>
-				<p>注意，连接他人的远程仓库一般只用到fetch，并不一定有push权限，强行push肯定会报错（因为push代码要配置协作者SSH key），并且连接多个远程仓库时，在pull/push时要指定仓库名称。</p>
+				<p>注意，连接他人的远程仓库一般只用到fetch，并不一定有push权限，强行push肯定会报错（因为push代码要配置协作者SSH key），另外连接多个远程仓库时，在pull/push时要指定仓库名称。</p>
 <pre><code class="javascript">git pull third
 // or
 git pull origin
