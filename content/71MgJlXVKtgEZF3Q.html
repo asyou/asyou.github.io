@@ -51,11 +51,12 @@
             <span class="date"><small>2022-03-11</small></span>
             <div class="mt-4">
                 <p>本文记录在使用uniCloud云开发时，云数据库查询数据的基本代码，包括列表查询和单条数据详情查询。</p>
+                <p>先介绍一下uniCloud云函数的调用方式，一共有四种，1、传统restful方式（即云函数url化，使用http(s)访问）；2、callfunction方式；3、云对象方式；4、clientDB方式，本例代码使用callfunction方式。</p>
                 <p>uniapp的uniCloud云开发数据库查询跟Mysql查询不一样，它用的是MongoDB语法，如果不懂MongoDB语法或没用过使用起来将会非常难以入手，官方文档：<a href="https://uniapp.dcloud.io/uniCloud/cf-database-aggregate.html" target="_blank">点击前往</a></p>
                 <p>本例代码基于uniCloud云开发，使用了官方提供的opendb-mall商城相关的数据库表，如果是自建表只需要修改代码中的表名和字段即可。</p>
                 <p>本文假定你本地开发环境都已部署好（已关联腾讯或阿里云服务空间），并且具备数据库相关基础知识（范式、表结构、表关联等）。</p>
                 <h3>一、创建数据表</h3>
-                <p>在uniCloud Web控制台先创建好相关的表opendb-mall-goods和opendb-mall-sku，本例只用到了这二张表。</p>
+                <p>在uniCloud Web控制台先创建好相关的表opendb-mall-goods和opendb-mall-sku，本例只用到了这两个表。</p>
                 <h3>二、编写云函数</h3>
 <pre><code class="javascript">// 商品类云函数
 'use strict';
@@ -118,28 +119,26 @@ data: [{
 },
 {_id: "41ae62ef622b0f850baf305d3bd85b84", is_new: true, is_on_sale: true, is_real: true,…}]
 // 详情
-data: {
-    {
-        _id: "41ae62ef62161045087a14de5e9d8038",
-        total_sell_count: "0",
-        comment_count: "0",
-        goods_sn: "001",
-        is_alone_sale: true,
-        is_best: false,
-        is_hot: true,
-        is_new: true,
-        is_on_sale: true,
-        is_real: true,
-        month_sell_count: "0",
-        name: "测试商品名称",
-        remain_count: "0",
-        skuList: [
-            {_id: "54ad1eea621610dc1278dc9809d927b0", goods_id: "41ae62ef62161045087a14de5e9d8038", price: "0.01", sku_name: "白色", stock: 100, …},
-            {_id: "617ef50c6221b6f909aea6d2395ce928", goods_id: "41ae62ef62161045087a14de5e9d8038", price: "0.02", sku_name: "黑色", stock: 200, …},
-            {_id: "bf4a0bf26221bec212b32e39651e8b8f", goods_id: "41ae62ef62161045087a14de5e9d8038", price: "0.03", sku_name: "紫色", stock: 300, …}
-        ]
-    }
-}</code></pre>
+data: [{
+    _id: "41ae62ef62161045087a14de5e9d8038",
+    total_sell_count: "0",
+    comment_count: "0",
+    goods_sn: "001",
+    is_alone_sale: true,
+    is_best: false,
+    is_hot: true,
+    is_new: true,
+    is_on_sale: true,
+    is_real: true,
+    month_sell_count: "0",
+    name: "测试商品名称",
+    remain_count: "0",
+    skuList: [
+        {_id: "54ad1eea621610dc1278dc9809d927b0", goods_id: "41ae62ef62161045087a14de5e9d8038", price: "0.01", sku_name: "白色", stock: 100, …},
+        {_id: "617ef50c6221b6f909aea6d2395ce928", goods_id: "41ae62ef62161045087a14de5e9d8038", price: "0.02", sku_name: "黑色", stock: 200, …},
+        {_id: "bf4a0bf26221bec212b32e39651e8b8f", goods_id: "41ae62ef62161045087a14de5e9d8038", price: "0.03", sku_name: "紫色", stock: 300, …}
+    ]
+}]</code></pre>
                 <h3>三、模板代码</h3>
 <pre><code class="javascript">// 获取商品列表
 uniCloud.callFunction({
