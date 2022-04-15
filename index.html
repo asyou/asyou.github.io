@@ -6,9 +6,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="shortcut icon" href="favicon.ico" />
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
+<link href="bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
+<script src="bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
 <style type="text/css">
 	body {
 		margin-top: 70px;
@@ -19,12 +18,12 @@
 	<nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
 		<div class="container">
 			<a class="navbar-brand" href="index.html">王维的博客</a>
-			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="navbar-toggler-icon"></span>
 			</button>
-			<div class="collapse navbar-collapse" id="collapsibleNavbar">
+			<div class="collapse navbar-collapse" id="navbarNav">
 				<ul class="navbar-nav">
-					<li class="nav-item active"><a class="nav-link" href="index.html">主页</a></li>
+					<li class="nav-item"><a class="nav-link active" href="index.html">主页</a></li>
 					<li class="nav-item"><a class="nav-link" href="html/php.html">PHP</a></li>
 					<li class="nav-item"><a class="nav-link" href="html/vue.html">Vue</a></li>
 					<li class="nav-item"><a class="nav-link" href="html/unicloud.html">uniCloud</a></li>
@@ -40,61 +39,61 @@
 					<div class="d-flex w-100 justify-content-between">
 						<h5 class="mb-1">PHP读取图片像素颜色，及图片转换成base64流方法</h5>
 					</div>
-					<p class="mb-1"><span class="badge badge-primary">PHP</span> <span class="badge badge-light">2022-03-31</span></p>
+					<p class="mb-1"><span class="badge bg-primary">PHP</span> <span class="badge bg-light text-dark">2022-03-31</span></p>
 				</a>
 				<a href="content/4DP9Mmr0RwJQLc7v.html" class="list-group-item list-group-item-action">
 					<div class="d-flex w-100 justify-content-between">
 						<h5 class="mb-1">PHP对用户敏感信息进行AES加密与解密方法</h5>
 					</div>
-					<p class="mb-1"><span class="badge badge-primary">PHP</span> <span class="badge badge-light">2022-03-22</span></p>
+					<p class="mb-1"><span class="badge bg-primary">PHP</span> <span class="badge bg-light text-dark">2022-03-22</span></p>
 				</a>
 				<a href="content/Vjvguc4s5pkYRFfC.html" class="list-group-item list-group-item-action">
 					<div class="d-flex w-100 justify-content-between">
 						<h5 class="mb-1">在Vue项目中使用RSA对登录密码或敏感数据进行加密与解密</h5>
 					</div>
-					<p class="mb-1"><span class="badge badge-primary">PHP</span> <span class="badge badge-success">Vue</span> <span class="badge badge-light">2022-03-12</span></p>
+					<p class="mb-1"><span class="badge bg-primary">PHP</span> <span class="badge bg-success">Vue</span> <span class="badge bg-light text-dark">2022-03-12</span></p>
 				</a>
 				<a href="content/C99NJLnQFhbHHnGa.html" class="list-group-item list-group-item-action">
 					<div class="d-flex w-100 justify-content-between">
 						<h5 class="mb-1">uniapp实现微信公众号网页支付</h5>
 					</div>
-					<p class="mb-1"><span class="badge badge-primary">PHP</span> <span class="badge badge-success">Vue</span> <span class="badge badge-light">2022-03-12</span></p>
+					<p class="mb-1"><span class="badge bg-primary">PHP</span> <span class="badge bg-success">Vue</span> <span class="badge bg-light text-dark">2022-03-12</span></p>
 				</a>
 				<a href="content/71MgJlXVKtgEZF3Q.html" class="list-group-item list-group-item-action">
 					<div class="d-flex w-100 justify-content-between">
 						<h5 class="mb-1">uniCloud云数据库聚合操作之商品列表与商品详情数据联表查询</h5>
 					</div>
-					<p class="mb-1"><span class="badge badge-success">Vue</span> <span class="badge badge-info">uniCloud</span> <span class="badge badge-light">2022-03-11</span></p>
+					<p class="mb-1"><span class="badge bg-success">Vue</span> <span class="badge bg-info">uniCloud</span> <span class="badge bg-light text-dark">2022-03-11</span></p>
 				</a>
 				<a href="content/zQZKllNv2dQdRLr9.html" class="list-group-item list-group-item-action">
 					<div class="d-flex w-100 justify-content-between">
 						<h5 class="mb-1">Vue在微信h5中获取用户授权信息代码实现</h5>
 					</div>
-					<p class="mb-1"><span class="badge badge-success">Vue</span> <span class="badge badge-light">2022-03-10</span></p>
+					<p class="mb-1"><span class="badge bg-success">Vue</span> <span class="badge bg-light text-dark">2022-03-10</span></p>
 				</a>
 				<a href="content/GrcMl11ITi0v8pLY.html" class="list-group-item list-group-item-action">
 					<div class="d-flex w-100 justify-content-between">
 						<h5 class="mb-1">Git工具基本使用与Github项目管理</h5>
 					</div>
-					<p class="mb-1"><span class="badge badge-warning">随手笔记</span> <span class="badge badge-light">2022-03-02</span></p>
+					<p class="mb-1"><span class="badge bg-warning">随手笔记</span> <span class="badge bg-light text-dark">2022-03-02</span></p>
 				</a>
 				<a href="content/mLdh5If8QuBKnnnn.html" class="list-group-item list-group-item-action">
 					<div class="d-flex w-100 justify-content-between">
 						<h5 class="mb-1">Thinkphp5使用Workman搭建WebSocket即时聊天服务</h5>
 					</div>
-					<p class="mb-1"><span class="badge badge-primary">PHP</span> <span class="badge badge-success">Vue</span> <span class="badge badge-light">2022-03-01</span></p>
+					<p class="mb-1"><span class="badge bg-primary">PHP</span> <span class="badge bg-success">Vue</span> <span class="badge bg-light text-dark">2022-03-01</span></p>
 				</a>
 				<a href="content/DvIJvUFxSEbLvZUt.html" class="list-group-item list-group-item-action">
 					<div class="d-flex w-100 justify-content-between">
 						<h5 class="mb-1">Linux服务器安装SVN工具，实现代码自动同步</h5>
 					</div>
-					<p class="mb-1"><span class="badge badge-warning">随手笔记</span> <span class="badge badge-light">2022-03-01</span></p>
+					<p class="mb-1"><span class="badge bg-warning">随手笔记</span> <span class="badge bg-light text-dark">2022-03-01</span></p>
 				</a>
 				<a href="content/MB0APj8C8oKL8xKn.html" class="list-group-item list-group-item-action">
 					<div class="d-flex w-100 justify-content-between">
 						<h5 class="mb-1">Fastadmin后台框架的使用心得与分享</h5>
 					</div>
-					<p class="mb-1"><span class="badge badge-primary">PHP</span> <span class="badge badge-light">2022-03-01</span></p>
+					<p class="mb-1"><span class="badge bg-primary">PHP</span> <span class="badge bg-light text-dark">2022-03-01</span></p>
 				</a>
 			</div>
 		</div>
