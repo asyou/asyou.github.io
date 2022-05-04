@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>在Vue项目中使用RSA对登录密码或敏感数据进行加密与解密 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content=""/>
+<meta name="description" content="" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
+<script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav">
+								<li class="nav-item"><a class="nav-link " href="/categories/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+		</div>
+	</div>
+</nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>在Vue项目中使用RSA对登录密码或敏感数据进行加密与解密</h1>
+            <span class="date"><small>2022-03-12</small></span>
+            <div class="mt-4">
+                <p>本文记录uniapp开发的应用对用户登录密码进行RSA加密传输的功能实现。</p><h3>先来了解为什么要对密码进行加密</h3><p>登录表单一般使用form表单或axios提交登录账号和密码，如果域名使用http协议则登录信息完全是明文传输的，https传输的破解也并非难事。一旦数据被劫持，分分钟就被人知道了明文密码。</p><p>把关键信息比如登录密码进行加密，在传输过程即使被黑客劫持了数据，但因密码被加密而无法得知用户的真实密码，这对保护用户信息安全极其重要！</p><h3>再来了解常用的加密算法</h3><p>1、对称加密算法，如AES、DES、3DES，是一种加密和解密采用相同密钥的可逆加密方式；</p><p>2、非对称加密算法，如RSA、DSA、ECC等，是一种加密和解密采用不同的密钥，即公钥和私钥，此种加密方式是可逆的；</p><p>3、线性散列加密算法，如MD5、SHA1、HMAC，是一种单向不可逆的加密算法，常用于密码加密、文件完整性检测等。</p><h3>RSA加密算法</h3><p>RSA最大特点是加密和解密的密钥不一致，公钥是可以公开的，私钥自己保管好。由私钥可以推导出公钥，但有公钥却无法推导出私钥。关于RSA加密算法的原理，可以查阅百科相关资料。</p><p>加密方式，由公钥加密的数据可以被私钥解密，反过来由私钥加密的数据也可以由公钥解密（但公钥加密不能被公钥解密，私钥也一样），RSA加密算法是基于一个十分简单的数论事实：将两个大素数（即质数）相乘十分容易，但是想要对其乘积进行因式分解却极其困难，因此可以将乘积公开作为加密密钥。</p><p>虽然RSA的安全性一直未能得到理论上的证明，但它经历了各种攻击至今未被完全攻破，目前世界上有记录的破解记录最长密钥位数是768位，使用了2000台电脑并且用了2年时间，而目前常用的密钥长度通常是2048位，至少目前来说是足够安全的，而且密钥越长破解难度也越大。</p><p style="color:red;">破解RSA算法，本质上是对一个大数进行因式分解，这在数学上是极其困难的！</p><h3>密码可以分分钟修改，但破解却需要几十年就变得毫无意义了！</h3><p>回归正题，在Vue项目中如何对用户提交的登录密码进行RSA加密，需要先生成RSA密钥对，可以使用支付宝开放平台开发助手工具生成，公钥保存在前端，私钥保存在服务器上。</p><h3>一、安装jsencrypt.js</h3><pre class="javascript">npm&nbsp;install&nbsp;jsencrypt&nbsp;--dep</pre><p>此种方式安装的文件似乎有点问题，这里提供一个可用的版本，H5、小程序、App全端通用，点击下载：<a href="/common/jsencrypt.js">jsencrypt.js</a>，下载后放入项目的common目录中。</p><h3>二、前端代码</h3><pre class="javascript">//&nbsp;/pages/user/login.vue
+import&nbsp;JSEncrypt&nbsp;from&nbsp;&#39;@/common/jsencrypt.js&#39;
+let&nbsp;encryptor&nbsp;=&nbsp;new&nbsp;JSEncrypt()
+encryptor.setPublicKey(this.$publicKey)&nbsp;//&nbsp;公钥
+let&nbsp;password&nbsp;=&nbsp;encryptor.encrypt(this.form.password)&nbsp;//&nbsp;对密码进行RSA加密</pre><p>在浏览器调试窗口查看提交表单信息时，密码就不再是明文的了，而是被加密过后的一串长长的密文。</p><h3>三、后端代码</h3><p>本例后台使用的是FastAdmin，官方自带了一个RSA处理类，拿来即用。</p><pre class="php">//&nbsp;/api/user/login.php
+use&nbsp;think\Config;
+use&nbsp;fast\Rsa;
+//&nbsp;...
+$rsa&nbsp;=&nbsp;new&nbsp;Rsa(null,Config::get(&#39;rsa.privateKey&#39;));
+$ret&nbsp;=&nbsp;$rsa-&gt;privDecrypt($password);&nbsp;//&nbsp;对前端传回来的密码进行解密</pre><p>需要说明的是，如果RSA是PKCS#1格式（非Java适用），需要对Rsa.php做如下修改</p><pre class="php">//&nbsp;/extend/fast/Rsa.php
+//&nbsp;function&nbsp;setupPrivKey()方法里面，大概第62行
+$pem&nbsp;=&nbsp;&quot;-----BEGIN&nbsp;PRIVATE&nbsp;KEY-----\n&quot;&nbsp;.&nbsp;$pem&nbsp;.&nbsp;&quot;-----END&nbsp;PRIVATE&nbsp;KEY-----\n&quot;;</pre><p>修改成</p><pre class="php">$pem&nbsp;=&nbsp;&quot;-----BEGIN&nbsp;RSA&nbsp;PRIVATE&nbsp;KEY-----\n&quot;&nbsp;.&nbsp;$pem&nbsp;.&nbsp;&quot;-----END&nbsp;RSA&nbsp;PRIVATE&nbsp;KEY-----\n&quot;;</pre><p>中间需要加上“RSA”，如果是PKCS#8（Java适用）格式则忽略此步，这两者的区别可以自行查阅相关资料。</p><h3>四、说明</h3><p>1、密码正常解密后，就可以通过系统的加密方式加密一下密码，再去数据库中比对用户密码是否正确（数据库中绝对不要存储明文密码！！！），本例数据库用户密码采用了双重MD5+随机salt的方式，确保安全。</p><p>2、确保公钥和私钥不要同时存储在同一个地方（前端存公钥，后端存私钥是比较稳妥的办法），不要同时存储在前端，也不要同时存储在服务器上，否则就是在给自己或公司挖坑，哈哈～</p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2022 254555778@qq.com</div>
+</footer>
+</body>
+</html>

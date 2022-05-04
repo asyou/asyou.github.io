@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>PHPQrcode生成二维码 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content=""/>
+<meta name="description" content="" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
+<script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav">
+								<li class="nav-item"><a class="nav-link " href="/categories/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+		</div>
+	</div>
+</nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>PHPQrcode生成二维码</h1>
+            <span class="date"><small>2022-02-22</small></span>
+            <div class="mt-4">
+                <p>利用PHP生成二维码是很常用的功能，用于支付、分享海报等。</p><h3>本文要实现的功能及流程</h3><p>1、后台部署phpQrcode插件，实现API接口或任何需要的地方调用；</p><p>2、创建好的二维码可以直接输出图片，也可以转成base64格式，适应不同需要。</p><p><br/></p><h3>第一步，下载phpQrcode插件</h3><p>插件地址：http://sourceforge.net/projects/phpqrcode/，<a href="http://sourceforge.net/projects/phpqrcode/" target="_blank">点击下载</a></p><p>下载好后解压，放入vendor目录。</p><h3>第二步，在全局的common.php中创建2个函数</h3><pre class="php">//&nbsp;/application/common.php
+/**
+&nbsp;*&nbsp;生成二维码
+&nbsp;*&nbsp;@param&nbsp;string&nbsp;$content&nbsp;二维码内容
+&nbsp;*&nbsp;@param&nbsp;string&nbsp;$path&nbsp;保存路径
+&nbsp;*&nbsp;@return&nbsp;string&nbsp;$file&nbsp;二维码文件路径
+&nbsp;*/
+function&nbsp;createQrcode($content,$path)
+{
+&nbsp;&nbsp;&nbsp;&nbsp;vendor(&#39;phpqrcode.phpqrcode&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;$errorCorrectionLevel&nbsp;=&nbsp;&#39;L&#39;;&nbsp;&nbsp;//容错级别
+&nbsp;&nbsp;&nbsp;&nbsp;$matrixPointSize&nbsp;=&nbsp;5;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//生成图片大小
+&nbsp;&nbsp;&nbsp;&nbsp;//生成二维码图片
+&nbsp;&nbsp;&nbsp;&nbsp;$prefix&nbsp;=&nbsp;&#39;./uploads&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(!file_exists($prefix.$path))&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$rs&nbsp;=&nbsp;mkdir($prefix.$path,0777,true);
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;$filename&nbsp;=&nbsp;uniqid().time().&#39;.png&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;$fullpath&nbsp;=&nbsp;$prefix.$path.&#39;/&#39;.$filename;
+&nbsp;&nbsp;&nbsp;&nbsp;\QRcode::png($content,&nbsp;$fullpath&nbsp;,&nbsp;$errorCorrectionLevel,&nbsp;$matrixPointSize,&nbsp;2);
+&nbsp;&nbsp;&nbsp;&nbsp;$QR&nbsp;=&nbsp;$fullpath;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//已经生成的原始二维码图片文件
+&nbsp;&nbsp;&nbsp;&nbsp;$QR&nbsp;=&nbsp;imagecreatefromstring(file_get_contents($QR));
+&nbsp;&nbsp;&nbsp;&nbsp;//输出图片
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;imagepng($QR,&nbsp;&#39;qrcode.png&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;imagedestroy($QR);
+&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;substr($fullpath,&nbsp;1,&nbsp;strlen($fullpath)-1);
+}
+
+/**
+*&nbsp;生成二维码以base64输出,
+*&nbsp;$content&nbsp;二维码内容
+*/
+function&nbsp;createQrcode64($content,&nbsp;$level&nbsp;=&nbsp;&#39;L&#39;,&nbsp;$size&nbsp;=&nbsp;5,&nbsp;$margin&nbsp;=&nbsp;2)
+{
+&nbsp;&nbsp;&nbsp;&nbsp;Vendor(&#39;phpqrcode.phpqrcode&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;$QRcode&nbsp;=&nbsp;new&nbsp;\QRcode();
+&nbsp;&nbsp;&nbsp;&nbsp;ob_start();&nbsp;//&nbsp;在服务器打开一个缓冲区来保存所有的输出
+&nbsp;&nbsp;&nbsp;&nbsp;$QRcode-&gt;png($content,false,$level,$size,$margin);
+&nbsp;&nbsp;&nbsp;&nbsp;$imageString&nbsp;=&nbsp;base64_encode(ob_get_contents());
+&nbsp;&nbsp;&nbsp;&nbsp;ob_end_clean();&nbsp;//清除缓冲区的内容，并将缓冲区关闭，但不会输出内容
+&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&quot;data:image/jpg;base64,&quot;.$imageString;
+}</pre><h3>在api接口中使用</h3><pre class="php">//&nbsp;该函数需要指定二维码图片存放目录，返回二维码图片存放路径
+$data[&#39;qrcode&#39;]&nbsp;=&nbsp;createQrcode(&#39;http://www.xxx.com/article/detail/id/1.html&#39;,&nbsp;&#39;/qrcode&#39;);
+//&nbsp;该函数仅返回二维码的base64文件流，前端可直接用img渲染
+$data[&#39;qrcode64&#39;]&nbsp;=&nbsp;createQrcode(&#39;http://www.xxx.com/article/detail/id/1.html&#39;);
+return&nbsp;$data;</pre><h3>说明：</h3><p>两个函数的第一个参数都是二维码内容，可以是任意字符串内容；</p><p>两种方式生成二维码各有优劣，第一种适合二维码不变的情况，可以保存在服务器和数据库中长期重复使用，缺点是时间久了会生成大量二维码图片占用服务器硬盘空间；第二种直接输出文件流，适合不希望保存二维码的情况，也不占用硬盘空间，缺点是可能会轻微影响手机性能（如果性能太差的话）；</p><p>如果想在生成的二维码中嵌入logo，可以自行扩展。</p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2022 254555778@qq.com</div>
+</footer>
+</body>
+</html>

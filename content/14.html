@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Git工具基本使用与Github项目管理 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content=""/>
+<meta name="description" content="" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
+<script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav">
+								<li class="nav-item"><a class="nav-link " href="/categories/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+		</div>
+	</div>
+</nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>Git工具基本使用与Github项目管理</h1>
+            <span class="date"><small>2022-03-02</small></span>
+            <div class="mt-4">
+                <p>本文不是Git的基础入门教程，而是把项目实践过程写下来做记录，基础入门教程网上有很多，可以阅读廖雪峰的官方网站查看关于Git的部分，官方网站：<a href="https://www.liaoxuefeng.com/wiki/896043488029600" target="_blank">点击前往</a></p><p>早期工作过的一些公司，并没有使用版本管理工具，代码或文件同步全靠FTP手动，那时候用8uFtp或FileZilla，使用FTP有很多弊端，一个人开发还好，如果是多个人，一不小心就把别人的工作结果给覆盖了；其次是同步代码得一个个提交，一天工作下来几十处代码几十个文件夹要一个个去提交要让人崩溃。</p><p>后面的项目用了Svn，就好多了，多人协作完全不在话下，Checkout/Commit几下就完成了代码更新与同步。</p><p>再后来就用上了Git，用作项目代码的第三方备份与同步再适合不过了，国外有Github，优点是全球使用人数众多，托管的开源项目也多，缺点是国内访问速度慢；国内有Gitee，优缺点是反过来，访问速度快，但使用人数不如Github，这两者在使用上基本都一样。</p><p>可能有人要问都有了Svn，为什么还要用Git呢，这两者有什么区别？</p><p>区别还是有的，Svn更适合公司项目供内部使用，服务器和工作电脑都部署好就可以两点一线同步更新了；Github更适合开源或个人项目，可以把项目部署到Github分享给所有人或邀请他人共同进行完善，也可以创建私有项目仅供自己备份使用。</p><p>最明显的区别有两点，一是Svn服务是中心化，即一台Svn服务器＋多台个人电脑Svn客户端；Git则“没有”中心服务器，每个部署了Git的服务器或个人电脑都可以是个服务中心或叫备份中心，严格来讲每个Git仓库都是一个“备份”节点；二是Svn的checkout/commit支持全部或单个文件，而Git的pull/push并不能针对单个文件或文件夹进行操作。</p><p>当然实际使用还有其他的区别，比如Git有“暂存区”的概念，可以有多个remote地址等。</p><p>接下来要说的就是Git的基本使用。</p><h3>一、创建项目</h3><p>首先要做的，就是在Github网站上创建账号，如有账号则直接登录；</p><p>登录进去后，找到Repositories，点击“New”按钮进入添加项目来创建一个新项目。</p><h3>二、连接多个远程仓库</h3><p>本地Git项目除了能连接自己的远程仓库外，还可以连接多个其他的远程仓库。</p><pre class="javascript">//&nbsp;查看本地已连接的远程仓库
+git&nbsp;remote&nbsp;-v</pre><p>输出类似下面</p><pre class="javascript">third	https://gitee.com/xxx/third.git&nbsp;(fetch)
+third	https://gitee.com/xxx/third.git&nbsp;(push)
+origin	git@github.com:gitname/www.xxx.com.git&nbsp;(fetch)
+origin	git@github.com:gitname/www.xxx.com.git&nbsp;(push)</pre><p>如上，我本地项目连接了两个远程仓库，third是gitee上的开源项目，我可以不时地从上面拉取代码到我本地进行同步/合并，然后推送到我自己的origin远程仓库。</p><p>注意，连接他人的远程仓库一般只用到fetch，并不一定有push权限，强行push肯定会报错（因为push代码要配置协作者SSH key），另外连接多个远程仓库时，在pull/push时要指定仓库名称。</p><pre class="javascript">git&nbsp;pull&nbsp;third
+//&nbsp;or
+git&nbsp;pull&nbsp;origin
+//&nbsp;or
+git&nbsp;push&nbsp;origin</pre><h3>三、配置Deploy key和GPG keys</h3><p>刚开始时没弄明白这两者有什么区别，经过查阅资料后才知道，Deploy key是给协作者用的，而项目创建者（即Github账号所有者）用的是GPG keys，区别就是前者只有单个项目的访问或推送权限，同一个协作者在不同的项目中需要有不同的Deploy key，而后者可以访问或推送所有项目（即无需为每个项目配置key，也无必要）。</p><h3>四、配置SSH key</h3><p>配置key之前，先确保本地已经配置好git用户名和邮箱，使用命令查看</p><pre class="javascript">git&nbsp;config&nbsp;user.name&nbsp;//&nbsp;查看用户
+git&nbsp;config&nbsp;user.email&nbsp;//&nbsp;查看邮箱</pre><p>使用如下命令生成SSH key</p><pre class="javascript">ssh-keygen&nbsp;-t&nbsp;rsa&nbsp;-C&nbsp;&quot;邮箱地址&quot;</pre><p>然后多次回车后就在本地生成了key文件，并给出了key的保存目录，进入该目录使用vi或cat查看/.ssh/id_rsa.pub文件，把里面的内容复制一下，再配置到Github的Deploy key或GPG keys即可使用SSH方式pull或push代码了。</p><p>推荐使用SSH方式拉取或推送代码，国内使用https方式经常会无法连接，实际测试使用SSH连接的方式速度还是挺快的，也很稳定。</p><h3>四、使用Github Desktop客户端</h3><p>Github官方出了桌面客户端，并且有Windows/Mac版本，实际使用过后的感觉，很赞！</p><p>下载桌面端并登录后，可以直接导入Git上已有的远程仓库，也可以添加本地已有的Git项目，或克隆一个线上的项目；界面简洁，左侧分为Changes和History两栏，分别展示本地修改记录和历史版本提交记录，右侧显示项目文件改动对比等。</p><p>总结起来，Github客户端使用还是很方便的，免去了用命令行方式拉取、提交代码等，可以更直观地查看文件修改情况，推荐使用。</p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2022 254555778@qq.com</div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>uniCloud云数据库聚合操作之商品列表与商品详情数据联表查询 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content=""/>
+<meta name="description" content="" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
+<script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav">
+								<li class="nav-item"><a class="nav-link " href="/categories/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+		</div>
+	</div>
+</nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>uniCloud云数据库聚合操作之商品列表与商品详情数据联表查询</h1>
+            <span class="date"><small>2022-03-11</small></span>
+            <div class="mt-4">
+                <p>本文记录在使用uniCloud云开发时，云数据库查询数据的基本代码，包括列表查询和单条数据详情查询。</p><p>先介绍一下uniCloud云函数的调用方式，一共有四种，1、传统restful方式（即云函数url化，使用http(s)访问）；2、callfunction方式；3、云对象方式；4、clientDB方式，本例代码使用callfunction方式。</p><p>uniapp的uniCloud云开发数据库查询跟Mysql查询不一样，它用的是MongoDB语法，如果不懂MongoDB语法或没用过使用起来将会非常难以入手，官方文档：<a href="https://uniapp.dcloud.io/uniCloud/cf-database-aggregate.html" target="_blank">点击前往</a></p><p>本例代码基于uniCloud云开发，使用了官方提供的opendb-mall商城相关的数据库表，如果是自建表只需要修改代码中的表名和字段即可。</p><p>本文假定你本地开发环境都已部署好（已关联腾讯或阿里云服务空间），并且具备数据库相关基础知识（范式、表结构、表关联等）。</p><h3>一、创建数据表</h3><p>在uniCloud Web控制台先创建好相关的表opendb-mall-goods和opendb-mall-sku，本例只用到了这两个表。</p><h3>二、编写云函数</h3><pre class="javascript">//&nbsp;商品类云函数
+&#39;use&nbsp;strict&#39;;
+const&nbsp;db&nbsp;=&nbsp;uniCloud.database()
+exports.main&nbsp;=&nbsp;async&nbsp;(events,&nbsp;context)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;switch&nbsp;(events.action)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;list&#39;:&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;查询商品列表
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;new&nbsp;Promise((resolve,&nbsp;reject)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;db.collection(&#39;opendb-mall-goods&#39;).aggregate().lookup({
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from:&nbsp;&#39;opendb-mall-sku&#39;,&nbsp;//&nbsp;附表
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;localField:&nbsp;&#39;_id&#39;,&nbsp;//&nbsp;主表主键
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;foreignField:&nbsp;&#39;goods_id&#39;,&nbsp;//&nbsp;主表在附表的外键名
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;as:&nbsp;&#39;skuList&#39;&nbsp;//&nbsp;附表数据
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}).end().then(res&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resolve(res)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}).catch(err&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reject(err)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;info&#39;:&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;查询商品详情
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;new&nbsp;Promise((resolve,&nbsp;reject)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;db.collection(&#39;opendb-mall-goods&#39;).aggregate().lookup({
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from:&nbsp;&#39;opendb-mall-sku&#39;,&nbsp;//&nbsp;附表
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;localField:&nbsp;&#39;_id&#39;,&nbsp;//&nbsp;主表主键名
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;foreignField:&nbsp;&#39;goods_id&#39;,&nbsp;//&nbsp;主表在附表的外键名
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;as:&nbsp;&#39;skuList&#39;&nbsp;//&nbsp;附表数据
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}).match({
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_id:&nbsp;events.id
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}).end().then(res&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resolve(res)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}).catch(err&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reject(err)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}</pre><p>以上列表和详情的代码区别只是详情多了一个match()方法，返回数据分别如下</p><pre class="javascript">//&nbsp;列表
+data:&nbsp;[{
+&nbsp;&nbsp;&nbsp;&nbsp;_id:&nbsp;&quot;41ae62ef62161045087a14de5e9d8038&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;total_sell_count:&nbsp;&quot;0&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;comment_count:&nbsp;&quot;0&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;goods_sn:&nbsp;&quot;001&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;is_alone_sale:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;is_best:&nbsp;false,
+&nbsp;&nbsp;&nbsp;&nbsp;is_hot:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;is_new:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;is_on_sale:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;is_real:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;month_sell_count:&nbsp;&quot;0&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;name:&nbsp;&quot;测试商品名称&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;remain_count:&nbsp;&quot;0&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;skuList:&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{_id:&nbsp;&quot;54ad1eea621610dc1278dc9809d927b0&quot;,&nbsp;goods_id:&nbsp;&quot;41ae62ef62161045087a14de5e9d8038&quot;,&nbsp;price:&nbsp;&quot;0.01&quot;,…},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{_id:&nbsp;&quot;617ef50c6221b6f909aea6d2395ce928&quot;,&nbsp;goods_id:&nbsp;&quot;41ae62ef62161045087a14de5e9d8038&quot;,&nbsp;price:&nbsp;&quot;0.02&quot;,…},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{_id:&nbsp;&quot;bf4a0bf26221bec212b32e39651e8b8f&quot;,&nbsp;goods_id:&nbsp;&quot;41ae62ef62161045087a14de5e9d8038&quot;,&nbsp;price:&nbsp;&quot;0.02&quot;,…}
+&nbsp;&nbsp;&nbsp;&nbsp;]
+},
+{_id:&nbsp;&quot;41ae62ef622b0f850baf305d3bd85b84&quot;,&nbsp;is_new:&nbsp;true,&nbsp;is_on_sale:&nbsp;true,&nbsp;is_real:&nbsp;true,…}]
+//&nbsp;详情
+data:&nbsp;[{
+&nbsp;&nbsp;&nbsp;&nbsp;_id:&nbsp;&quot;41ae62ef62161045087a14de5e9d8038&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;total_sell_count:&nbsp;&quot;0&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;comment_count:&nbsp;&quot;0&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;goods_sn:&nbsp;&quot;001&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;is_alone_sale:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;is_best:&nbsp;false,
+&nbsp;&nbsp;&nbsp;&nbsp;is_hot:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;is_new:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;is_on_sale:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;is_real:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;month_sell_count:&nbsp;&quot;0&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;name:&nbsp;&quot;测试商品名称&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;remain_count:&nbsp;&quot;0&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;skuList:&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{_id:&nbsp;&quot;54ad1eea621610dc1278dc9809d927b0&quot;,&nbsp;goods_id:&nbsp;&quot;41ae62ef62161045087a14de5e9d8038&quot;,&nbsp;price:&nbsp;&quot;0.01&quot;,&nbsp;sku_name:&nbsp;&quot;白色&quot;,&nbsp;stock:&nbsp;100,&nbsp;…},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{_id:&nbsp;&quot;617ef50c6221b6f909aea6d2395ce928&quot;,&nbsp;goods_id:&nbsp;&quot;41ae62ef62161045087a14de5e9d8038&quot;,&nbsp;price:&nbsp;&quot;0.02&quot;,&nbsp;sku_name:&nbsp;&quot;黑色&quot;,&nbsp;stock:&nbsp;200,&nbsp;…},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{_id:&nbsp;&quot;bf4a0bf26221bec212b32e39651e8b8f&quot;,&nbsp;goods_id:&nbsp;&quot;41ae62ef62161045087a14de5e9d8038&quot;,&nbsp;price:&nbsp;&quot;0.03&quot;,&nbsp;sku_name:&nbsp;&quot;紫色&quot;,&nbsp;stock:&nbsp;300,&nbsp;…}
+&nbsp;&nbsp;&nbsp;&nbsp;]
+}]</pre><h3>三、模板代码</h3><pre class="javascript">//&nbsp;获取商品列表
+uniCloud.callFunction({
+&nbsp;&nbsp;&nbsp;&nbsp;name:&nbsp;&#39;goods&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;data:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;action:&nbsp;&#39;list&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}).then(res&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;res.result.data.forEach(item&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.goodsList.push(item)
+&nbsp;&nbsp;&nbsp;&nbsp;})
+})
+//&nbsp;获取商品详情
+uniCloud.callFunction({
+&nbsp;&nbsp;&nbsp;&nbsp;name:&nbsp;&#39;goods&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;data:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;action:&nbsp;&#39;info&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;id:&nbsp;&#39;商品id&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}).then(res&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;console.log(res.result)
+})</pre><h3>四、说明</h3><p>1、本地编写好的云函数需要右键上传部署才会生效；</p><p>2、免费云空间对函数个数有限制，本例中云函数用参数形式实现不同查询需求，可以有效减少云函数数量；</p><p>3、相比于Mysql关系型数据库，MongoDB是文档型数据库，最大的特点是文档型数据库表是Json结构，字段可以自由扩展（除主要字段外，每条数据都可以拥有不同的字段名和字段数），非常方便。</p><p>4、unicloud-db前端组件是个极具创新的东西，可以在模板上直接获取数据而不需要像上面那样写云函数，并且是整套流程都做好了，包括加载成功、失败、数据分页等，但在我深入使用之后还是感觉有点不习惯，不如写云函数调用的方式来得直接与方便，有兴趣可以学学。</p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2022 254555778@qq.com</div>
+</footer>
+</body>
+</html>
