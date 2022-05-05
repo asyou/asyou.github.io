@@ -195,7 +195,7 @@ protected&nbsp;function&nbsp;buildPages($pages,$pages_cur,$pages_last,$category)
 &nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;$html&nbsp;.=&nbsp;&quot;&lt;/ul&gt;&quot;;
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;$html;
-}</pre><p>这是生成静态的核心代码，自动处理列表页、内容页，并且自动生成了分页内容。<br/></p><p><strong>三、其他说明</strong></p><p>1、本实例前端用的是bootstrap5.1.3，目前是最新版本，其他版本分页数据结构可能不一样；</p><p>2、需要自行处理栏目页、详情页生成所需的模板文件；</p><p>3、代码高亮用到了hightlight.js，并修改了源码使之匹配后台ueditor编辑器（该编辑器不支持&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;嵌套）。</p>            </div>
+}</pre><p>这是生成静态的核心代码，自动处理列表页、内容页，并且自动生成了分页内容。<br/></p><p><strong>三、其他说明</strong></p><p>1、本例前端用的是bootstrap5.1.3，目前是最新版本，其他版本分页数据结构可能不一样；</p><p>2、本例用到的栏目分类表主要字段有name和nickname，类型分别为中文和英文；</p><p>3、本例目前只实现了整站更新，单文件生成待后续更新；</p><p>4、需要自行处理栏目页、详情页生成HTML所需的模板文件；</p><p>5、代码高亮用到了hightlight.js，并修改了源码使之匹配后台ueditor编辑器（该编辑器不支持&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;嵌套）；</p><p>6、上传图片后，需要在源码视图中手动修改图片路径，把/uploads/前面的的路径删除（如果有的话）；</p><p>7、可以把静态HTML根目录设置为本地git目录，连接远程github，这样在生成后即可实时git push上去。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
