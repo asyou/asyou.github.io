@@ -170,7 +170,11 @@ protected&nbsp;function&nbsp;buildPages($pages,$pages_cur,$pages_last,$category)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($pages_cur&nbsp;==&nbsp;1)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$html&nbsp;.=&nbsp;&quot;&lt;li&nbsp;class=\&quot;page-item&nbsp;disabled\&quot;&gt;&lt;span&nbsp;class=\&quot;page-link\&quot;&gt;«&lt;/span&gt;&lt;/li&gt;&quot;;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$html&nbsp;.=&nbsp;&quot;&lt;li&nbsp;class=\&quot;page-item\&quot;&gt;&lt;a&nbsp;class=\&quot;page-link\&quot;&nbsp;href=\&quot;/{$category}_&quot;.($pages_cur-1)&nbsp;.&quot;.html\&quot;&gt;«&lt;/a&gt;&lt;/li&gt;&quot;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($pages_cur&nbsp;==&nbsp;2)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$html&nbsp;.=&nbsp;&quot;&lt;li&nbsp;class=\&quot;page-item\&quot;&gt;&lt;a&nbsp;class=\&quot;page-link\&quot;&nbsp;href=\&quot;/{$category}.html\&quot;&gt;«&lt;/a&gt;&lt;/li&gt;&quot;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$html&nbsp;.=&nbsp;&quot;&lt;li&nbsp;class=\&quot;page-item\&quot;&gt;&lt;a&nbsp;class=\&quot;page-link\&quot;&nbsp;href=\&quot;/{$category}_&quot;.($pages_cur-1)&nbsp;.&quot;.html\&quot;&gt;«&lt;/a&gt;&lt;/li&gt;&quot;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;($i=$pages_start;&nbsp;$i&lt;=$pages_end;&nbsp;$i++)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($i&nbsp;!=&nbsp;$pages_cur)&nbsp;{
