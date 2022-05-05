@@ -57,7 +57,7 @@
             <h1>thinkphp5生成静态html</h1>
             <span class="date"><small>2022-05-05</small></span>
             <div class="mt-4">
-                <p>本文介绍如何利用thinkphp5生成全站静态html，自动处理栏目列表、分页和详情页，所有操作一键生成。</p><p>先介绍下背景，Github支持搭建免费个人博客，但只支持纯静态网站，不支持php、jsp等动态语言。刚开始完全可以自行处理文章列表、文章详情，以及分页展示。但随着文章列表越来越多，单纯靠手工去挨个修改每个静态页已显得不适合了，所以花了点时间用thinkphp搭建了一个静态生成功能，经测试完全达到预期要求。</p><p>简单介绍一下博客架构，导航处有若干菜单分类，每个菜单分类对应一个文章列表，每个分类列表（含首页）都有其分页，所有详情页统一在一个文件夹内，按ID号生成文档，结构大致如下：</p><p>/</p><p>|--categories</p><p>|--|--分类1.html</p><p>|--|--分类2.html</p><p>|--|--分类*.html</p><p>|--common&nbsp;公共JS、CSS文件</p><p>|--content</p><p>|--|--1.html</p><p>|--|--2.html</p><p>|--|--*.html</p><p>|--uploads&nbsp;图片等附件</p><p>|--index.html</p><p>|--index_2.html</p><p>|--index_*.html</p><p>在后台文章管理中添加一个按钮，点击一键更新文档</p><p><img src="/uploads/20220505/f8f0a70aad17ef0730455216b4a26656.png"/></p><p>新增或修改文章后，点击按钮把所有文章按照上述网站结构生成静态HTML。</p><p><strong>一、生成静态方法</strong></p><p>thinkphp早期的版本自带了buildHtml方法，不过在后来的更新中移除了，现在需要移回来。</p><pre class="php">//&nbsp;/thinkphp/library/think/Controller.php
+                <p>本文介绍如何利用thinkphp5生成全站静态html，自动处理栏目列表、分页和详情页，所有操作一键生成。</p><p>先介绍下背景，Github支持搭建免费个人博客，但只支持纯静态网站，不支持php、jsp等动态语言。刚开始完全可以自行处理文章列表、文章详情，以及分页展示。但随着文章列表越来越多，单纯靠手工去挨个修改每个静态页已显得不适合了，所以花了点时间用thinkphp搭建了一个静态生成功能，经测试完全达到预期要求。</p><p>简单介绍一下博客架构，导航处有若干菜单分类，每个菜单分类对应一个文章列表，每个分类列表（含首页）都有其分页，所有详情页统一在一个文件夹内，按ID号生成文档，结构大致如下：</p><p>/</p><p>|--categories</p><p>|--|--分类1.html</p><p>|--|--分类2.html</p><p>|--|--分类*.html</p><p>|--common&nbsp;公共JS、CSS文件</p><p>|--content</p><p>|--|--1.html</p><p>|--|--2.html</p><p>|--|--*.html</p><p>|--uploads&nbsp;图片等附件</p><p>|--index.html</p><p>|--index_2.html</p><p>|--index_*.html</p><p>本例用的后台是Fastadmin后台管理系统，结合ThinkPHP5.0开发而来，如果对Fastadmin不熟，可参考本站博文：<a href="11.html">Fastadmin后台框架的使用心得与分享</a>，先使用该后台系统搭建好博客基本的结构，分类表、文章表等。</p><p><strong>一、生成静态方法</strong></p><p>生成静态HTML主要依赖thinkphp的buildHtml()方法，早期的版本自带了此方法，不过在后来的版本中移除了，现在需要移回来。</p><pre class="php">//&nbsp;/thinkphp/library/think/Controller.php
 /**
 &nbsp;*&nbsp;生成静态页面
 &nbsp;*&nbsp;@access&nbsp;protected
@@ -77,7 +77,7 @@ protected&nbsp;function&nbsp;buildHtml($htmlfile=&#39;&#39;,$htmlpath=&#39;&#39;
 &nbsp;&nbsp;&nbsp;&nbsp;$File&nbsp;=&nbsp;new&nbsp;\think\template\driver\File();
 &nbsp;&nbsp;&nbsp;&nbsp;$File-&gt;write($htmlfile,&nbsp;$content);
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;$content;
-}</pre><p><strong>二、处理按钮事件</strong></p><p>点击按钮后执行的方法</p><pre class="php">&nbsp;//&nbsp;后台控制器方法
+}</pre><p><br/></p><p style="white-space: normal;"><strong>二、添加自定义按钮</strong></p><p style="white-space: normal;">在后台文章管理中添加一个按钮，点击一键更新文档</p><p style="white-space: normal;"><img src="http://update.github.hk/uploads/20220505/f8f0a70aad17ef0730455216b4a26656.png"/></p><p style="white-space: normal;">新增或修改文章后，点击按钮把所有文章按照上述网站结构生成静态HTML；或者勾选指定文章单独生成内容页。</p><p><strong>三、处理按钮事件</strong></p><p>点击按钮后执行的方法</p><pre class="php">//&nbsp;后台控制器方法
 /**
 &nbsp;*&nbsp;更新文档
 &nbsp;*&nbsp;@param&nbsp;array&nbsp;$ids
@@ -91,7 +91,14 @@ public&nbsp;function&nbsp;build()
 &nbsp;&nbsp;&nbsp;&nbsp;
 &nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(isset($params[&#39;ids&#39;]))&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;有ids，则只更新指定ID的文档
-
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$data[&#39;list&#39;]&nbsp;=&nbsp;$this-&gt;model-&gt;field([&#39;id&#39;,&#39;title&#39;,&#39;category_ids&#39;,&#39;createtime&#39;])-&gt;where([&#39;id&#39;=&gt;[&#39;IN&#39;,$params[&#39;ids&#39;]]])-&gt;select();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;($i=0;&nbsp;$i&lt;count($data[&#39;list&#39;]);&nbsp;$i++)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$data[&#39;info&#39;]&nbsp;=&nbsp;$this-&gt;model-&gt;field([&#39;id&#39;,&#39;category_ids&#39;,&#39;title&#39;,&#39;keywords&#39;,&#39;description&#39;,&#39;content&#39;,&#39;createtime&#39;])-&gt;where([&#39;id&#39;=&gt;$data[&#39;list&#39;][$i][&#39;id&#39;]])-&gt;find();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$categories&nbsp;=&nbsp;$this-&gt;categoryModel-&gt;field([&#39;id&#39;,&#39;name&#39;,&#39;nickname&#39;])-&gt;where(&#39;FIND_IN_SET(&#39;.$data[&#39;list&#39;][$i][&#39;category_ids&#39;].&#39;,id)&#39;)-&gt;select();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$data[&#39;cur&#39;]&nbsp;=&nbsp;$categories[0][&#39;nickname&#39;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$this-&gt;view-&gt;assign(&#39;data&#39;,$data);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$this-&gt;buildHtml($data[&#39;list&#39;][$i][&#39;id&#39;],&nbsp;&#39;./静态HTML根目录/content/&#39;,&#39;article/build/detail&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;否则更新所有文档，包括列表页
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$pages&nbsp;=&nbsp;10;
@@ -199,7 +206,7 @@ protected&nbsp;function&nbsp;buildPages($pages,$pages_cur,$pages_last,$category)
 &nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;$html&nbsp;.=&nbsp;&quot;&lt;/ul&gt;&quot;;
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;$html;
-}</pre><p>这是生成静态的核心代码，自动处理列表页、内容页，并且自动生成了分页内容。<br/></p><p><strong>三、其他说明</strong></p><p>1、本例前端用的是bootstrap5.1.3，目前是最新版本，其他版本分页数据结构可能不一样；</p><p>2、本例用到的栏目分类表主要字段有name和nickname，类型分别为中文和英文；</p><p>3、本例目前只实现了整站更新，单文件生成待后续更新；</p><p>4、需要自行处理栏目页、详情页生成HTML所需的模板文件；</p><p>5、代码高亮用到了hightlight.js，并修改了源码使之匹配后台ueditor编辑器（该编辑器不支持&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;嵌套）；</p><p>6、上传图片后，需要在源码视图中手动修改图片路径，把/uploads/前面的的路径删除（如果有的话）；</p><p>7、可以把静态HTML根目录设置为本地git目录，连接远程github，这样在生成后即可实时git push上去。</p>            </div>
+}</pre><p>这是生成静态的核心代码，自动处理列表页、内容页，并且自动生成了分页内容。<br/></p><p><strong>四、其他说明</strong></p><p>1、本例前端用的是bootstrap5.1.3，目前是最新版本，其他版本分页数据结构可能不一样；</p><p>2、本例用到的栏目分类表主要字段有name和nickname，类型分别为中文和英文；</p><p>3、本例实现了整站生成，也实现了指定文件生成（单个或多个）；</p><p>4、需要自行处理栏目页、详情页生成HTML所需的模板文件；</p><p>5、代码高亮用到了hightlight.js，并修改了源码使之匹配后台ueditor编辑器（该编辑器不支持&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;嵌套）；</p><p>6、上传图片后，需要在源码视图中手动修改图片路径，把/uploads/前面的url路径删除（如果有的话）；</p><p>7、可以把静态HTML根目录设置为本地git目录，连接远程github，这样在生成后即可实时git push上去；</p><p>最终实现的效果，是在本地电脑上搭建了一个动态的博客后台，前台即是一个博客网站，同时也在/public/目录中生成了一个纯静态博客站，把该目录放到服务器上即是一个可正常浏览的纯静态网站。如此一来，便可以在自己电脑上写博客，本地查看测试后再推送到github上，十分方便！</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
