@@ -77,7 +77,7 @@ protected&nbsp;function&nbsp;buildHtml($htmlfile=&#39;&#39;,$htmlpath=&#39;&#39;
 &nbsp;&nbsp;&nbsp;&nbsp;$File&nbsp;=&nbsp;new&nbsp;\think\template\driver\File();
 &nbsp;&nbsp;&nbsp;&nbsp;$File-&gt;write($htmlfile,&nbsp;$content);
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;$content;
-}</pre><p><br/></p><p style="white-space: normal;"><strong>二、添加自定义按钮</strong></p><p style="white-space: normal;">在后台文章管理中添加一个按钮，点击一键更新文档</p><p style="white-space: normal;"><img src="http://update.github.hk/uploads/20220505/f8f0a70aad17ef0730455216b4a26656.png"/></p><p style="white-space: normal;">新增或修改文章后，点击按钮把所有文章按照上述网站结构生成静态HTML；或者勾选指定文章单独生成内容页。</p><p><strong>三、处理按钮事件</strong></p><p>点击按钮后执行的方法</p><pre class="php">//&nbsp;后台控制器方法
+}</pre><p><br/></p><p style="white-space: normal;"><strong>二、添加自定义按钮</strong></p><p style="white-space: normal;">在后台文章管理中添加一个按钮，点击一键更新文档</p><p style="white-space: normal;"><img src="/uploads/20220505/f8f0a70aad17ef0730455216b4a26656.png"/></p><p style="white-space: normal;">新增或修改文章后，点击按钮把所有文章按照上述网站结构生成静态HTML；或者勾选指定文章单独生成内容页。</p><p><strong>三、处理按钮事件</strong></p><p>点击按钮后执行的方法</p><pre class="php">//&nbsp;后台控制器方法
 /**
 &nbsp;*&nbsp;更新文档
 &nbsp;*&nbsp;@param&nbsp;array&nbsp;$ids
