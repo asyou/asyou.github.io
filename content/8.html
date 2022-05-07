@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>PHPQrcode生成二维码 - 王维的博客</title>
+<title>PHPQrcode生成二维码，支持嵌入logo，支持仅base4输出 - 王维的博客</title>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="keywords" content=""/>
-<meta name="description" content="" />
+<meta name="keywords" content="PHPQrcode,二维码,生成二维码,PHP生成二维码"/>
+<meta name="description" content="PHP生成带logo的二维码" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
 <script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
@@ -54,17 +54,18 @@
 </nav>
     <div class="container">
         <div class="content mt-3">
-            <h1>PHPQrcode生成二维码</h1>
+            <h1>PHPQrcode生成二维码，支持嵌入logo，支持仅base4输出</h1>
             <span class="date"><small>2022-02-22</small></span>
             <div class="mt-4">
-                <p>利用PHP生成二维码是很常用的功能，用于支付、分享海报等。</p><h3>本文要实现的功能及流程</h3><p>1、后台部署phpQrcode插件，实现API接口或任何需要的地方调用；</p><p>2、创建好的二维码可以直接输出图片，也可以转成base64格式，适应不同需要。</p><p><br/></p><h3>第一步，下载phpQrcode插件</h3><p>插件地址：http://sourceforge.net/projects/phpqrcode/，<a href="http://sourceforge.net/projects/phpqrcode/" target="_blank">点击下载</a></p><p>下载好后解压，放入vendor目录。</p><h3>第二步，在全局的common.php中创建2个函数</h3><pre class="php">//&nbsp;/application/common.php
+                <p>利用PHP生成二维码是很常用的功能，用于支付、分享海报等。</p><h3>本文要实现的功能及流程</h3><p>1、后台部署PHPQrcode插件，实现API接口或任何需要的地方调用；</p><p>2、可以生成二维码并保存在服务器上，适用于常用二维码且内容长期不变的场景；也可以仅生成base64二维码文件流，不保存实际图片；</p><p>3、上述两种方式都支持是否在生成的二维码中间嵌入logo。</p><p><br/></p><h3>第一步，下载phpQrcode插件</h3><p>插件地址：http://sourceforge.net/projects/phpqrcode/，<a href="http://sourceforge.net/projects/phpqrcode/" target="_blank">点击下载</a></p><p>下载好后解压，放入vendor目录。</p><h3>第二步，在全局的common.php中创建2个函数</h3><pre class="php">//&nbsp;/application/common.php
 /**
 &nbsp;*&nbsp;生成二维码
 &nbsp;*&nbsp;@param&nbsp;string&nbsp;$content&nbsp;二维码内容
 &nbsp;*&nbsp;@param&nbsp;string&nbsp;$path&nbsp;保存路径
+&nbsp;*&nbsp;@param&nbsp;string&nbsp;$logo&nbsp;二维码logo
 &nbsp;*&nbsp;@return&nbsp;string&nbsp;$file&nbsp;二维码文件路径
 &nbsp;*/
-function&nbsp;createQrcode($content,$path)
+function&nbsp;createQrcode($content,$path,$logo=null)
 {
 &nbsp;&nbsp;&nbsp;&nbsp;vendor(&#39;phpqrcode.phpqrcode&#39;);
 &nbsp;&nbsp;&nbsp;&nbsp;$errorCorrectionLevel&nbsp;=&nbsp;&#39;L&#39;;&nbsp;&nbsp;//容错级别
@@ -79,30 +80,70 @@ function&nbsp;createQrcode($content,$path)
 &nbsp;&nbsp;&nbsp;&nbsp;\QRcode::png($content,&nbsp;$fullpath&nbsp;,&nbsp;$errorCorrectionLevel,&nbsp;$matrixPointSize,&nbsp;2);
 &nbsp;&nbsp;&nbsp;&nbsp;$QR&nbsp;=&nbsp;$fullpath;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//已经生成的原始二维码图片文件
 &nbsp;&nbsp;&nbsp;&nbsp;$QR&nbsp;=&nbsp;imagecreatefromstring(file_get_contents($QR));
-&nbsp;&nbsp;&nbsp;&nbsp;//输出图片
-&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;imagepng($QR,&nbsp;&#39;qrcode.png&#39;);
-&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;imagedestroy($QR);
+
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;二维码嵌入logo
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($logo)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$logo&nbsp;=&nbsp;imagecreatefromstring(file_get_contents($logo));&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$QR_width&nbsp;=&nbsp;imagesx($QR);//二维码图片宽度
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$QR_height&nbsp;=&nbsp;imagesy($QR);//二维码图片高度
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$logo_width&nbsp;=&nbsp;imagesx($logo);//logo图片宽度
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$logo_height&nbsp;=&nbsp;imagesy($logo);//logo图片高度
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$logo_qr_width&nbsp;=&nbsp;$QR_width&nbsp;/&nbsp;4;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$scale&nbsp;=&nbsp;$logo_width&nbsp;/&nbsp;$logo_qr_width;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$logo_qr_height&nbsp;=&nbsp;$logo_height&nbsp;/&nbsp;$scale;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$from_width&nbsp;=&nbsp;($QR_width&nbsp;-&nbsp;$logo_qr_width)&nbsp;/&nbsp;2;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//重新组合图片并调整大小
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;imagecopyresampled($QR,&nbsp;$logo,&nbsp;$from_width,&nbsp;$from_width,&nbsp;0,&nbsp;0,&nbsp;$logo_qr_width,&nbsp;$logo_qr_height,&nbsp;$logo_width,&nbsp;$logo_height);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;输出图片
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;imagepng($QR,&nbsp;$fullpath);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;销毁图片
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;imagedestroy($QR);
+&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;substr($fullpath,&nbsp;1,&nbsp;strlen($fullpath)-1);
 }
 
 /**
 *&nbsp;生成二维码以base64输出,
-*&nbsp;$content&nbsp;二维码内容
+*&nbsp;@param&nbsp;string&nbsp;$content&nbsp;二维码内容
+*&nbsp;@param&nbsp;string&nbsp;$logo&nbsp;二维码logo
+*&nbsp;@return&nbsp;string
 */
-function&nbsp;createQrcode64($content,&nbsp;$level&nbsp;=&nbsp;&#39;L&#39;,&nbsp;$size&nbsp;=&nbsp;5,&nbsp;$margin&nbsp;=&nbsp;2)
+function&nbsp;createQrcode64($content,$logo=null,$level=&#39;L&#39;,$size=5,$margin=2)
 {
 &nbsp;&nbsp;&nbsp;&nbsp;Vendor(&#39;phpqrcode.phpqrcode&#39;);
-&nbsp;&nbsp;&nbsp;&nbsp;$QRcode&nbsp;=&nbsp;new&nbsp;\QRcode();
 &nbsp;&nbsp;&nbsp;&nbsp;ob_start();&nbsp;//&nbsp;在服务器打开一个缓冲区来保存所有的输出
-&nbsp;&nbsp;&nbsp;&nbsp;$QRcode-&gt;png($content,false,$level,$size,$margin);
+&nbsp;&nbsp;&nbsp;&nbsp;\QRcode::png($content,false,$level,$size,$margin);
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;如果有logo
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($logo)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$ob_content&nbsp;=&nbsp;ob_get_contents();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ob_end_clean();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$QR&nbsp;=&nbsp;imagecreatefromstring($ob_content);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$logo&nbsp;=&nbsp;imagecreatefromstring(file_get_contents($logo));
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(imageistruecolor($logo))&nbsp;imagetruecolortopalette($logo,&nbsp;false,&nbsp;65535);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$QR_width&nbsp;=&nbsp;imagesx($QR);//二维码图片宽度
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$QR_height&nbsp;=&nbsp;imagesy($QR);//二维码图片高度
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$logo_width&nbsp;=&nbsp;imagesx($logo);//logo图片宽度
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$logo_height&nbsp;=&nbsp;imagesy($logo);//logo图片高度
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$logo_qr_width&nbsp;=&nbsp;$QR_width&nbsp;/&nbsp;4;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$scale&nbsp;=&nbsp;$logo_width&nbsp;/&nbsp;$logo_qr_width;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$logo_qr_height&nbsp;=&nbsp;$logo_height&nbsp;/&nbsp;$scale;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$from_width&nbsp;=&nbsp;($QR_width&nbsp;-&nbsp;$logo_qr_width)&nbsp;/&nbsp;2;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//重新组合图片并调整大小
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;imagecopyresampled($QR,&nbsp;$logo,&nbsp;$from_width,&nbsp;$from_width,&nbsp;0,&nbsp;0,&nbsp;$logo_qr_width,&nbsp;$logo_qr_height,&nbsp;$logo_width,&nbsp;$logo_height);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ob_start();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;输出图片
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;imagepng($QR);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;销毁图片
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;imagedestroy($QR);
+&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;$imageString&nbsp;=&nbsp;base64_encode(ob_get_contents());
-&nbsp;&nbsp;&nbsp;&nbsp;ob_end_clean();&nbsp;//清除缓冲区的内容，并将缓冲区关闭，但不会输出内容
+&nbsp;&nbsp;&nbsp;&nbsp;ob_end_clean();
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&quot;data:image/jpg;base64,&quot;.$imageString;
 }</pre><h3>在api接口中使用</h3><pre class="php">//&nbsp;该函数需要指定二维码图片存放目录，返回二维码图片存放路径
-$data[&#39;qrcode&#39;]&nbsp;=&nbsp;createQrcode(&#39;http://www.xxx.com/article/detail/id/1.html&#39;,&nbsp;&#39;/qrcode&#39;);
+$data[&#39;qrcode&#39;]&nbsp;=&nbsp;createQrcode(&#39;http://www.xxx.com/article/detail/id/1.html&#39;,&nbsp;&#39;/qrcode&#39;,&#39;logo.png&#39;);
 //&nbsp;该函数仅返回二维码的base64文件流，前端可直接用img渲染
-$data[&#39;qrcode64&#39;]&nbsp;=&nbsp;createQrcode(&#39;http://www.xxx.com/article/detail/id/1.html&#39;);
-return&nbsp;$data;</pre><h3>说明：</h3><p>两个函数的第一个参数都是二维码内容，可以是任意字符串内容；</p><p>两种方式生成二维码各有优劣，第一种适合二维码不变的情况，可以保存在服务器和数据库中长期重复使用，缺点是时间久了会生成大量二维码图片占用服务器硬盘空间；第二种直接输出文件流，适合不希望保存二维码的情况，也不占用硬盘空间，缺点是可能会轻微影响手机性能（如果性能太差的话）；</p><p>如果想在生成的二维码中嵌入logo，可以自行扩展。</p>            </div>
+$data[&#39;qrcode64&#39;]&nbsp;=&nbsp;createQrcode(&#39;http://www.xxx.com/article/detail/id/1.html&#39;,&#39;logo.png&#39;);
+return&nbsp;$data;</pre><h3>说明：</h3><p>1、两个函数的第一个参数都是二维码内容，可以是任意字符串内容；</p><p>2、两种方式生成二维码各有优劣，第一种适合二维码不变的情况，可以保存在服务器和数据库中长期重复使用，缺点是时间久了会生成大量二维码图片占用服务器硬盘空间；第二种直接输出文件流，适合不希望保存二维码的情况，也不占用硬盘空间，缺点是可能会轻微影响手机性能（如果性能太差的话）；</p><p>3、调用方法时如果传入了logo图片，则会把logo自动嵌入二维码中，logo图片支持本地相对路径，也支持远程图片，不过目前只测试了png格式，其他格式未测试。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
