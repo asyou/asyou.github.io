@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>浅谈数据结构系列之二《数据类型》 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content="数据类型,数据类型入门"/>
+<meta name="description" content="数据类型" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
+<script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    img {
+        max-width: 100%;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav">
+								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+		</div>
+	</div>
+</nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>浅谈数据结构系列之二《数据类型》</h1>
+            <span class="date"><small>2022-05-08</small></span>
+            <div class="mt-4">
+                <p>在上一篇介绍完数据结构的基本概念后，本篇来重点讲解数据结构中的另一个重要概念，即数据类型。<br/></p><p>几乎任何编程入门的书籍或教程，开篇都会先介绍数据类型，那么，数据类型又是什么？</p><p>顾名思义，数据类型就是数据的类型（废话...），几乎所有开发语言都有其固定的数据类型，当然，绝大多数都是通用的。</p><p>计算机中为什么要对数据进行类型的区别，是因为计算机对不同的数据类型有着不同的处理方式和逻辑。就好像是生活中要用不同的刀处理不同的食物一样，蔬菜用普通的菜刀，筒骨要用斩骨刀，削皮要用削皮刀一样。</p><p><strong>数据类型一般分为数值型和文本型两大类</strong></p><p>下面以PHP开发语言为例</p><p><strong>PHP基本数据类型</strong></p><p>1、字符串型（String）</p><p style="text-indent: 0em;">字符串是连续的字符序列，在其它语言中，字符和字符串是两种不同的数据类型，但在 PHP 中，统一将字符和字符串当作字符串数据类型。在 PHP 中，定义字符串有三种方式，分别是单引号方式、双引号方式、Heredoc 方式。</p><p style="text-indent: 0em;">可以说，只要在引号中间的字符都可以当作是字符串，换句话说，引号中的数字不再是数值类型，而是字符串。</p><p>2、整型（Integer，简写int）</p><p>在 PHP 中，整型变量称为 integer 或 int 类型，用来表示一个整数，整型的规则如下所示：</p><p>整型必须至少有一个数字（0～9）；</p><p>整型不能包含逗号或空格；</p><p>整型不能包含小数点；</p><p>整型可以是正数或负数。</p><p>注意整型类型不能使用引号，否则就会变成字符型。</p><p>3、浮点型（Float/Double）</p><p>浮点型在 PHP 中被称为 float 类型，也可称为实数，可以用来存储整数和小数，有效的取值范围是 1.8E-308 到 1.8E+308 之间。浮点数的精确度比整型数据类型要高。</p><p>简单理解，浮点型就是带小数的数值。</p><p>4、布尔型（Boolean，简写bool）</p><p>布尔型只有两种值，分别是 TRUE 和 FALSE（不区分大小写），意为逻辑真和逻辑假。</p><p>布尔型在判断语句中不可或缺，是非常重要的条件判断要素，可以根据判断条件不同的结果进行不同的处理流程。</p><p>5、数组（Array）</p><p>数组是一组数据的集合，是将数据按照一定规则组织起来形成的一个整体。数组的本质是存储管理和操作一组变量。按照数组的维度划分，可以有一维数组、二维数组和多维数组。我们可以使用 array() 函数来创建数组。</p><p>数组在实际中运用非常广泛，浏览网页看到的文章、新闻列表，几乎都是由数组结构组成的，经过循环语法展现给用户。</p><p>6、对象（Object）</p><p>对象（Object）可以用于存储数据。在 PHP 中对象必须声明。首先必须使用 class 关键字声明类对象。类是可以包含属性和方法的结构。然后在类中定义数据类型，在实例化的类中使用数据类型。</p><p>在支持面向对象的语言中，可以把各个具体事物的共同特征和行为抽象成一个实体，称之为一个“类”，而对象是类使用 new 关键字实例化后的结果。</p><p>7、资源（Resource）</p><p>资源（Resource）在 PHP 中同样是一种特殊的数据类型。它主要描述一个 PHP 的扩展资源，例如一个数据库查询（Query）、一个打开的文件句柄（fopen）或一个数据库连接（Database Connection）以及字符流（stream）等扩展类型。</p><p>但是我们并不能直接操作这个变量类型，只能通过专门的函数来使用。</p><p>8、空值（NULL）</p><p>NULL 在 PHP 中是一种特殊的数据类型，它只有一个值，即 NULL，表示空值（变量没有值），需要注意的是它与空格的意义不同。</p><p>当满足下列条件时，变量的值为 NULL：</p><p>变量被指定为 NULL 值；</p><p>变量在没有被赋值前，默认值为 NULL；</p><p>使用 unset() 函数删除一个变量后，这个变量值也为 NULL。</p><p><br/></p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2022 254555778@qq.com</div>
+</footer>
+</body>
+</html>
