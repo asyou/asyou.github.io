@@ -57,7 +57,7 @@
             <h1>thinkphp搜索功能使用union联表查询，以及分页处理</h1>
             <span class="date"><small>2022-05-14</small></span>
             <div class="mt-4">
-                <p>项目中有一个全局搜索功能，需要通过关键词查询三个表的数据，并需要使用thinkphp自带的paginate进行分页，通过官方文档或搜索来的资料，都不太接地气，写得不明不白，结合官方文档折腾了半天后最终解决了。<br/></p><p>其实这个功能是有两个核心需要解决的！</p><p>一是多表union查询时，必须保证查询的字段名、顺序完全一致，官方文档是这么说的：注意：UNION 内部的 SELECT 语句必须拥有相同数量的列。列也必须拥有相似的数据类型。同时，每条 SELECT 语句中的列的顺序必须相同。</p><p>二是多表union查询时，如果需要使用官方的paginate进行数据分页，需要使用子查询（这点很关键）！</p><p>也就是说，这个全局搜索功能要最终实现，是要区分使用场景的！移动端一般采用触底加载分页，下面针对这种场景分别给出代码。</p><p><strong>一、前后端分离时，移动端api的请求</strong></p><pre class="php">//&nbsp;api/search/search
+                <p>项目中有一个全局搜索功能，需要通过关键词查询三个表的数据，并需要使用thinkphp自带的paginate进行分页，通过官方文档或搜索来的资料，都不太接地气，写得不明不白，结合官方文档折腾了半天后最终解决了。<br/></p><p>其实这个功能是有两个核心需要解决的！</p><p>一是多表union查询时，必须保证查询的字段名、顺序完全一致，官方文档是这么说的：注意：UNION 内部的 SELECT 语句必须拥有相同数量的列。列也必须拥有相似的数据类型。同时，每条 SELECT 语句中的列的顺序必须相同。</p><p>二是多表union查询时，如果需要使用官方的paginate进行数据分页，需要使用子查询（这点很关键）！</p><p>也就是说，这个全局搜索功能要最终实现，是要区分使用场景的！PC端一般是MVC模式用的是分页按钮，移动端一般采用触底加载分页，下面针对这两种场景分别给出示例代码。</p><p><strong>一、前后端分离时，移动端api的请求</strong></p><pre class="php">//&nbsp;api/search/search
 $data[&#39;list&#39;]&nbsp;=&nbsp;Db::name(&#39;table1&#39;)
 &nbsp;&nbsp;&nbsp;&nbsp;-&gt;field([&#39;id&#39;,&#39;name&#39;,&#39;desc&#39;,&#39;createtime&#39;,&#39;thumbnail&#39;,&#39;auth_type&nbsp;AS&nbsp;type&#39;])
 &nbsp;&nbsp;&nbsp;&nbsp;-&gt;union(&#39;SELECT&nbsp;&#39;id&#39;,&#39;name&#39;,&#39;desc&#39;,&#39;createtime&#39;,`image`&nbsp;AS&nbsp;thumbnail,&quot;courses&quot;&nbsp;AS&nbsp;type&nbsp;FROM&nbsp;table2&nbsp;WHERE&nbsp;name&nbsp;LIKE&nbsp;&quot;%&#39;.$params[&#39;keywords&#39;].&#39;%&quot;&nbsp;ORDER&nbsp;BY&nbsp;id&nbsp;DESC&#39;)
@@ -66,7 +66,7 @@ $data[&#39;list&#39;]&nbsp;=&nbsp;Db::name(&#39;table1&#39;)
 &nbsp;&nbsp;&nbsp;&nbsp;-&gt;order([&#39;id&#39;=&gt;&#39;DESC&#39;])
 &nbsp;&nbsp;&nbsp;&nbsp;-&gt;limit($offset,$limit)
 &nbsp;&nbsp;&nbsp;&nbsp;-&gt;select();</pre><p>注意上述代码中的$offset和$limit需要正确处理，类似下面这样：</p><pre class="php">$limit&nbsp;=&nbsp;$params[&#39;limit&#39;];
-$offset&nbsp;=&nbsp;($params[&#39;pages&#39;]-1)*$limit;</pre><p><strong>二、MVC的场景（非前后端分离）</strong></p><pre class="php">//&nbsp;Search.php
+$offset&nbsp;=&nbsp;($params[&#39;pages&#39;]-1)*$limit;</pre><p><strong>二、MVC模式中的场景（非前后端分离）</strong></p><pre class="php">//&nbsp;Search.php
 $table1&nbsp;=&nbsp;Db::name(&#39;table1&#39;)
 &nbsp;&nbsp;&nbsp;&nbsp;-&gt;field([&#39;id&#39;,&#39;name&#39;,&#39;desc&#39;,&#39;createtime&#39;,&#39;thumbnail&#39;,&#39;auth_type&nbsp;AS&nbsp;type&#39;])
 &nbsp;&nbsp;&nbsp;&nbsp;-&gt;where([&#39;name&#39;=&gt;[&#39;LIKE&#39;,&#39;%&#39;.$params[&#39;keywords&#39;].&#39;%&#39;]])
