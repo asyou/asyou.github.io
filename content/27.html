@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Websocket实现站内即时消息提醒以及定时任务 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content="Websocket,消息提醒,定时任务"/>
+<meta name="description" content="Websocket实现即时消息提醒，以及定时任务，取代系统的定时任务" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
+<script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    img {
+        max-width: 100%;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav">
+								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+		</div>
+	</div>
+</nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>Websocket实现站内即时消息提醒以及定时任务</h1>
+            <span class="date"><small>2022-06-10</small></span>
+            <div class="mt-4">
+                <p>传统的HTTP协议是提供被动式服务，客户端每次发送的请求都需要服务器的反馈回应，当请求结束后便主动释放了连接。也就是客户端通过HTTP主动请求服务器，服务器再根据传递的参数再被动返回相应的内容。</p><p>但如果希望服务器主动向客户端发起请求，或者客户端-服务器即时双向全双工通信，HTTP协议就做不到了，必须使用WebSocket协议。</p><p>本文要实现的功能是，在Fastadmin后台中简单集成WebSocket，以实现即时消息提醒，以及定时任务（取代系统的定时任务，适用于虚拟机等无法使用定时任务的情况）。</p><p>需要实现的功能，1、客服组在录入数据之后，立即自动分配给销售组，同时需要即时弹窗通知对应的销售员；2、销售员跟进的客户，需要在设定的跟进时间之前弹窗提醒，比如提前5分钟。</p><p>由于只需要实现后台管理员账号之间的即时通讯（非聊天），所以只需要在管理员表中增加字段保存会话标识，实现会话标识to会话标识的通信即可。</p><p><strong>实现步骤</strong></p><p><strong>一、集成Gatewayman和workerman</strong></p><p>集成方式参与另一篇文章<a href="13.html">《Thinkphp5使用Workman搭建WebSocket即时聊天服务》</a></p><p><strong>二、前端JS代码</strong></p><p>前端代码需要实现WebSocket连接、通信，并处理连接关闭、连接错误以及断线重连等，同时也要实现心跳检测（防止长时间无通信被服务器关闭连接）。</p><p>下面是代码</p><pre class="javascript">//&nbsp;index.js
+var&nbsp;lockReconnect&nbsp;=&nbsp;false;
+var&nbsp;wsUrl&nbsp;=&nbsp;&#39;ws://127.0.0.1:1236&#39;;
+var&nbsp;ws;
+var&nbsp;tt;
+function&nbsp;createWebSocket()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;try&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ws&nbsp;=&nbsp;new&nbsp;WebSocket(wsUrl);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;init();
+&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;catch(e)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;console.Error(e);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reconnect(wsUrl);
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}
+function&nbsp;init()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;ws.onopen&nbsp;=&nbsp;function&nbsp;()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;连接或重连后刷新会话标识
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ws.send(JSON.stringify({type:&nbsp;&#39;authorize&#39;,admin_id:&nbsp;&#39;管理员ID&#39;}));
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;heartCheck.start();
+&nbsp;&nbsp;&nbsp;&nbsp;};
+&nbsp;&nbsp;&nbsp;&nbsp;ws.onclose&nbsp;=&nbsp;function&nbsp;()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;console.log(&#39;socket&nbsp;closed.&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clearInterval(heartCheck.timer1);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clearInterval(heartCheck.timer2);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reconnect(wsUrl);
+&nbsp;&nbsp;&nbsp;&nbsp;};
+&nbsp;&nbsp;&nbsp;&nbsp;ws.onerror&nbsp;=&nbsp;function()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;console.log(&#39;reconnect...&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clearInterval(heartCheck.timer1);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clearInterval(heartCheck.timer2);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reconnect(wsUrl);
+&nbsp;&nbsp;&nbsp;&nbsp;};
+&nbsp;&nbsp;&nbsp;&nbsp;ws.onmessage&nbsp;=&nbsp;function&nbsp;(event)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;data&nbsp;=&nbsp;JSON.parse(event.data)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;switch(data.type)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;heartbeat&#39;:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;console.log(&#39;heartbeat&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;clues&#39;:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;index&nbsp;=&nbsp;Layer.open({
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type:&nbsp;1,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;title:&nbsp;data.msg,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;area:&nbsp;[&#39;300px&#39;,&#39;auto&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;btn:&nbsp;[&#39;查看&#39;,&#39;全部关闭&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;content:&nbsp;&#39;您收到新的客户线索，姓名：&#39;+data.username+&#39;，点击查看&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yes:&nbsp;function(index,&nbsp;Layero)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Layer.close(index);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;top.window.$(&#39;[addtabs=&quot;103&quot;]&#39;).trigger(&quot;click&quot;);&nbsp;//&nbsp;103是后台菜单ID，点击确定后自动打开或定位到该菜单
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;btn2:&nbsp;function(index,&nbsp;Layero)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Layer.closeAll();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;top.window.$(&#39;[addtabs=&quot;103&quot;]&#39;).trigger(&quot;click&quot;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;schedule&#39;:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(data.data.length&nbsp;&gt;&nbsp;0)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;html&nbsp;=&nbsp;&#39;ID姓名跟进内容下一步计划计划时间&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$.each(data.data,&nbsp;function(i,o)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;html&nbsp;+=&nbsp;&#39;&#39;+o.id+&#39;&#39;+o.name+&#39;&#39;+o.trace_note+&#39;&#39;+o.next_trace_note+&#39;&#39;+o.next_trace_time_text+&#39;&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;html&nbsp;+=&nbsp;&#39;&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;index&nbsp;=&nbsp;Layer.open({
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type:&nbsp;1,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;title:&nbsp;data.msg,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;area:&nbsp;[&#39;600px&#39;,&#39;auto&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;btn:&nbsp;[&#39;确定&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;content:&nbsp;html,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yes:&nbsp;function(index,&nbsp;Layero)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Layer.close(index);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;top.window.$(&#39;[addtabs=&quot;1&quot;]&#39;).trigger(&quot;click&quot;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}
+function&nbsp;reconnect(url)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(lockReconnect)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return;
+&nbsp;&nbsp;&nbsp;&nbsp;};
+&nbsp;&nbsp;&nbsp;&nbsp;lockReconnect&nbsp;=&nbsp;true;
+&nbsp;&nbsp;&nbsp;&nbsp;tt&nbsp;&amp;&amp;&nbsp;clearTimeout(tt);
+&nbsp;&nbsp;&nbsp;&nbsp;tt&nbsp;=&nbsp;setTimeout(function&nbsp;()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;createWebSocket(url);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockReconnect&nbsp;=&nbsp;false;
+&nbsp;&nbsp;&nbsp;&nbsp;},&nbsp;5000);
+}
+var&nbsp;heartCheck&nbsp;=&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;timer1:&nbsp;null,
+&nbsp;&nbsp;&nbsp;&nbsp;timer2:&nbsp;null,
+&nbsp;&nbsp;&nbsp;&nbsp;start:&nbsp;function()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.timer1&nbsp;=&nbsp;setInterval(function()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ws.send(JSON.stringify({
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type:&nbsp;&#39;heartbeat&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;msg:&nbsp;&#39;ping&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},&nbsp;30000)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.timer2&nbsp;=&nbsp;setInterval(function()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ws.send(JSON.stringify({
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type:&nbsp;&#39;schedule&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;admin_id:&nbsp;&#39;管理员ID&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;msg:&nbsp;&#39;check&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},&nbsp;60000)
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}
+createWebSocket(wsUrl);</pre><p>这里第二个定时器是每隔1分钟去查询有哪些客户线索是需要马上跟进的，如果有就即时弹窗提醒。</p><p><strong>三、后端代码</strong></p><p>后端代码主要逻辑都在WebSocket的Events.php中的onMessage方法中<br/></p><p><br/></p><pre class="php">//&nbsp;Events.php/**
+&nbsp;*&nbsp;当客户端发来消息时触发
+&nbsp;*&nbsp;@param&nbsp;int&nbsp;$client_id&nbsp;会话id
+&nbsp;*&nbsp;@param&nbsp;mixed&nbsp;$data&nbsp;具体消息
+&nbsp;*/
+public&nbsp;static&nbsp;function&nbsp;onMessage($client_id,&nbsp;$data)
+{
+&nbsp;&nbsp;&nbsp;&nbsp;$adminModel&nbsp;&nbsp;&nbsp;=&nbsp;new&nbsp;\app\admin\model\Admin;
+&nbsp;&nbsp;&nbsp;&nbsp;$custoemrsModel&nbsp;=&nbsp;new&nbsp;\app\admin\model\customers\Index;
+&nbsp;&nbsp;&nbsp;&nbsp;$logsModel&nbsp;=&nbsp;new&nbsp;\app\admin\model\customers\Logs;
+
+&nbsp;&nbsp;&nbsp;&nbsp;$arr&nbsp;=&nbsp;json_decode($data,&nbsp;true);
+&nbsp;&nbsp;&nbsp;&nbsp;switch($arr[&#39;type&#39;])&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;authorize&#39;:&nbsp;&nbsp;&nbsp;//&nbsp;首次连接，保存或更新用户client_id
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;$arr&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;authorize&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;admin_id&#39;&nbsp;=&gt;&nbsp;&#39;用户ID&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$adminModel-&gt;save([&#39;client_id&#39;=&gt;$client_id],[&#39;id&#39;=&gt;$arr[&#39;admin_id&#39;]]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gateway::bindUid($client_id,$arr[&#39;admin_id&#39;]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;heartbeat&#39;:&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;心跳检测
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;$arr&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;heartbeat&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;msg&#39;&nbsp;=&gt;&nbsp;&#39;ping&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$rsp&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;heartbeat&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;msg&#39;&nbsp;&nbsp;=&gt;&nbsp;&#39;pong&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gateway::sendToClient($client_id,json_encode($rsp));
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;clues&#39;:&nbsp;//&nbsp;线索分配
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;$arr&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;clues&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;name&#39;&nbsp;=&gt;&nbsp;&#39;客户姓名&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;admin_id&#39;&nbsp;=&gt;&nbsp;&#39;用户ID&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$to_client_id&nbsp;=&nbsp;$adminModel-&gt;where([&#39;id&#39;=&gt;$arr[&#39;admin_id&#39;]])-&gt;value(&#39;client_id&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($to_client_id&nbsp;&amp;&amp;&nbsp;Gateway::isOnline($to_client_id))&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$rsp&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;clues&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;msg&#39;&nbsp;=&gt;&nbsp;&#39;接收到新的线索&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;user&#39;&nbsp;=&gt;&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;name&#39;&nbsp;=&gt;&nbsp;$arr[&#39;name&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gateway::sendToClient($to_client_id,json_encode($rsp));
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;schedule&#39;:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;$arr&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;schedule&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;admin_id&#39;&nbsp;=&gt;&nbsp;&#39;用户ID&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;msg&#39;&nbsp;=&gt;&nbsp;&#39;check&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$customers&nbsp;=&nbsp;$logsModel
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;alias(&#39;a&#39;)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;field([&#39;a.id&#39;,&#39;a.trace_note&#39;,&#39;a.next_trace_note&#39;,&#39;a.next_trace_time&#39;,&#39;b.name&#39;])
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;join(&#39;__CUSTOMERS__&nbsp;b&#39;,&#39;a.customers_id=b.id&#39;)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;where([&#39;a.admin_id&#39;=&gt;$arr[&#39;admin_id&#39;],&#39;a.next_trace_time&#39;=&gt;[&#39;BETWEEN&#39;,[time(),time()+(Config::get(&#39;site.offset_time&#39;)/1000)]],&#39;b.status&#39;=&gt;&#39;0&#39;])
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;order([&#39;a.next_trace_time&#39;=&gt;&#39;ASC&#39;])
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;select();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$rsp&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;schedule&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;msg&#39;&nbsp;=&gt;&nbsp;&#39;新日程提醒&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;data&#39;&nbsp;=&gt;&nbsp;$customers
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gateway::sendToClient($client_id,json_encode($rsp));
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}</pre><p><strong>三、添加线索时的即时通知</strong><br/></p><p>这里很简单，从管理员表中查询到自己的client_id，传给Events.php的onMessage方法</p><pre class="php">//&nbsp;Record.php
+$data&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;clues&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&#39;name&#39;&nbsp;=&gt;&nbsp;&#39;客户姓名&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&#39;admin_id&#39;&nbsp;=&gt;&nbsp;&#39;销售ID&#39;
+];
+Events::onMessage($client_id,json_encode($data));&nbsp;//&nbsp;$client_id从表中即时查询</pre><p>添加线索后，自动给对应的销售员发送弹窗提醒。</p><p>四、说明</p><p>1、WebSocket每次连接成功时，都必须携带用户ID去进行一次验证，此操作实际目的是更新其会话标识，因为WebSocket每次重新连接后（比如浏览器刷新、断线等）都会产生新的client_id，所以必须每次都更新一下否则通信会失败。</p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2022 254555778@qq.com</div>
+</footer>
+</body>
+</html>
