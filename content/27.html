@@ -57,7 +57,7 @@
             <h1>Websocket实现站内即时消息提醒以及定时任务</h1>
             <span class="date"><small>2022-06-10</small></span>
             <div class="mt-4">
-                <p>传统的HTTP协议是提供被动式服务，客户端每次发送的请求都需要服务器的反馈回应，当请求结束后便主动释放了连接。也就是客户端通过HTTP主动请求服务器，服务器再根据传递的参数再被动返回相应的内容。</p><p>但如果希望服务器主动向客户端发起请求，或者客户端-服务器即时双向全双工通信，HTTP协议就做不到了，必须使用WebSocket协议。</p><p>本文要实现的功能是，在Fastadmin后台中简单集成WebSocket，以实现即时消息提醒，以及定时任务（取代系统的定时任务，适用于虚拟机等无法使用定时任务的情况）。</p><p>需要实现的功能，1、客服组在录入数据之后，立即自动分配给销售组，同时需要即时弹窗通知对应的销售员；2、销售员跟进的客户，需要在设定的跟进时间之前弹窗提醒，比如提前5分钟。</p><p>由于只需要实现后台管理员账号之间的即时通讯（非聊天），所以只需要在管理员表中增加字段保存会话标识，实现会话标识to会话标识的通信即可。</p><p><strong>实现步骤</strong></p><p><strong>一、集成Gatewayman和workerman</strong></p><p>集成方式参与另一篇文章<a href="13.html">《Thinkphp5使用Workman搭建WebSocket即时聊天服务》</a></p><p><strong>二、前端JS代码</strong></p><p>前端代码需要实现WebSocket连接、通信，并处理连接关闭、连接错误以及断线重连等，同时也要实现心跳检测（防止长时间无通信被服务器关闭连接）。</p><p>下面是代码</p><pre class="javascript">//&nbsp;index.js
+                <p>传统的HTTP协议是提供被动式服务，客户端每次发送的请求都需要服务器的反馈回应，当请求结束后便主动释放了连接。也就是客户端通过HTTP主动请求服务器，服务器再根据传递的参数再被动返回相应的内容。</p><p>但如果希望服务器主动向客户端发起请求，或者客户端-服务器即时双向全双工通信，HTTP协议就做不到了，必须使用WebSocket协议。</p><p>本文要实现的功能是，在Fastadmin后台中简单集成WebSocket，以实现即时消息提醒，以及定时任务（取代系统的定时任务，适用于虚拟机等无法使用定时任务的情况）。</p><p>需要实现的功能，1、客服组在录入数据之后，立即自动分配给销售组，同时需要即时弹窗通知对应的销售员；2、销售员跟进的客户，需要在设定的跟进时间之前弹窗提醒，比如提前5分钟。</p><p>由于只需要实现后台管理员账号之间的即时通讯（非聊天），所以只需要在管理员表中增加字段保存会话标识，实现会话标识to会话标识的通信即可。</p><p><strong>实现步骤</strong></p><p><strong>一、集成Gatewayman和workerman</strong></p><p>集成方式参考另一篇文章<a href="13.html">《Thinkphp5使用Workman搭建WebSocket即时聊天服务》</a></p><p>新建一个模块push，按照官方提示新建Index.php和Events.php两个控制器，直接复制官方代码。</p><p><strong>二、前端JS代码</strong></p><p>前端代码需要实现WebSocket连接、通信，并处理连接关闭、连接错误以及断线重连等，同时也要实现心跳检测（防止长时间无通信被服务器关闭连接）。</p><p>下面是具体代码</p><pre class="javascript">//&nbsp;index.js
 var&nbsp;lockReconnect&nbsp;=&nbsp;false;
 var&nbsp;wsUrl&nbsp;=&nbsp;&#39;ws://127.0.0.1:1236&#39;;
 var&nbsp;ws;
@@ -114,11 +114,11 @@ function&nbsp;init()&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;schedule&#39;:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(data.data.length&nbsp;&gt;&nbsp;0)&nbsp;{
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;html&nbsp;=&nbsp;&#39;ID姓名跟进内容下一步计划计划时间&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;html&nbsp;=&nbsp;&#39;&lt;div&nbsp;style=&quot;padding:&nbsp;20px;&quot;&gt;&lt;table&nbsp;id=&quot;table&quot;&nbsp;class=&quot;table&nbsp;table-striped&nbsp;table-bordered&nbsp;table-hover&nbsp;table-nowrap&quot;&gt;&lt;tr&gt;&lt;th&gt;ID&lt;/th&gt;&lt;th&gt;姓名&lt;/th&gt;&lt;th&gt;跟进内容&lt;/th&gt;&lt;th&gt;下一步计划&lt;/th&gt;&lt;th&gt;计划时间&lt;/th&gt;&lt;/tr&gt;&#39;;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$.each(data.data,&nbsp;function(i,o)&nbsp;{
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;html&nbsp;+=&nbsp;&#39;&#39;+o.id+&#39;&#39;+o.name+&#39;&#39;+o.trace_note+&#39;&#39;+o.next_trace_note+&#39;&#39;+o.next_trace_time_text+&#39;&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;html&nbsp;+=&nbsp;&#39;&lt;tr&gt;&lt;td&gt;&#39;+o.id+&#39;&lt;/td&gt;&lt;td&gt;&#39;+o.name+&#39;&lt;/td&gt;&lt;td&gt;&#39;+o.trace_note+&#39;&lt;/td&gt;&lt;td&gt;&#39;+o.next_trace_note+&#39;&lt;/td&gt;&lt;td&gt;&#39;+o.next_trace_time_text+&#39;&lt;/td&gt;&lt;/tr&gt;&#39;;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;html&nbsp;+=&nbsp;&#39;&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;html&nbsp;+=&nbsp;&#39;&lt;/table&gt;&lt;/div&gt;&#39;;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;index&nbsp;=&nbsp;Layer.open({
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type:&nbsp;1,
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;title:&nbsp;data.msg,
@@ -135,6 +135,7 @@ function&nbsp;init()&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;}
 }
+//&nbsp;断线后每5秒自动重连
 function&nbsp;reconnect(url)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(lockReconnect)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return;
@@ -150,12 +151,14 @@ var&nbsp;heartCheck&nbsp;=&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;timer1:&nbsp;null,
 &nbsp;&nbsp;&nbsp;&nbsp;timer2:&nbsp;null,
 &nbsp;&nbsp;&nbsp;&nbsp;start:&nbsp;function()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;心跳检测，每30秒由客户端发送一次请求，服务器会立即响应
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.timer1&nbsp;=&nbsp;setInterval(function()&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ws.send(JSON.stringify({
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type:&nbsp;&#39;heartbeat&#39;,
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;msg:&nbsp;&#39;ping&#39;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}))
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},&nbsp;30000)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;定时任务，每60秒向服务器请求查询有哪些线索需要马上跟进
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.timer2&nbsp;=&nbsp;setInterval(function()&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ws.send(JSON.stringify({
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type:&nbsp;&#39;schedule&#39;,
@@ -165,7 +168,8 @@ var&nbsp;heartCheck&nbsp;=&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},&nbsp;60000)
 &nbsp;&nbsp;&nbsp;&nbsp;}
 }
-createWebSocket(wsUrl);</pre><p>这里第二个定时器是每隔1分钟去查询有哪些客户线索是需要马上跟进的，如果有就即时弹窗提醒。</p><p><strong>三、后端代码</strong></p><p>后端代码主要逻辑都在WebSocket的Events.php中的onMessage方法中<br/></p><p><br/></p><pre class="php">//&nbsp;Events.php/**
+createWebSocket(wsUrl);</pre><p>这里第二个定时器是每隔1分钟去查询有哪些客户线索是需要马上跟进的，如果有就即时弹窗提醒，此功能也可以使用系统的定时任务替代。</p><p><strong>三、后端代码</strong></p><p>后端代码主要逻辑都在WebSocket的Events.php中的onMessage方法中</p><pre class="php">//&nbsp;/push/controller/Events.php
+/**
 &nbsp;*&nbsp;当客户端发来消息时触发
 &nbsp;*&nbsp;@param&nbsp;int&nbsp;$client_id&nbsp;会话id
 &nbsp;*&nbsp;@param&nbsp;mixed&nbsp;$data&nbsp;具体消息
@@ -225,7 +229,7 @@ public&nbsp;static&nbsp;function&nbsp;onMessage($client_id,&nbsp;$data)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;alias(&#39;a&#39;)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;field([&#39;a.id&#39;,&#39;a.trace_note&#39;,&#39;a.next_trace_note&#39;,&#39;a.next_trace_time&#39;,&#39;b.name&#39;])
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;join(&#39;__CUSTOMERS__&nbsp;b&#39;,&#39;a.customers_id=b.id&#39;)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;where([&#39;a.admin_id&#39;=&gt;$arr[&#39;admin_id&#39;],&#39;a.next_trace_time&#39;=&gt;[&#39;BETWEEN&#39;,[time(),time()+(Config::get(&#39;site.offset_time&#39;)/1000)]],&#39;b.status&#39;=&gt;&#39;0&#39;])
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;where([&#39;a.admin_id&#39;=&gt;$arr[&#39;admin_id&#39;],&#39;a.next_trace_time&#39;=&gt;[&#39;BETWEEN&#39;,[time(),time()+300]],&#39;b.status&#39;=&gt;&#39;0&#39;])
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;order([&#39;a.next_trace_time&#39;=&gt;&#39;ASC&#39;])
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;select();
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$rsp&nbsp;=&nbsp;[
@@ -237,12 +241,13 @@ public&nbsp;static&nbsp;function&nbsp;onMessage($client_id,&nbsp;$data)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
 &nbsp;&nbsp;&nbsp;&nbsp;}
 }</pre><p><strong>三、添加线索时的即时通知</strong><br/></p><p>这里很简单，从管理员表中查询到自己的client_id，传给Events.php的onMessage方法</p><pre class="php">//&nbsp;Record.php
+use&nbsp;app\push\controller\Events;
 $data&nbsp;=&nbsp;[
 &nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;clues&#39;,
 &nbsp;&nbsp;&nbsp;&nbsp;&#39;name&#39;&nbsp;=&gt;&nbsp;&#39;客户姓名&#39;,
 &nbsp;&nbsp;&nbsp;&nbsp;&#39;admin_id&#39;&nbsp;=&gt;&nbsp;&#39;销售ID&#39;
 ];
-Events::onMessage($client_id,json_encode($data));&nbsp;//&nbsp;$client_id从表中即时查询</pre><p>添加线索后，自动给对应的销售员发送弹窗提醒。</p><p>四、说明</p><p>1、WebSocket每次连接成功时，都必须携带用户ID去进行一次验证，此操作实际目的是更新其会话标识，因为WebSocket每次重新连接后（比如浏览器刷新、断线等）都会产生新的client_id，所以必须每次都更新一下否则通信会失败。</p>            </div>
+Events::onMessage($client_id,json_encode($data));&nbsp;//&nbsp;$client_id从表中即时查询</pre><p>添加线索后，自动给对应的销售员发送弹窗提醒。</p><p><strong>四、说明</strong></p><p>1、WebSocket每次连接成功时，都必须携带用户ID去进行一次验证，此操作实际目的是更新其会话标识，因为WebSocket每次重新连接后（比如浏览器刷新、断线等）都会产生新的client_id，所以必须每次都更新一下否则通信会失败；</p><p>2、WebSocket所有通讯都加上一个type类型，用来区分是什么请求，并且不同的类型所携带的data参数不一样，以此让前后端判断并处理不同的业务逻辑，比如type为heartbeat为心跳检测，没有参数；type为clues的时候要带上销售员的ID，和客户姓名；</p><p>3、目前还不支持单用户多端登录，如有需要可自行改造。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
