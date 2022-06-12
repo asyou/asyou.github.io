@@ -113,13 +113,13 @@ class&nbsp;WebSocket&nbsp;extends&nbsp;Server
 
 &nbsp;&nbsp;&nbsp;&nbsp;//连接关闭时回调函数
 &nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;function&nbsp;onClose($server,$fd)&nbsp;{}
-}</pre><p><strong>五、启动swoole服务</strong></p><p>thinkphp5.1官方文档中，在项目根目录下执行以下命令来启动：</p><pre class="javascript">php&nbsp;think&nbsp;swoole</pre><p>执行后报如下错误：</p><pre>[InvalidArgumentException]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</pre><p><strong>五、启动swoole服务</strong></p><p>thinkphp5.1官方文档中说明，在项目根目录下执行以下命令来启动：</p><pre class="javascript">php&nbsp;think&nbsp;swoole</pre><p>执行后报如下错误：</p><pre>[InvalidArgumentException]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Command&nbsp;&quot;swoole&quot;&nbsp;is&nbsp;not&nbsp;defined.</pre><p>我猜想是thinkphp5.0版本的原因，因为在5.0的开发文档上并未找到swoole相关说明。</p><p>那就用码友提供的启动方式：</p><pre class="javascript">php&nbsp;public/index.php&nbsp;swoole/WebSocket/start</pre><p>启动成功！如果想以守护进程方式启动，修改上面控制器：</p><pre class="php">daemonize=true</pre><p>或者在启动命令后面加上-d参数即可。</p><p>但我觉得这种一长串代码的启动方式太不优雅了，作为一个有简洁强迫症的开发者来说绝不允许，于是想着如何改造。</p><p>1、创建独立的swoole启动入口文件，在public目录中新建一个swoole.php文件，写入如下内容：</p><pre class="php">#!/usr/bin/env&nbsp;php
 &lt;?php
 define(&#39;APP_PATH&#39;,&nbsp;__DIR__&nbsp;.&nbsp;&#39;/../application/&#39;);
 define(&#39;BIND_MODULE&#39;,&#39;swoole/WebSocket&#39;);
 //&nbsp;加载框架引导文件
-require&nbsp;__DIR__&nbsp;.&nbsp;&#39;/../thinkphp/start.php&#39;;</pre><p>2、在项目根目录中以下面的方式启动：<br/></p><pre class="php">php&nbsp;public/swoole.php&nbsp;start</pre><p>或者进入public目录，执行：</p><pre class="php">php&nbsp;swoole.php&nbsp;start</pre><p>即可！是不是简洁多了～</p><p><strong>六、前端JS代码</strong></p><p>前端连接WebSocket的代码都大同小异，以下为简单示例：<br/></p><pre class="php">var&nbsp;ws&nbsp;=&nbsp;new&nbsp;WebSocket(&quot;ws://127.0.0.1:9501);
+require&nbsp;__DIR__&nbsp;.&nbsp;&#39;/../thinkphp/start.php&#39;;</pre><p>2、在项目根目录中以下面的方式启动：<br/></p><pre class="php">php&nbsp;public/swoole.php&nbsp;start</pre><p>或者进入public目录，执行：</p><pre class="php">php&nbsp;swoole.php&nbsp;start</pre><p>即可！是不是简洁多了～</p><p><strong>六、前端JS代码</strong></p><p>前端连接WebSocket的代码都大同小异，以下为简单示例：<br/></p><pre class="php">var&nbsp;ws&nbsp;=&nbsp;new&nbsp;WebSocket(&quot;ws://127.0.0.1:9501&quot;);
 ws.onopen&nbsp;=&nbsp;function()&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;console.log(&#39;WebSocket&nbsp;connect&nbsp;success.&#39;;
 &nbsp;&nbsp;&nbsp;&nbsp;ws.send(&#39;连接成功后，发送用户鉴权信息&#39;);
