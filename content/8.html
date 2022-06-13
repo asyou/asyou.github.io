@@ -57,7 +57,7 @@
             <h1>PHPQrcode生成二维码，支持嵌入logo，支持仅base4输出</h1>
             <span class="date"><small>2022-02-22</small></span>
             <div class="mt-4">
-                <p>利用PHP生成二维码是很常用的功能，用于支付、分享海报等。</p><h3>本文要实现的功能及流程</h3><p>1、后台部署PHPQrcode插件，实现API接口或任何需要的地方调用；</p><p>2、可以生成二维码并保存在服务器上，适用于常用二维码且内容长期不变的场景；也可以仅生成base64二维码文件流，不保存实际图片；</p><p>3、上述两种方式都支持是否在生成的二维码中间嵌入logo。</p><p><br/></p><h3>第一步，下载phpQrcode插件</h3><p>插件地址：http://sourceforge.net/projects/phpqrcode/，<a href="http://sourceforge.net/projects/phpqrcode/" target="_blank">点击下载</a></p><p>下载好后解压，放入vendor目录。</p><h3>第二步，在全局的common.php中创建2个函数</h3><pre class="php">//&nbsp;/application/common.php
+                <p>利用PHP生成二维码是很常用的功能，用于支付、分享海报等。</p><p><strong>本文要实现的功能及流程</strong></p><p>1、后台部署PHPQrcode插件，实现API接口或任何需要的地方调用；</p><p>2、可以生成二维码并保存在服务器上，适用于常用二维码且内容长期不变的场景；也可以仅生成base64二维码文件流，不保存实际图片；</p><p>3、上述两种方式都支持是否在生成的二维码中间嵌入logo。</p><p><strong>第一步，下载phpQrcode插件</strong><br/></p><p>插件地址：http://sourceforge.net/projects/phpqrcode/，<a href="http://sourceforge.net/projects/phpqrcode/" target="_blank">点击下载</a></p><p>下载好后解压，放入vendor目录。</p><p><strong>第二步，在全局的common.php中创建2个函数</strong></p><pre class="php">//&nbsp;/application/common.php
 /**
 &nbsp;*&nbsp;生成二维码
 &nbsp;*&nbsp;@param&nbsp;string&nbsp;$content&nbsp;二维码内容
@@ -139,11 +139,11 @@ function&nbsp;createQrcode64($content,$logo=null,$level=&#39;L&#39;,$size=5,$mar
 &nbsp;&nbsp;&nbsp;&nbsp;$imageString&nbsp;=&nbsp;base64_encode(ob_get_contents());
 &nbsp;&nbsp;&nbsp;&nbsp;ob_end_clean();
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&quot;data:image/jpg;base64,&quot;.$imageString;
-}</pre><h3>在api接口中使用</h3><pre class="php">//&nbsp;该函数需要指定二维码图片存放目录，返回二维码图片存放路径
+}</pre><p><strong>在api接口中使用</strong></p><pre class="php">//&nbsp;该函数需要指定二维码图片存放目录，返回二维码图片存放路径
 $data[&#39;qrcode&#39;]&nbsp;=&nbsp;createQrcode(&#39;http://www.xxx.com/article/detail/id/1.html&#39;,&nbsp;&#39;/qrcode&#39;,&#39;logo.png&#39;);
 //&nbsp;该函数仅返回二维码的base64文件流，前端可直接用img渲染
 $data[&#39;qrcode64&#39;]&nbsp;=&nbsp;createQrcode(&#39;http://www.xxx.com/article/detail/id/1.html&#39;,&#39;logo.png&#39;);
-return&nbsp;$data;</pre><h3>说明：</h3><p>1、两个函数的第一个参数都是二维码内容，可以是任意字符串内容；</p><p>2、两种方式生成二维码各有优劣，第一种适合二维码不变的情况，可以保存在服务器和数据库中长期重复使用，缺点是时间久了会生成大量二维码图片占用服务器硬盘空间；第二种直接输出文件流，适合不希望保存二维码的情况，也不占用硬盘空间，缺点是可能会轻微影响手机性能（如果性能太差的话）；</p><p>3、调用方法时如果传入了logo图片，则会把logo自动嵌入二维码中，logo图片支持本地相对路径，也支持远程图片，不过目前只测试了png格式，其他格式未测试。</p>            </div>
+return&nbsp;$data;</pre><p><strong>说明：</strong></p><p>1、两个函数的第一个参数都是二维码内容，可以是任意字符串内容；</p><p>2、两种方式生成二维码各有优劣，第一种适合二维码不变的情况，可以保存在服务器和数据库中长期重复使用，缺点是时间久了会生成大量二维码图片占用服务器硬盘空间；第二种直接输出文件流，适合不希望保存二维码的情况，也不占用硬盘空间，缺点是可能会轻微影响手机性能（如果性能太差的话）；</p><p>3、调用方法时如果传入了logo图片，则会把logo自动嵌入二维码中，logo图片支持本地相对路径，也支持远程图片，不过目前只测试了png格式，其他格式未测试。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">

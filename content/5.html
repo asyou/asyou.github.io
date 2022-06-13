@@ -5,8 +5,8 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="keywords" content=""/>
-<meta name="description" content="" />
+<meta name="keywords" content="加密,解密,base64"/>
+<meta name="description" content="base64简单加密与解密功能实现" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
 <script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
@@ -63,7 +63,7 @@ npm&nbsp;install&nbsp;--save&nbsp;js-base64
 let&nbsp;Base64&nbsp;=&nbsp;require(&#39;js-base64&#39;).Base64
 //&nbsp;编码与解码
 Base64.encode(&#39;xxx&#39;)
-Base64.decode(&#39;xxx&#39;)</pre><p>来使用base64编码与解码，如果没有或不会使用npm工具，则直接将代码下载到本地项目中也一样，或者直接使用下面封装好的代码也可以。</p><h3>一、封装代码</h3><pre class="javascript">//&nbsp;/common/base64.js
+Base64.decode(&#39;xxx&#39;)</pre><p>来使用base64编码与解码，如果没有或不会使用npm工具，则直接将代码下载到本地项目中也一样，或者直接使用下面封装好的代码也可以。</p><p><strong>一、封装代码</strong></p><pre class="javascript">//&nbsp;/common/base64.js
 /**
 &nbsp;*&nbsp;@description&nbsp;Base64编码与解码
 &nbsp;*&nbsp;@author&nbsp;sin@254555778
@@ -144,7 +144,7 @@ const&nbsp;Base64&nbsp;=&nbsp;{
 	return&nbsp;t
 &nbsp;&nbsp;&nbsp;&nbsp;}
 }
-export&nbsp;default&nbsp;Base64</pre><h3>二、使用示例</h3><pre class="javascript">import&nbsp;Base64&nbsp;from&nbsp;&#39;@/common/base64&#39;
+export&nbsp;default&nbsp;Base64</pre><p><strong>二、使用示例</strong></p><pre class="javascript">import&nbsp;Base64&nbsp;from&nbsp;&#39;@/common/base64&#39;
 Base64.encode(&#39;王维的博客&#39;);&nbsp;//&nbsp;546L57u055qE5Y2a5a6i
 Base64.decode(&#39;546L57u055qE5Y2a5a6i&#39;);&nbsp;&nbsp;//&nbsp;王维的博客</pre><p>使用非常简单！</p>            </div>
         </div>

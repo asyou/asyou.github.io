@@ -5,8 +5,8 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="keywords" content=""/>
-<meta name="description" content="" />
+<meta name="keywords" content="微信退款,支付宝退款"/>
+<meta name="description" content="微信和支付宝退款功能代码实现" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
 <script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
@@ -57,11 +57,11 @@
             <h1>PHP微信/支付宝退款流程及实现代码</h1>
             <span class="date"><small>2022-02-28</small></span>
             <div class="mt-4">
-                <p>用户使用微信/支付宝下单后，难免会出现需要退款的情况。本文提供PHP代码实现微信/支付宝退款主要的代码。</p><h3>本文要实现的功能及流程</h3><p>1、用户在订单详情页点击退款按钮，订单变成退款审核状态；</p><p>2、管理员在后台查看订单列表，对退款审核状态中的订单进行审核；</p><p>3、审核通过则立即发起退款流程，支付金额将按原支付方式退回用户支付账户中；</p><p>4、审核驳回则只把订单状态改为审核驳回状态，用户可以再次发起退款；</p><p>5、确保订单表中有out_trade_no和trade_id字段，发起退款需要用到，这是微信或支付宝支付成功后会返回的参数；</p><p>6、本文代码环境：ThinkPHP5.0，PHP版本7.4.x。</p><p><br/></p><h3>本示例使用到的微信/支付宝SDK如下</h3><p>1、微信使用的是EasyWechat插件，版本号4.2.11，插件地址：<a href="https://www.easywechat.com/4.x/" target="_blank">点击前往</a></p><p>2、支付宝使用的是Alipay EasySDK，版本号2.2.0，Github地址：<a href="https://github.com/alipay/alipay-easysdk/tree/master/php" target="_blank">点击前往</a></p><p>3、注意：<strong style="color: red;">涉及到用户退款，微信一定要有API证书文件！否则会失败！</strong>API证书在商户后台申请后下载并部署到服务器上，然后在微信支付配置中引入。支付宝的话证书和非证书二选一，选证书的话跟微信一样去下载并部署，非证书的话使用支付宝公钥。支付宝公钥可使用支付宝提供的开放平台开发助手工具生成，本文使用的是此种方式。</p><h3>上述SDK安装方式不尽相同，请先确保各自正确安装好</h3><p>本文假设所有基础部署工作都已完成，SDK都可以正常使用。虽然本文给出的示例代码可以直接复制使用，但一定要先阅读并了解微信、支付宝官方的支付开发文档，遇到问题才不会手忙脚乱束手无策。</p><p>回到正题，假设后端代码全部在Payment.php控制器</p><h3>第一步，引入微信EasyWechat插件和支付宝EasySDK</h3><pre class="php">//&nbsp;/Payment.php
+                <p>用户使用微信/支付宝下单后，难免会出现需要退款的情况。本文提供PHP代码实现微信/支付宝退款主要的代码。</p><p><strong>本文要实现的功能及流程</strong></p><p>1、用户在订单详情页点击退款按钮，订单变成退款审核状态；</p><p>2、管理员在后台查看订单列表，对退款审核状态中的订单进行审核；</p><p>3、审核通过则立即发起退款流程，支付金额将按原支付方式退回用户支付账户中；</p><p>4、审核驳回则只把订单状态改为审核驳回状态，用户可以再次发起退款；</p><p>5、确保订单表中有out_trade_no和trade_id字段，发起退款需要用到，这是微信或支付宝支付成功后会返回的参数；</p><p>6、本文代码环境：ThinkPHP5.0，PHP版本7.4.x。</p><p><strong>本示例使用到的微信/支付宝SDK如下</strong><br/></p><p>1、微信使用的是EasyWechat插件，版本号4.2.11，插件地址：<a href="https://www.easywechat.com/4.x/" target="_blank">点击前往</a></p><p>2、支付宝使用的是Alipay EasySDK，版本号2.2.0，Github地址：<a href="https://github.com/alipay/alipay-easysdk/tree/master/php" target="_blank">点击前往</a></p><p>3、注意：<strong style="color: red;">涉及到用户退款，微信一定要有API证书文件！否则会失败！</strong>API证书在商户后台申请后下载并部署到服务器上，然后在微信支付配置中引入。支付宝的话证书和非证书二选一，选证书的话跟微信一样去下载并部署，非证书的话使用支付宝公钥。支付宝公钥可使用支付宝提供的开放平台开发助手工具生成，本文使用的是此种方式。</p><p><strong>上述SDK安装方式不尽相同，请先确保各自正确安装好</strong></p><p>本文假设所有基础部署工作都已完成，SDK都可以正常使用。虽然本文给出的示例代码可以直接复制使用，但一定要先阅读并了解微信、支付宝官方的支付开发文档，遇到问题才不会手忙脚乱束手无策。</p><p>回到正题，假设后端代码全部在Payment.php控制器</p><p><strong>第一步，引入微信EasyWechat插件和支付宝EasySDK</strong></p><pre class="php">//&nbsp;/Payment.php
 use&nbsp;think\Config;
 use&nbsp;EasyWeChat\Factory;
 use&nbsp;Alipay\EasySDK\Kernel\Factory&nbsp;as&nbsp;alipayFactory;
-use&nbsp;Alipay\EasySDK\Kernel\Config&nbsp;as&nbsp;alipayConfig;</pre><h3>第二步，微信和支付宝config.php配置</h3><pre class="php">//&nbsp;application/config.php
+use&nbsp;Alipay\EasySDK\Kernel\Config&nbsp;as&nbsp;alipayConfig;</pre><p><strong>第二步，微信和支付宝config.php配置</strong></p><pre class="php">//&nbsp;application/config.php
 &#39;wechat&#39;&nbsp;=&gt;&nbsp;[
 &nbsp;&nbsp;&nbsp;&nbsp;&#39;h5pay&#39;&nbsp;=&gt;&nbsp;[
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;app_id&#39;&nbsp;=&gt;&nbsp;&#39;微信app_id&#39;,
@@ -75,7 +75,7 @@ use&nbsp;Alipay\EasySDK\Kernel\Config&nbsp;as&nbsp;alipayConfig;</pre><h3>第二
 &nbsp;&nbsp;&nbsp;&nbsp;&#39;app_id&#39;&nbsp;=&gt;&nbsp;&#39;支付宝app_id&#39;,
 &nbsp;&nbsp;&nbsp;&nbsp;&#39;private_key&#39;&nbsp;=&gt;&nbsp;&#39;支付宝私钥&#39;,
 &nbsp;&nbsp;&nbsp;&nbsp;&#39;public_key&#39;&nbsp;=&gt;&nbsp;&#39;支付宝公钥&#39;
-],</pre><h3>第三步，退款方法</h3><pre class="php">//&nbsp;Payment.php
+],</pre><p><strong>第三步，退款方法</strong></p><pre class="php">//&nbsp;Payment.php
 /**
 &nbsp;*&nbsp;退款方法
 &nbsp;*&nbsp;该方法接收2个参数，一个订单类型，一个订单ID
@@ -163,8 +163,8 @@ private&nbsp;function&nbsp;getOptions()
 &nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;可设置AES密钥，调用AES加解密相关接口时需要（可选）
 &nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;$options-&gt;encryptKey&nbsp;=&nbsp;&quot;&quot;;
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;$options;
-}</pre><h3>说明：</h3><p>上述refund方法并非在后台模块中，实际需要在后台订单管理控制器中跨模块调用，使用方法如下</p><pre class="php">//&nbsp;后台方法，假设上面的Payment.php控制器在API模块中：
-$rs&nbsp;=&nbsp;controller(&#39;api/payment&#39;)-&gt;refund(&#39;apply&#39;,$order_id);</pre><p>上述getOptions方法同样也适用于支付宝支付参数配置，可自行拓展以适应支付和退款时不同的通知方式。</p><h3>吐个槽～</h3><p>微信公众号支付需要在商户后台配置支付授权目录且有数量限制（这点难以理解，产品业务线长的话需要各种跳转支付影响体验）；</p><p>微信公众号用户授权方式是需要跳转到微信服务器获取code，再跳转回来用code去换取用户信息，这种方式且不说体验不好，如果是vue开发的单页应用经这么一跳，定义的关键变量就直接给跳没了，必须用缓存的方式保存起来，技术这么发达的年代，api接口静默授权很难么？</p><p>微信公众号授权跟微信小程序授权返回的用户数据结构<strong style="color: red;">并不统一</strong>，需要在后端逐一判断并统一保存，这真是个巨坑！！！另外似乎目前网页授权经常抽疯不返回昵称和头像，只能得到个openid，这对需要用户信息的场景比如生成推广海报来说是个巨大的灾难；</p><p>不管是微信还是支付宝，官方提供的开发者文档真是烂到极致，尤其是对新手极其不友好，完全不知道从何下手。</p>            </div>
+}</pre><p><strong>说明：</strong></p><p>上述refund方法并非在后台模块中，实际需要在后台订单管理控制器中跨模块调用，使用方法如下</p><pre class="php">//&nbsp;后台方法，假设上面的Payment.php控制器在API模块中：
+$rs&nbsp;=&nbsp;controller(&#39;api/payment&#39;)-&gt;refund(&#39;apply&#39;,$order_id);</pre><p>上述getOptions方法同样也适用于支付宝支付参数配置，可自行拓展以适应支付和退款时不同的通知方式。</p><p><strong>吐个槽～</strong></p><p>微信公众号支付需要在商户后台配置支付授权目录且有数量限制（这点难以理解，产品业务线长的话需要各种跳转支付影响体验）；</p><p>微信公众号用户授权方式是需要跳转到微信服务器获取code，再跳转回来用code去换取用户信息，这种方式且不说体验不好，如果是vue开发的单页应用经这么一跳，定义的关键变量就直接给跳没了，必须用缓存的方式保存起来，技术这么发达的年代，api接口静默授权很难么？</p><p>微信公众号授权跟微信小程序授权返回的用户数据结构<strong style="color: red;">并不统一</strong>，需要在后端逐一判断并统一保存，这真是个巨坑！！！另外似乎目前网页授权经常抽疯不返回昵称和头像，只能得到个openid，这对需要用户信息的场景比如生成推广海报来说是个巨大的灾难；</p><p>不管是微信还是支付宝，官方提供的开发者文档真是烂到极致，尤其是对新手极其不友好，完全不知道从何下手。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">

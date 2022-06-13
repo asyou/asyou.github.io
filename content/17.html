@@ -5,8 +5,8 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="keywords" content=""/>
-<meta name="description" content="" />
+<meta name="keywords" content="uniapp,微信公众号支付"/>
+<meta name="description" content="uniapp开发的H5项目中实现微信支付" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
 <script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
@@ -57,7 +57,7 @@
             <h1>uniapp实现微信公众号网页支付</h1>
             <span class="date"><small>2022-03-12</small></span>
             <div class="mt-4">
-                <p>本文记录uniapp开发的手机网页版如何实现微信和支付宝支付。</p><p>微信网页支付就是公众号支付，必须使用微信内置浏览器（当然微信官方有提供非微信浏览器的H5支付），本文实现的是在微信浏览器的公众号支付，微信中使用支付宝支付已有另一篇博文有详细解说，请参考<a href="2.html">uniapp实现在微信H5中使用支付宝支付</a>。</p><h3>一、微信公众号支付所需的配置</h3><p>1、公众号后台设置网页授权域名（支付必须要获取openid）；</p><p>2、商户后台配置支付授权目录、IP白名单和支付密钥，如果需要支持退款还需要生成api证书；</p><p>3、支付业务所需四个参数，公众号app_id、开发者密钥secret、商户号mch_id和支付密钥key，四个缺一不可。</p><h3>二、前端代码</h3><p>向后端发送支付参数，并返回微信支付信息，下方$wechat.wxpay是封装好的JS模块，详见<a href="4.html">uniapp封装微信h5支付、分享等功能</a>。</p><pre class="javascript">//&nbsp;/pages/payment/pay.vue
+                <p>本文记录uniapp开发的手机网页版如何实现微信和支付宝支付。</p><p>微信网页支付就是公众号支付，必须使用微信内置浏览器（当然微信官方有提供非微信浏览器的H5支付），本文实现的是在微信浏览器的公众号支付，微信中使用支付宝支付已有另一篇博文有详细解说，请参考<a href="2.html">uniapp实现在微信H5中使用支付宝支付</a>。</p><p><strong>一、微信公众号支付所需的配置</strong></p><p>1、公众号后台设置网页授权域名（支付必须要获取openid）；</p><p>2、商户后台配置支付授权目录、IP白名单和支付密钥，如果需要支持退款还需要生成api证书；</p><p>3、支付业务所需四个参数，公众号app_id、开发者密钥secret、商户号mch_id和支付密钥key，四个缺一不可。</p><p><strong>二、前端代码</strong></p><p>向后端发送支付参数，并返回微信支付信息，下方$wechat.wxpay是封装好的JS模块，详见<a href="4.html">uniapp封装微信h5支付、分享等功能</a>。</p><pre class="javascript">//&nbsp;/pages/payment/pay.vue
 this.$http.post(&#39;/payment/pay&#39;,&nbsp;this.form).then(res&nbsp;=&gt;&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;_this&nbsp;=&nbsp;this
 &nbsp;&nbsp;&nbsp;&nbsp;_this.$wechat.wxpay(res.data.paystring,&nbsp;function(ret)&nbsp;{
@@ -87,7 +87,7 @@ this.$http.post(&#39;/payment/pay&#39;,&nbsp;this.form).then(res&nbsp;=&gt;&nbsp
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;})
-})</pre><h3>三、后端代码</h3><p>后端使用了EasyWechat4.3插件。</p><pre class="php">//&nbsp;payment/pay.php
+})</pre><p><strong>三、后端代码</strong></p><p>后端使用了EasyWechat4.3插件。</p><pre class="php">//&nbsp;payment/pay.php
 use&nbsp;EasyWeChat\Factory;
 use&nbsp;think\Config;
 //&nbsp;...
@@ -105,7 +105,7 @@ if&nbsp;(isset($params[&#39;url&#39;]))&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;$app-&gt;jssdk-&gt;setUrl($params[&#39;url&#39;]);
 }
 $data[&#39;paystring&#39;]&nbsp;=&nbsp;$app-&gt;jssdk-&gt;bridgeConfig($pay[&#39;prepay_id&#39;],&nbsp;false);
-$this-&gt;success(&#39;data&#39;,$data);</pre><h3>四、支付结果通知</h3><pre class="php">//&nbsp;wechat/notify.php
+$this-&gt;success(&#39;data&#39;,$data);</pre><p><strong>四、支付结果通知</strong></p><pre class="php">//&nbsp;wechat/notify.php
 use&nbsp;EasyWeChat\Factory;
 use&nbsp;think\Config;
 //&nbsp;...
@@ -135,7 +135,7 @@ public&nbsp;function&nbsp;notify()
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;true;
 &nbsp;&nbsp;&nbsp;&nbsp;});
 &nbsp;&nbsp;&nbsp;&nbsp;$response-&gt;send();
-}</pre><h3>五、注意事项</h3><p>1、提交支付前一定要先获取用户openid，snsapi_base或snsapi_userinfo授权都可以；</p><p>2、前端的/pages/payment/是需要填写到商户后台的支付授权目录，完整格式是http://xxx.com/pages/payment/；</p><p>3、支付结果一定要以微信服务器通知的结果为准，前端代码的“支付成功”状态并不可信！</p><p>4、处理支付结果通知时，不管订单是否存在还是状态为已支付，或者业务逻辑处理完后，都需要向微信服务器返回true，否则微信会在一段时间内反复通知（支付宝也一样）。</p>            </div>
+}</pre><p><strong>五、注意事项</strong></p><p>1、提交支付前一定要先获取用户openid，snsapi_base或snsapi_userinfo授权都可以；</p><p>2、前端的/pages/payment/是需要填写到商户后台的支付授权目录，完整格式是http://xxx.com/pages/payment/；</p><p>3、支付结果一定要以微信服务器通知的结果为准，前端代码的“支付成功”状态并不可信！</p><p>4、处理支付结果通知时，不管订单是否存在还是状态为已支付，或者业务逻辑处理完后，都需要向微信服务器返回true，否则微信会在一段时间内反复通知（支付宝也一样）。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">

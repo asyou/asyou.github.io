@@ -5,8 +5,8 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="keywords" content=""/>
-<meta name="description" content="" />
+<meta name="keywords" content="Linux,SVN,代码同步"/>
+<meta name="description" content="Linux服务器上安装SVN，实现代码同步" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
 <script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
@@ -57,10 +57,10 @@
             <h1>Linux服务器安装SVN工具，实现代码自动同步</h1>
             <span class="date"><small>2022-03-01</small></span>
             <div class="mt-4">
-                <p>本文讲解在Centos7系统上安装SVN服务，其他Linux系统也通用，记录下来以备不时之需。</p><p>假设服务器用的是Lnmp，则默认网站目录是/home/wwwroot/，在/home/下有三个文件夹：www、wwwlogs和wwwroot，网站目录都在/home/wwwroot/</p><h3>1、安装svn服务器端，如已安装则跳过此步</h3><pre>yum&nbsp;install&nbsp;subversion</pre><h3>2、创建一个svn版本仓库（可随意创建，本示例创建到/home/www/目录下）</h3><pre class="javascript">cd&nbsp;/home/www/
+                <p>本文讲解在Centos7系统上安装SVN服务，其他Linux系统也通用，记录下来以备不时之需。</p><p>假设服务器用的是Lnmp，则默认网站目录是/home/wwwroot/，在/home/下有三个文件夹：www、wwwlogs和wwwroot，网站目录都在/home/wwwroot/</p><p><strong>1、安装svn服务器端，如已安装则跳过此步</strong></p><pre class="javascript">yum&nbsp;install&nbsp;subversion</pre><p><strong>2、创建一个svn版本仓库（可随意创建，本示例创建到/home/www/目录下）</strong></p><pre class="javascript">cd&nbsp;/home/www/
 mkdir&nbsp;-p&nbsp;repos
 chmod&nbsp;-R&nbsp;777&nbsp;repos&nbsp;//&nbsp;修改目录权限为777
-svnadmin&nbsp;create&nbsp;/home/www/repos/www.xxx.com&nbsp;//&nbsp;创建一个svn版本仓库www.xxx.com(www.xxx.com可以是网站域名，也可以是任何名字)</pre><h3>3、下面要修改conf目录下的三个配置文件svnserve.conf、authz和passwd</h3><p>编辑svnserve.conf文件</p><pre class="javascript">cd&nbsp;/home/www/repos/www.xxx.com/conf&nbsp;//&nbsp;进入刚刚创建的版本仓库的conf目录
+svnadmin&nbsp;create&nbsp;/home/www/repos/www.xxx.com&nbsp;//&nbsp;创建一个svn版本仓库www.xxx.com(www.xxx.com可以是网站域名，也可以是任何名字)</pre><p><strong>3、下面要修改conf目录下的三个配置文件svnserve.conf、authz和passwd</strong></p><p>编辑svnserve.conf文件</p><pre class="javascript">cd&nbsp;/home/www/repos/www.xxx.com/conf&nbsp;//&nbsp;进入刚刚创建的版本仓库的conf目录
 vi&nbsp;svnserve.conf&nbsp;//&nbsp;配置版本库信息和用户文件和用户密码文件的路径、版本库路径
 //&nbsp;找到这几个，前面的#号和空格去掉
 anon-access&nbsp;=&nbsp;none&nbsp;//&nbsp;改成none
@@ -83,15 +83,15 @@ www.xxx.com&nbsp;=&nbsp;user1,user2&nbsp;//&nbsp;SVN用户名，多个用户用�
 //&nbsp;用户名及密码，一行一个
 user1&nbsp;=&nbsp;123456
 user2&nbsp;=&nbsp;123456
-//&nbsp;保存退出</pre><h3>4、启动SVN服务（二选一），如果已启动则跳过此步</h3><pre class="javascript">svnserve&nbsp;-d&nbsp;-r&nbsp;/home/www/repos/www.xxx.com&nbsp;//&nbsp;单版本库启动
-svnserve&nbsp;-d&nbsp;-r&nbsp;/home/www/repos&nbsp;//&nbsp;多版本库启动</pre><h3>5、设置SVN自动同步到网站目录</h3><pre class="javascript">cd&nbsp;/home/www/repos/www.xxx.com/hooks/&nbsp;//&nbsp;进入版本库目录
+//&nbsp;保存退出</pre><p><strong>4、启动SVN服务（二选一），如果已启动则跳过此步</strong></p><pre class="javascript">svnserve&nbsp;-d&nbsp;-r&nbsp;/home/www/repos/www.xxx.com&nbsp;//&nbsp;单版本库启动
+svnserve&nbsp;-d&nbsp;-r&nbsp;/home/www/repos&nbsp;//&nbsp;多版本库启动</pre><p><strong>5、设置SVN自动同步到网站目录</strong></p><pre class="javascript">cd&nbsp;/home/www/repos/www.xxx.com/hooks/&nbsp;//&nbsp;进入版本库目录
 cp&nbsp;post-commit.tmpl&nbsp;post-commit	//&nbsp;复制并另存
 vi&nbsp;post-commit
 //&nbsp;加入这行
 /usr/bin/svn&nbsp;update&nbsp;--username&nbsp;user1&nbsp;--password&nbsp;123456&nbsp;/home/wwwroot/www.xxx.com
 //&nbsp;保存退出</pre><p>赋予post-commit文件执行权限，然后手动检出一次</p><pre class="javascript">chmod&nbsp;+x&nbsp;post-commit
 //&nbsp;手动检出一份代码到网站目录，前面是版本库目录，后面是网站目录
-svn&nbsp;co&nbsp;file:///home/www/repos/www.xxx.com/&nbsp;/home/wwwroot/www.xxx.com/</pre><p>如果显示</p><pre class="javascript">Checkeout&nbsp;version&nbsp;0.</pre><p>则表示检出成功，SVN工作正常了。</p><h3>6、客户端连接</h3><p>假设客户端使用tortoiseSVN</p><p>打开资源库浏览器输入地址：svn://你的svn服务器ip:3690/www.xxx.com</p><p>输入用户名user1，密码123456</p><p>在本地checkout一下，再创建一个测试文件test.php，里面随便输出些内容，再SVN提交，查看网站目录/home/wwwroot/www.xx.com/下面如果有test.php文件，则SVN所有设置都OK</p><h3>七、注意事项</h3><p>1、服务器需要开放3690端口，注意不仅是要在防火墙中开放该端口，多数情况下还需要在服务器控制面板中的安全规则配置中开放端口；</p><p>2、有时候防火墙关闭会导致SVN连接不上，必须保持开启；</p><p>3、本文并未介绍如何使SVN开机自启动，可自行搜索相关资料。</p><p>其他建议</p><p>1、严格来说，SVN只用来负责记录代码或文本文件的版本更新与迭代，尽量不要把图片纳入SVN版本控制中（图片会非常占用宽带资源，特别是巨量的情况下）；</p><p>2、建议对网站一些运行日志目录如runtime、图片上传目录uploads和一些需要区分生产环境/开发环境的文件进行忽略（纳入版本库之前就要忽略掉，否则只能删除后再提交，然后再设置忽略），另外还有如备份文件、cert证书文件等也都不建议纳入版本控制中；</p><p>3、如果是把SVN管理中的代码复制到另一个网站并用另一个SVN账号管理，则一定要在复制进去后，手动删除所有.svn目录和文件，否则会沿用之前的SVN记录。</p>            </div>
+svn&nbsp;co&nbsp;file:///home/www/repos/www.xxx.com/&nbsp;/home/wwwroot/www.xxx.com/</pre><p>如果显示</p><pre class="javascript">Checkeout&nbsp;version&nbsp;0.</pre><p>则表示检出成功，SVN工作正常了。</p><p><strong>6、客户端连接</strong></p><p>假设客户端使用tortoiseSVN</p><p>打开资源库浏览器输入地址：svn://你的svn服务器ip:3690/www.xxx.com</p><p>输入用户名user1，密码123456</p><p>在本地checkout一下，再创建一个测试文件test.php，里面随便输出些内容，再SVN提交，查看网站目录/home/wwwroot/www.xx.com/下面如果有test.php文件，则SVN所有设置都OK</p><p><strong>7、注意事项</strong></p><p>1、服务器需要开放3690端口，注意不仅是要在防火墙中开放该端口，多数情况下还需要在服务器控制面板中的安全规则配置中开放端口；</p><p>2、有时候防火墙关闭会导致SVN连接不上，必须保持开启；</p><p>3、本文并未介绍如何使SVN开机自启动，可自行搜索相关资料。</p><p>其他建议</p><p>1、严格来说，SVN只用来负责记录代码或文本文件的版本更新与迭代，尽量不要把图片纳入SVN版本控制中（图片会非常占用宽带资源，特别是巨量的情况下）；</p><p>2、建议对网站一些运行日志目录如runtime、图片上传目录uploads和一些需要区分生产环境/开发环境的文件进行忽略（纳入版本库之前就要忽略掉，否则只能删除后再提交，然后再设置忽略），另外还有如备份文件、cert证书文件等也都不建议纳入版本控制中；</p><p>3、如果是把SVN管理中的代码复制到另一个网站并用另一个SVN账号管理，则一定要在复制进去后，手动删除所有.svn目录和文件，否则会沿用之前的SVN记录。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">

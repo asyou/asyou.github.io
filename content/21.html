@@ -5,8 +5,8 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="keywords" content=""/>
-<meta name="description" content="" />
+<meta name="keywords" content="uniapp,APP版本更新,热更新"/>
+<meta name="description" content="uniapp开发的安卓APP进行版本更新，支持热更新、静默更新和强制更新" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
 <script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
@@ -57,7 +57,7 @@
             <h1>uniapp安卓App版本更新、热更新代码实现，支持静默、强制更新</h1>
             <span class="date"><small>2022-04-15</small></span>
             <div class="mt-4">
-                <p>本文记录的是uniapp开发的安卓App如何实现版本更新，自动弹窗提示，支持主动、被动更新，也支持强制、静默更新。</p><p>本示例核心代码来自uniapp插件市场，经修改优化而来。</p><h3>先分析一下版本更新功能的流程和逻辑。</h3><p>1、用户进入App后，携带本地版本号自动向后台请求一次最新版本信息；</p><p>2、后台根据用户端传的版本号查询最新版本，有更新则返回下载信息，包括链接、更新内容等；</p><p>3、前端接收到服务器返回信息，如果有更新，则弹窗提示App更新。</p><p>主要文件有两个，appConfig.js和appUpgrade.js</p><h3>一、appConfig.js，主要是请求后台</h3><pre class="javascript">//&nbsp;/common/appConfig.js
+                <p>本文记录的是uniapp开发的安卓App如何实现版本更新，自动弹窗提示，支持主动、被动更新，也支持强制、静默更新。</p><p>本示例核心代码来自uniapp插件市场，经修改优化而来。</p><p><strong>先分析一下版本更新功能的流程和逻辑。</strong></p><p>1、用户进入App后，携带本地版本号自动向后台请求一次最新版本信息；</p><p>2、后台根据用户端传的版本号查询最新版本，有更新则返回下载信息，包括链接、更新内容等；</p><p>3、前端接收到服务器返回信息，如果有更新，则弹窗提示App更新。</p><p>主要文件有两个，appConfig.js和appUpgrade.js</p><p><strong>一、appConfig.js，主要是请求后台</strong></p><pre class="javascript">//&nbsp;/common/appConfig.js
 import&nbsp;Vue&nbsp;from&nbsp;&quot;vue&quot;
 const&nbsp;platform&nbsp;=&nbsp;uni.getSystemInfoSync().platform
 const&nbsp;clientid&nbsp;=&nbsp;plus.push.getClientInfo()[&#39;clientid&#39;]
@@ -102,7 +102,7 @@ export&nbsp;default&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;appUpdateColor:&nbsp;&quot;f00&quot;,
 &nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;弹窗图标（不填显示默认图标，链接配置示例如：&nbsp;&#39;/static/ic_ar.png&#39;）
 &nbsp;&nbsp;&nbsp;&nbsp;appUpdateIcon:&nbsp;&#39;&#39;
-}</pre><h3>二、appUpgrade.js，版本更新核心代码</h3><pre class="javascript">//&nbsp;/common/appUpgrade.js
+}</pre><p><strong>二、appUpgrade.js，版本更新核心代码</strong></p><pre class="javascript">//&nbsp;/common/appUpgrade.js
 //&nbsp;#ifdef&nbsp;APP-PLUS&nbsp;
 import&nbsp;appConfig&nbsp;from&nbsp;&quot;@/common/appConfig&quot;
 const&nbsp;platform&nbsp;=&nbsp;uni.getSystemInfoSync().platform
@@ -916,17 +916,17 @@ export&nbsp;default&nbsp;function(isPrompt&nbsp;=&nbsp;false)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
 &nbsp;&nbsp;&nbsp;&nbsp;})
 }
-//&nbsp;#endif</pre><h3>三、模板代码</h3><p>在App.vue里面导入appUpgrade.js</p><pre class="javascript">//&nbsp;App.vue
+//&nbsp;#endif</pre><p><strong>三、模板代码</strong></p><p>在App.vue里面导入appUpgrade.js</p><pre class="javascript">//&nbsp;App.vue
 import&nbsp;APPUpgrade&nbsp;from&nbsp;&#39;@/common/appUpgrade&#39;
 onLaunch()&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;APPUpgrade()
-}</pre><h3>四、其他页面，例如进入版本更新列表时</h3><pre class="javascript">//&nbsp;/app/version.vue
+}</pre><p><strong>四、其他页面，例如进入版本更新列表时</strong></p><pre class="javascript">//&nbsp;/app/version.vue
 import&nbsp;APPUpgrade,&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;getCurrentNo
 }&nbsp;from&nbsp;&#39;@/common/appUpgrade&#39;
 onLoad()&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;APPUpgrade(true)
-}</pre><h3>五、整包附件</h3><p>1、本例完整核心代码打成压缩包，<a href="/common/appUpgradeDemo.zip">点击下载</a></p><p>2、下载后，根据项目实际情况放置js和图片资源，需要用到的地方正确引用即可；</p><p>3、本例代码也支持ios热更新，即wgt更新包，不过要注意苹果可能会禁止App以wgt方式更新，以实际情况为准。</p>            </div>
+}</pre><p><strong>五、整包附件</strong></p><p>1、本例完整核心代码打成压缩包，<a href="/common/appUpgradeDemo.zip">点击下载</a></p><p>2、下载后，根据项目实际情况放置js和图片资源，需要用到的地方正确引用即可；</p><p>3、本例代码也支持ios热更新，即wgt更新包，不过要注意苹果可能会禁止App以wgt方式更新，以实际情况为准。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
