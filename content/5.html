@@ -132,7 +132,19 @@ const&nbsp;Base64&nbsp;=&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;n++
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;if&nbsp;(r&nbsp;&gt;&nbsp;191&nbsp;&amp;&amp;&nbsp;r&nbsp;&lt;&nbsp;224)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;c2&nbsp;=&nbsp;e.charCodeAt(n&nbsp;+&nbsp;1);
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;+=&nbsp;String.fromCharCode((r&nbsp;&amp;&nbsp;31)</pre><h3>二、使用示例</h3><pre class="javascript">import&nbsp;Base64&nbsp;from&nbsp;&#39;@/common/base64&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;+=&nbsp;String.fromCharCode((r&nbsp;&amp;&nbsp;31)&nbsp;&lt;&lt;&nbsp;6&nbsp;|&nbsp;c2&nbsp;&amp;&nbsp;63);
+		n&nbsp;+=&nbsp;2
+	&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+		c2&nbsp;=&nbsp;e.charCodeAt(n&nbsp;+&nbsp;1);
+		c3&nbsp;=&nbsp;e.charCodeAt(n&nbsp;+&nbsp;2);
+		t&nbsp;+=&nbsp;String.fromCharCode((r&nbsp;&amp;&nbsp;15)&nbsp;&lt;&lt;&nbsp;12&nbsp;|&nbsp;(c2&nbsp;&amp;&nbsp;63)&nbsp;&lt;&lt;&nbsp;6&nbsp;|&nbsp;c3&nbsp;&amp;&nbsp;63);
+		n&nbsp;+=&nbsp;3
+	&nbsp;&nbsp;&nbsp;&nbsp;}
+	}
+	return&nbsp;t
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}
+export&nbsp;default&nbsp;Base64</pre><h3>二、使用示例</h3><pre class="javascript">import&nbsp;Base64&nbsp;from&nbsp;&#39;@/common/base64&#39;
 Base64.encode(&#39;王维的博客&#39;);&nbsp;//&nbsp;546L57u055qE5Y2a5a6i
 Base64.decode(&#39;546L57u055qE5Y2a5a6i&#39;);&nbsp;&nbsp;//&nbsp;王维的博客</pre><p>使用非常简单！</p>            </div>
         </div>
