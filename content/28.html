@@ -62,7 +62,7 @@
 swoole
 ...</pre><p>以命令行为例，如显示上述内容，则表示已安装swoole扩展。如果没有，则进行安装。</p><p>1、从官方下载swoole最新源码，github地址：<a href="https://github.com/swoole/swoole-src/releases" target="_blank">点击前往</a>，本例下载的是4.8.10 Source code (zip)，此处要说明的是，官方没有说明不同版本对PHP版本的要求，也没查到相关资料。本例的PHP版本是7.4.21，其他版本是否可用未验证。</p><p>2、下载好后解压，用命令行进入解压目录，依次执行如下命令：</p><pre class="javascript">phpize
 ./configure
-make&nbsp;&amp;&amp;&nbsp;make&nbsp;install</pre><p>大约几分钟就安装好了，如果有错误根据提示解决就好。</p><p><strong>二、修改php.ini，添加swoole扩展</strong></p><pre class="javascript">vi&nbsp;php.ini</pre><p>找到扩展加载的地方，在后面加上一行：</p><pre class="javascript">extension=xxx
+make&nbsp;&amp;&amp;&nbsp;make&nbsp;install</pre><p>大约几分钟就安装好了，如果有错误根据提示解决就好。</p><p><strong>二、修改php.ini，添加swoole扩展</strong></p><p>如果找不到php.ini或机器上安装有多版本PHP，输入php --ini来确定文件正确位置</p><pre class="javascript">vi&nbsp;php.ini</pre><p>找到扩展加载的地方，在后面加上一行：</p><pre class="javascript">extension=xxx
 extension=swoole.so</pre><p>重启apache，再使用php -m验证扩展是否安装成功。</p><p><strong>三、安装think-swoole</strong></p><p>在项目根目录中执行如下命令：</p><pre class="javascript">composer&nbsp;require&nbsp;topthink/think-swoole</pre><p>此处有个小插曲，如上命令执行报错，大概意思是think-swoole最新版与当前项目的thinkphp版本不匹配，本例版本是thinkphp5.0。解决办法也简单，在后面加上指定版本号：</p><pre class="javascript">composer&nbsp;require&nbsp;topthink/think-swoole=2</pre><p>依次尝试后，后面指定版本为2即可安装成功。</p><p>至此，本地swoole就安装好了。</p><p><strong>四、创建swoole模块，并创建WebSocket控制器</strong></p><pre class="php">//&nbsp;/swoole/WebSocket.php
 &lt;?php
 namespace&nbsp;app\swoole\controller;

@@ -57,7 +57,7 @@
             <h1>Websocket实现站内即时消息提醒以及定时任务</h1>
             <span class="date"><small>2022-06-10</small></span>
             <div class="mt-4">
-                <p>传统的HTTP协议是提供被动式服务，客户端每次发送的请求都需要服务器的反馈回应，当请求结束后便主动释放了连接。也就是客户端通过HTTP主动请求服务器，服务器再根据传递的参数再被动返回相应的内容。</p><p>但如果希望服务器主动向客户端发起请求，或者客户端-服务器即时双向全双工通信，HTTP协议就做不到了，必须使用WebSocket协议。</p><p>本文要实现的功能是，在Fastadmin后台中简单集成WebSocket，以实现即时消息提醒，以及定时任务（取代系统的定时任务，适用于虚拟机等无法使用定时任务的情况）。</p><p>需要实现的功能，1、客服组在录入数据之后，立即自动分配给销售组，同时需要即时弹窗通知对应的销售员；2、销售员跟进的客户，需要在设定的跟进时间之前弹窗提醒，比如提前5分钟。</p><p>由于只需要实现后台管理员账号之间的即时通讯（非聊天），所以只需要在管理员表中增加字段保存会话标识，实现会话标识to会话标识的通信即可。</p><p><strong>实现步骤</strong></p><p><strong>一、集成Gatewayman和workerman</strong></p><p>集成方式参考另一篇文章<a href="13.html">《Thinkphp5使用Workman搭建WebSocket即时聊天服务》</a></p><p>新建一个模块push，按照官方提示新建Index.php和Events.php两个控制器，直接复制官方代码。</p><p><strong>二、前端JS代码</strong></p><p>前端代码需要实现WebSocket连接、通信，并处理连接关闭、连接错误以及断线重连等，同时也要实现心跳检测（防止长时间无通信被服务器关闭连接）。</p><p>下面是具体代码</p><pre class="javascript">//&nbsp;index.js
+                <p>传统的HTTP协议是提供被动式服务，客户端每次发送的请求都需要服务器的反馈回应，当请求结束后便主动释放了连接。也就是客户端通过HTTP主动请求服务器，服务器再根据传递的参数再被动返回相应的内容。</p><p>但如果希望服务器主动向客户端发起请求，或者客户端-服务器即时双向全双工通信，HTTP协议就做不到了，必须使用WebSocket协议。</p><p>本文要实现的功能是，在Fastadmin后台中简单集成WebSocket，以实现即时消息提醒，以及定时任务（取代系统的定时任务，适用于虚拟机等无法使用定时任务的情况）。</p><p>需要实现的功能，1、客服组在录入数据之后，立即自动分配给销售组，同时需要即时弹窗通知对应的销售员；2、销售员跟进的客户，需要在设定的跟进时间之前弹窗提醒，比如提前5分钟。</p><p>由于只需要实现后台管理员账号之间的即时通讯（非聊天），所以只需要把管理员ID和client_id绑定，再用sendToUid方法发送消息即可。</p><p><strong>实现步骤</strong></p><p><strong>一、集成Gatewayman和workerman</strong></p><p>集成方式参考另一篇文章<a href="13.html">《Thinkphp5使用Workman搭建WebSocket即时聊天服务》</a></p><p>新建一个模块push，按照官方提示新建Index.php和Events.php两个控制器，直接复制官方代码。</p><p><strong>二、前端JS代码</strong></p><p>前端代码需要实现WebSocket连接、通信，并处理连接关闭、连接错误以及断线重连等，同时也要实现心跳检测（防止长时间无通信被服务器关闭连接）。</p><p>下面是具体代码</p><pre class="javascript">//&nbsp;index.js
 var&nbsp;lockReconnect&nbsp;=&nbsp;false;
 var&nbsp;wsUrl&nbsp;=&nbsp;&#39;ws://127.0.0.1:1236&#39;;
 var&nbsp;ws;
@@ -176,39 +176,22 @@ createWebSocket(wsUrl);</pre><p>这里第二个定时器是每隔1分钟去查�
 &nbsp;*/
 public&nbsp;static&nbsp;function&nbsp;onMessage($client_id,&nbsp;$data)
 {
-&nbsp;&nbsp;&nbsp;&nbsp;$adminModel&nbsp;&nbsp;&nbsp;=&nbsp;new&nbsp;\app\admin\model\Admin;
-&nbsp;&nbsp;&nbsp;&nbsp;$custoemrsModel&nbsp;=&nbsp;new&nbsp;\app\admin\model\customers\Index;
 &nbsp;&nbsp;&nbsp;&nbsp;$logsModel&nbsp;=&nbsp;new&nbsp;\app\admin\model\customers\Logs;
-
 &nbsp;&nbsp;&nbsp;&nbsp;$arr&nbsp;=&nbsp;json_decode($data,&nbsp;true);
 &nbsp;&nbsp;&nbsp;&nbsp;switch($arr[&#39;type&#39;])&nbsp;{
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;authorize&#39;:&nbsp;&nbsp;&nbsp;//&nbsp;首次连接，保存或更新用户client_id
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;$arr&nbsp;=&nbsp;[
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;authorize&#39;,
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;admin_id&#39;&nbsp;=&gt;&nbsp;&#39;用户ID&#39;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;];
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$adminModel-&gt;save([&#39;client_id&#39;=&gt;$client_id],[&#39;id&#39;=&gt;$arr[&#39;admin_id&#39;]]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;authorize&#39;:&nbsp;&nbsp;&nbsp;//&nbsp;首次连接，client_id绑定uid
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gateway::bindUid($client_id,$arr[&#39;admin_id&#39;]);
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;heartbeat&#39;:&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;心跳检测
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;$arr&nbsp;=&nbsp;[
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;heartbeat&#39;,
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;msg&#39;&nbsp;=&gt;&nbsp;&#39;ping&#39;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;];
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$rsp&nbsp;=&nbsp;[
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;heartbeat&#39;,
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;msg&#39;&nbsp;&nbsp;=&gt;&nbsp;&#39;pong&#39;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gateway::sendToClient($client_id,json_encode($rsp));
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;服务器可以不作响应
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;Gateway::sendToClient($client_id,json_encode($rsp));
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;clues&#39;:&nbsp;//&nbsp;线索分配
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;$arr&nbsp;=&nbsp;[
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;clues&#39;,
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;name&#39;&nbsp;=&gt;&nbsp;&#39;客户姓名&#39;,
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;admin_id&#39;&nbsp;=&gt;&nbsp;&#39;用户ID&#39;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;];
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$to_client_id&nbsp;=&nbsp;$adminModel-&gt;where([&#39;id&#39;=&gt;$arr[&#39;admin_id&#39;]])-&gt;value(&#39;client_id&#39;);
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($to_client_id&nbsp;&amp;&amp;&nbsp;Gateway::isOnline($to_client_id))&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(Gateway::isUidOnline($arr[&#39;admin_id&#39;]))&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$rsp&nbsp;=&nbsp;[
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;clues&#39;,
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;msg&#39;&nbsp;=&gt;&nbsp;&#39;接收到新的线索&#39;,
@@ -216,15 +199,10 @@ public&nbsp;static&nbsp;function&nbsp;onMessage($client_id,&nbsp;$data)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;name&#39;&nbsp;=&gt;&nbsp;$arr[&#39;name&#39;]
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gateway::sendToClient($to_client_id,json_encode($rsp));
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gateway::sendToUid($arr[&#39;admin_id&#39;],json_encode($rsp));
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;schedule&#39;:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;$arr&nbsp;=&nbsp;[
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;=&gt;&nbsp;&#39;schedule&#39;,
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;admin_id&#39;&nbsp;=&gt;&nbsp;&#39;用户ID&#39;,
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;msg&#39;&nbsp;=&gt;&nbsp;&#39;check&#39;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;];
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$customers&nbsp;=&nbsp;$logsModel
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;alias(&#39;a&#39;)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;field([&#39;a.id&#39;,&#39;a.trace_note&#39;,&#39;a.next_trace_note&#39;,&#39;a.next_trace_time&#39;,&#39;b.name&#39;])
@@ -237,7 +215,7 @@ public&nbsp;static&nbsp;function&nbsp;onMessage($client_id,&nbsp;$data)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;msg&#39;&nbsp;=&gt;&nbsp;&#39;新日程提醒&#39;,
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;data&#39;&nbsp;=&gt;&nbsp;$customers
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gateway::sendToClient($client_id,json_encode($rsp));
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gateway::sendToUid($arr[&#39;admin_id&#39;],json_encode($rsp));
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
 &nbsp;&nbsp;&nbsp;&nbsp;}
 }</pre><p><strong>三、添加线索时的即时通知</strong><br/></p><p>这里很简单，从管理员表中查询到自己的client_id，传给Events.php的onMessage方法</p><pre class="php">//&nbsp;Record.php
@@ -247,7 +225,7 @@ $data&nbsp;=&nbsp;[
 &nbsp;&nbsp;&nbsp;&nbsp;&#39;name&#39;&nbsp;=&gt;&nbsp;&#39;客户姓名&#39;,
 &nbsp;&nbsp;&nbsp;&nbsp;&#39;admin_id&#39;&nbsp;=&gt;&nbsp;&#39;销售ID&#39;
 ];
-Events::onMessage($client_id,json_encode($data));&nbsp;//&nbsp;$client_id从表中即时查询</pre><p>添加线索后，自动给对应的销售员发送弹窗提醒。</p><p><strong>四、说明</strong></p><p>1、WebSocket每次连接成功时，都必须携带用户ID去进行一次验证，此操作实际目的是更新其会话标识，因为WebSocket每次重新连接后（比如浏览器刷新、断线等）都会产生新的client_id，所以必须每次都更新一下否则通信会失败；</p><p>2、WebSocket所有通讯都加上一个type类型，用来区分是什么请求，并且不同的类型所携带的data参数不一样，以此让前后端判断并处理不同的业务逻辑，比如type为heartbeat为心跳检测，没有参数；type为clues的时候要带上销售员的ID，和客户姓名；</p><p>3、目前还不支持单用户多端登录，如有需要可自行改造。</p>            </div>
+Events::onMessage(null,json_encode($data));</pre><p>添加线索后，自动给对应的销售员发送弹窗提醒。</p><p><strong>四、说明</strong></p><p>1、WebSocket每次连接成功时，都必须携带用户ID去进行一次验证，此操作实际目的是client_id绑定用户ID，WebSocket每次重新连接后（比如浏览器刷新、断线等）都会产生新的client_id，uid支持绑定多个client_id；</p><p>2、WebSocket所有通讯都加上一个type类型，用来区分是什么请求，并且不同的类型所携带的data参数不一样，以此让前后端判断并处理不同的业务逻辑，比如type为heartbeat为心跳检测，没有参数；type为clues的时候要带上销售员的ID，和客户姓名；</p><p>3、本例已实现用户多端登录，即同一个用户可以同时在不电脑上登录，或者在电脑和手机上同时登录，所有端都能正常收到即时消息提醒。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
