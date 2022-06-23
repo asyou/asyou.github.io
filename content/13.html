@@ -62,8 +62,8 @@
 define(&#39;APP_PATH&#39;,&nbsp;__DIR__&nbsp;.&nbsp;&#39;/../application/&#39;);
 define(&#39;BIND_MODULE&#39;,&#39;chat/Index&#39;);
 //&nbsp;加载框架引导文件
-require&nbsp;__DIR__&nbsp;.&nbsp;&#39;/../thinkphp/start.php&#39;;</pre><p><strong>二、在application中新建chat模块</strong></p><p>在controller中创建Index.php和Events.php两个控制器</p><pre class="php">//&nbsp;application/chat/controller/Index.php
-//&nbsp;该文件内容由官方提供，只需要修改IP地址和控制器，其他保持默认（所有逻辑都在Events.php中实现）
+require&nbsp;__DIR__&nbsp;.&nbsp;&#39;/../thinkphp/start.php&#39;;</pre><p><strong>二、在application中新建chat模块</strong></p><p>在controller中创建Index.php和Events.php两个控制器</p><p>此处Index.php由官方demo修改而来，demo中用了start_businessworker.php、start_gateway.php和start_register.php三个文件，这里把三个文件合并成一个了。</p><pre class="php">//&nbsp;application/chat/controller/Index.php
+//&nbsp;在单台服务器部署的时候，该文件只需要修改对应端口即可，其他保持默认；分布式部署的时候，需要在从服务器上删除或注释register服务，并修改lanIp为服务器的内网IP
 &lt;?php
 namespace&nbsp;app\chat\controller;
 use&nbsp;\GatewayWorker\Register;
@@ -75,16 +75,17 @@ class&nbsp;Index&nbsp;extends&nbsp;Worker
 {
 &nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;function&nbsp;__construct()
 &nbsp;&nbsp;&nbsp;&nbsp;{
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;初始化register
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;初始化register服务
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$register&nbsp;=&nbsp;new&nbsp;Register(&#39;text://0.0.0.0:1238&#39;);
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;初始化&nbsp;bussinessWorker&nbsp;进程
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;初始化bussinessWorker进程
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$worker&nbsp;=&nbsp;new&nbsp;BusinessWorker();
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$worker-&gt;name&nbsp;=&nbsp;&#39;GatewayChat&#39;;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$worker-&gt;count&nbsp;=&nbsp;4;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$worker-&gt;registerAddress&nbsp;=&nbsp;&#39;0.0.0.0:1238&#39;;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;设置处理业务的类,此处制定Events的命名空间
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$worker-&gt;eventHandler&nbsp;=&nbsp;&#39;\app\chat\controller\Events&#39;;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;初始化&nbsp;gateway&nbsp;进程
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;初始化gateway进程
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$gateway&nbsp;=&nbsp;new&nbsp;Gateway(&quot;websocket://0.0.0.0:1236&quot;);
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$gateway-&gt;name&nbsp;=&nbsp;&#39;chat&#39;;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$gateway-&gt;count&nbsp;=&nbsp;4;
@@ -92,8 +93,9 @@ class&nbsp;Index&nbsp;extends&nbsp;Worker
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$gateway-&gt;startPort&nbsp;=&nbsp;2900;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$gateway-&gt;pingInterval&nbsp;=&nbsp;30;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$gateway-&gt;pingNotResponseLimit&nbsp;=&nbsp;1;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$gateway-&gt;pingData&nbsp;=&nbsp;&#39;ping&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$gateway-&gt;pingData&nbsp;=&nbsp;json_encode([&#39;type&#39;=&gt;&#39;heartbeat&#39;,&#39;msg&#39;=&gt;&#39;ping&#39;]);
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$gateway-&gt;registerAddress&nbsp;=&nbsp;&#39;0.0.0.0:1238&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;运行所有Worker;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Worker::runAll();
 &nbsp;&nbsp;&nbsp;&nbsp;}
