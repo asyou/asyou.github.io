@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>thinkphp5安装redis扩展，以及Mac安装redis服务 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content="thinkphp,phpredis,redis"/>
+<meta name="description" content="thinkphp安装redis扩展，安装redis服务" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
+<script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    img {
+        max-width: 100%;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav">
+								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+		</div>
+	</div>
+</nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>thinkphp5安装redis扩展，以及Mac安装redis服务</h1>
+            <span class="date"><small>2022-06-24</small></span>
+            <div class="mt-4">
+                <p>&nbsp;Redis（Remote Dictionary Server）是一个高性能的key-value存储系统，由于数据存储的计算机的内存中，所以它的性能非常高，常用于存储一些频繁读取的内容，从而避免造成数据库I/O瓶颈。</p><p>thinkphp支持redis，本文就记录一下整个安装过程。</p><p>一、安装php的redis扩展</p><p>1、先确定本机或服务器的PHP版本，以及安装目录，本机为php7.4，安装目录为/usr/local/opt/php@7.4/，在终端中进入到该目录<br/></p><pre class="javascript">cd&nbsp;/usr/local/opt/php@7.4/bin/</pre><p>2、下载phpredis<br/></p><pre class="javascript">git&nbsp;clone&nbsp;https://github.com/nicolasff/phprredis.git</pre><p>3、进入下载的文件夹</p><pre class="javascript">cd&nbsp;phpredis</pre><p>当前路径应该是/usr/local/opt/php@7.4/bin/phpredis，一定要保证路径正确</p><p>4、使用phpize命令编译生成configure配置文件</p><pre class="javascript">/usr/local/opt/php@7.4/bin/phpize&nbsp;--with-php-config=/usr/local/opt/php@7.4/bin/php-config</pre><p>5、配置phpredis</p><pre class="javascript">./configure&nbsp;--with-php-config=/usr/local/opt/php@7.4/bin/php-config</pre><p>6、编译安装</p><pre class="javascript">make&nbsp;&amp;&amp;&nbsp;make&nbsp;install</pre><p>7、安装完后，修改php.ini，开启redis扩展，如不确定文件位置，可使用php --ini来定位</p><pre class="javascript">...
+extension=xxx
+extension=redis.so
+...</pre><p>8、配置后，重启php-fpm服务即可。</p><pre class="javascript">brew&nbsp;services&nbsp;start/restart&nbsp;php@7.4</pre><p><strong>二、安装redis服务</strong></p><p>本机或服务器安装redis有多种方式，可以用下载安装的方式，也可以用命令行安装。本机是Mac，可以用HomeBrew的方式安装</p><p>1、查找redis版本</p><pre class="javascript">brew&nbsp;search&nbsp;redis</pre><p>命令执行后会列出所有redis版本，标有@符号的后面是版本号，未标的是最新版本<br/></p><p>2、直接安装最新版本</p><pre class="javascript">brew&nbsp;install&nbsp;redis</pre><p>等待几分钟安装完后，提示信息类似下面</p><pre class="javascript">==&gt;&nbsp;Downloading&nbsp;https://mirrors.ustc.edu.cn/homebrew-bottles/redis-6.0.1&nbsp;
+##################################################################&nbsp;100%
+==&gt;&nbsp;Pouring&nbsp;redis-6.0.1.mojave.bottle.tar.gz
+==&gt;&nbsp;Caveats
+To&nbsp;have&nbsp;launchd&nbsp;start&nbsp;redis&nbsp;now&nbsp;and&nbsp;restart&nbsp;at&nbsp;login:
+&nbsp;&nbsp;brew&nbsp;services&nbsp;start&nbsp;redis
+Or,&nbsp;if&nbsp;you&nbsp;don&#39;t&nbsp;want/need&nbsp;a&nbsp;background&nbsp;service&nbsp;you&nbsp;can&nbsp;just&nbsp;run:
+&nbsp;&nbsp;redis-server&nbsp;/usr/local/etc/rredis.conf
+==&gt;&nbsp;Summary
+🍺&nbsp;/usr/local/Cellar/redis/6.0.1:&nbsp;13&nbsp;files,&nbsp;4.1MB</pre><p>显示这些信息，就表示redis服务安装成功了。</p><p><strong>三、启动redis服务</strong></p><p>有两种方式启动redis</p><p>1、通过brew services来启动</p><pre class="javascript">brew&nbsp;services&nbsp;start&nbsp;redis</pre><p>2、通过redis默认命令redis-server来启动</p><pre class="javascript">#&nbsp;指定配置文件，后台启动必须
+redis-server&nbsp;/usr/local/etc/redis.conf
+#&nbsp;默认参数启动，启动后关闭窗口服务就停止了
+redis-server</pre><p>按ctrl+c即可停止redis服务器（跟gatewarworker的用法类似）。</p><p>3、连接redis服务</p><pre class="javascript">#&nbsp;远程服务连接
+redis-cli&nbsp;-h&nbsp;IP&nbsp;-p&nbsp;6379
+#&nbsp;本机服务连接
+redis-cli
+#&nbsp;关闭redis服务
+redis-cli&nbsp;shutdown</pre><p><strong>四、PHP连接redis例子</strong></p><p>php连接redis都差不多，直接复制网上的</p><pre class="php">//&nbsp;Index/index.php
+public&nbsp;function&nbsp;redis()
+{
+&nbsp;&nbsp;&nbsp;&nbsp;$redis&nbsp;=&nbsp;new&nbsp;\Redis();
+&nbsp;&nbsp;&nbsp;&nbsp;$redis-&gt;connect(&#39;127.0.0.1&#39;,6379);
+&nbsp;&nbsp;&nbsp;&nbsp;$redis-&gt;set(&#39;test&#39;,&#39;Redis扩展添加成功&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;echo&nbsp;$redis-&gt;get(&#39;test&#39;);
+}</pre><p>浏览器中访问这个方法，如果输出“Redis扩展添加成功”，则表示所有工作已经完成！</p><p><strong>五、最后</strong></p><p>前面讲过，thinkphp是支持redis的，修改config.php，把cache从File修改为redis，即可切换为redis缓存</p><pre class="javascript">//&nbsp;application/config.php
+&#39;cache&#39;&nbsp;=&gt;&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;驱动方式
+&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;&#39;Redis&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;缓存保存目录
+&nbsp;&nbsp;&nbsp;&nbsp;&#39;path&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;CACHE_PATH,
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;缓存前缀
+&nbsp;&nbsp;&nbsp;&nbsp;&#39;prefix&#39;&nbsp;=&gt;&nbsp;&#39;&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;缓存有效期&nbsp;0表示永久缓存
+&nbsp;&nbsp;&nbsp;&nbsp;&#39;expire&#39;&nbsp;=&gt;&nbsp;0,
+],</pre><p>即可享受redis带来的高速缓存服务啦～</p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2022 254555778@qq.com</div>
+</footer>
+</body>
+</html>
