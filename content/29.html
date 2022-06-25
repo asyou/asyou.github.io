@@ -73,7 +73,7 @@ Or,&nbsp;if&nbsp;you&nbsp;don&#39;t&nbsp;want/need&nbsp;a&nbsp;background&nbsp;s
 make&nbsp;&amp;&amp;&nbsp;make&nbsp;install</pre><p>手动下载安装的方式，需要手动配置环境变量，或者进入到redis安装目录才能执行redis-server相关命令<strong><br/></strong></p><p><strong>三、启动redis服务</strong></p><p>有两种方式启动redis</p><p>1、通过brew services来启动</p><pre class="javascript">brew&nbsp;services&nbsp;start&nbsp;redis</pre><p>2、通过redis默认命令redis-server来启动</p><pre class="javascript">#&nbsp;指定配置文件，后台启动必须
 redis-server&nbsp;/usr/local/etc/redis.conf
 #&nbsp;默认参数启动，启动后关闭窗口服务就停止了
-redis-server</pre><p>按ctrl+c即可停止redis服务器（跟gatewarworker的用法类似）。</p><p>3、连接redis服务</p><pre class="javascript">#&nbsp;远程服务连接
+redis-server</pre><p>按ctrl+c即可停止redis服务器（跟GateWayworker的用法类似）。</p><p>3、连接redis服务</p><pre class="javascript">#&nbsp;远程服务连接
 redis-cli&nbsp;-h&nbsp;IP&nbsp;-p&nbsp;6379
 #&nbsp;本机服务连接
 redis-cli
@@ -85,7 +85,7 @@ public&nbsp;function&nbsp;redis()
 &nbsp;&nbsp;&nbsp;&nbsp;$redis-&gt;connect(&#39;127.0.0.1&#39;,6379);
 &nbsp;&nbsp;&nbsp;&nbsp;$redis-&gt;set(&#39;test&#39;,&#39;Redis扩展添加成功&#39;);
 &nbsp;&nbsp;&nbsp;&nbsp;echo&nbsp;$redis-&gt;get(&#39;test&#39;);
-}</pre><p>浏览器中访问这个方法，如果输出“Redis扩展添加成功”，则表示所有工作已经完成！</p><p><strong>五、最后</strong></p><p>前面讲过，thinkphp是支持redis的，修改config.php，把cache从File修改为redis，即可切换为redis缓存</p><pre class="javascript">//&nbsp;application/config.php
+}</pre><p>浏览器中访问这个方法，如果输出“Redis扩展添加成功”，则表示所有工作已经完成！</p><p><strong>五、thinkphp使用redis作为缓存</strong></p><p>前面讲过，thinkphp是支持redis的，修改config.php，把cache从File修改为redis，即可切换为redis缓存</p><pre class="javascript">//&nbsp;application/config.php
 &#39;cache&#39;&nbsp;=&gt;&nbsp;[
 &nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;驱动方式
 &nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;&#39;Redis&#39;,
@@ -95,7 +95,7 @@ public&nbsp;function&nbsp;redis()
 &nbsp;&nbsp;&nbsp;&nbsp;&#39;prefix&#39;&nbsp;=&gt;&nbsp;&#39;&#39;,
 &nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;缓存有效期&nbsp;0表示永久缓存
 &nbsp;&nbsp;&nbsp;&nbsp;&#39;expire&#39;&nbsp;=&gt;&nbsp;0,
-],</pre><p>即可享受redis带来的高速缓存服务啦～</p>            </div>
+],</pre><p>即可享受redis带来的高速缓存服务啦～</p><p><strong>六、总结</strong></p><p>1、php的redis扩展和电脑需要安装的redis是两个独立的东西，即php跟redis这两者没有任何关系；例如thinkphp支持mysql数据库，但电脑仍然需要安装mysql；</p><p>2、thinkphp有自带的redis组件，文件在/thinkphp/cache/driver/Redis.php，但它仍然依赖php的redis扩展；</p><p>3、也就是说，php的redis扩展、thinkphp的redis组件和本机需要安装的redis服务，这三者是相互独立的且各司其职，缺一不可；</p><p>4、redis服务的用法跟gatewayworker差不多，都是以cli方式运行，并不依赖于apache/nginx，也就是说redis服务可以部署到任意服务器上，通过远程连接使用，非常适合分布式部署。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
