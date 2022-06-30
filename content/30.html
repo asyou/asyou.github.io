@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>php获取指定年月日起止时间戳方法 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content="php,年月日,时间戳"/>
+<meta name="description" content="PHP封装一个获取指定年月日起止时间戳的方法" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
+<script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    img {
+        max-width: 100%;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav">
+								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+		</div>
+	</div>
+</nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>php获取指定年月日起止时间戳方法</h1>
+            <span class="date"><small>2022-06-30</small></span>
+            <div class="mt-4">
+                <p>在一些列表筛选时，经常用会用到按日期时间筛选数据，本文提供一个方法，参数灵活，可以返回指定年、年月、年月日的起止时间戳，方便使用。<br/></p><p><strong>一、php代码</strong></p><pre class="php">//&nbsp;demo.php
+/**
+&nbsp;*&nbsp;获取指定年月日起止时间戳
+&nbsp;*&nbsp;1、不传参数，返回当天起止时间戳
+&nbsp;*&nbsp;2、date为年，返回该年起止时间戳
+&nbsp;*&nbsp;3、date为年月，返回该月起止时间戳
+&nbsp;*&nbsp;4、date为年月日，返回该日起止时间戳
+&nbsp;*&nbsp;5、date年月/日必须以-为间隔，其他无效
+&nbsp;*&nbsp;@param&nbsp;string&nbsp;$date
+&nbsp;*&nbsp;@return&nbsp;array
+&nbsp;*/
+public&nbsp;function&nbsp;getUnixtime($date=null)
+{
+&nbsp;&nbsp;&nbsp;&nbsp;$resp&nbsp;=&nbsp;false;
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(is_null($date))&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$date&nbsp;=&nbsp;date(&#39;Y-m-d&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$resp&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;date&#39;&nbsp;=&gt;&nbsp;[$date.&#39;&nbsp;00:00:00&#39;,&nbsp;$date.&#39;&nbsp;23:59:59&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;unix&#39;&nbsp;=&gt;&nbsp;[strtotime($date.&#39;&nbsp;00:00:00&#39;),&nbsp;strtotime($date.&#39;&nbsp;23:59:59&#39;)]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(preg_match_all(&#39;/^\d{4}-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|30|31)$/&#39;,&nbsp;$date))&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$resp&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;date&#39;&nbsp;=&gt;&nbsp;[$date.&#39;&nbsp;00:00:00&#39;,&nbsp;$date.&#39;&nbsp;23:59:59&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;unix&#39;&nbsp;=&gt;&nbsp;[strtotime($date.&#39;&nbsp;00:00:00&#39;),&nbsp;strtotime($date.&#39;&nbsp;23:59:59&#39;)]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(preg_match_all(&#39;/^\d{4}-(0?[1-9]|1[0-2])$/&#39;,&nbsp;$date))&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$resp&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;date&#39;&nbsp;=&gt;&nbsp;[$date.&#39;-01&nbsp;00:00:00&#39;,&nbsp;date(&#39;Y-m-d&#39;,&nbsp;strtotime(&quot;{$date}&nbsp;+1&nbsp;month&nbsp;-1&nbsp;day&quot;)).&#39;&nbsp;23:59:59&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;unix&#39;&nbsp;=&gt;&nbsp;[strtotime($date.&#39;-01&nbsp;00:00:00&#39;),&nbsp;strtotime(date(&#39;Y-m-d&#39;,&nbsp;strtotime(&quot;{$date}&nbsp;+1&nbsp;month&nbsp;-1&nbsp;day&quot;)).&#39;&nbsp;23:59:59&#39;)]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(preg_match_all(&#39;/^\d{4}$/&#39;,&nbsp;$date))&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$resp&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;date&#39;&nbsp;=&gt;&nbsp;[$date.&#39;-01-01&nbsp;00:00:00&#39;,&nbsp;$date.&#39;-12-31&nbsp;23:59:59&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;unix&#39;&nbsp;=&gt;&nbsp;[strtotime($date.&#39;-01-01&nbsp;00:00:00&#39;),&nbsp;strtotime($date.&#39;-12-31&nbsp;23:59:59&#39;)]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;$resp;
+}</pre><p><strong>二、注意事项</strong></p><p>1、参数建议使用date()方法生成，避免出错；</p><p>2、该方法会校验年月日基本格式，格式正确才能返回，否则返回false；</p><p>3、例如2022-13是错误的，因为没有13月，2022-00-01/2022-01-00也是错误的，因为没有第00月和第00日；</p><p>4、一些特殊的日期格式也会有返回结果，但其实是错误的，例如2022-02-30/2022-11-31，注意参数的正确性即可避免。</p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2022 254555778@qq.com</div>
+</footer>
+</body>
+</html>
