@@ -76,7 +76,7 @@ public&nbsp;function&nbsp;test2()
 &nbsp;&nbsp;&nbsp;&nbsp;$docx-&gt;addText(&#39;文本内容&#39;);
 &nbsp;&nbsp;&nbsp;&nbsp;$docx-&gt;addMath(&#39;数学公式&#39;);&nbsp;//&nbsp;omml格式xml
 &nbsp;&nbsp;&nbsp;&nbsp;$docx-&gt;buildDocx(&#39;文件名称&#39;);
-}</pre><p>从数据库中读取出试题，通过上述方法生成word即可，完美地保留了原有的数学公式，唯一不足的就是，一些细节处理得不太好，比如排版有些小问题，括号也变成没有留空了，需要在下载后手动调整一下。</p><p>不过，这些都是小问题了。</p>            </div>
+}</pre><p>从数据库中读取出试题，通过上述方法生成word即可，完美地保留了原有的数学公式，唯一不足的就是，一些细节处理得不太好，比如排版有些小问题，括号也变成没有留空了，需要在下载后手动调整一下。</p><p>不过，这些都是小问题了。</p><p><strong>延伸阅读</strong></p><p>一些名词的解释</p><p>1、Latex</p><p>这是一种专门处理数学公式的排版系统，它的出现极大地简化了数学公式在印刷、Word文档中输入的难度。数学公式转成Latex格式后可以很方便地存储，当需要输出到浏览器上的时候，配合Mathjax插件即可。</p><p>2、omml</p><p>这是Docx文档通过$archive-&gt;getFromName(&#39;word/document.xml&#39;)方式所获取到的xml数据结构，这种特殊的xml结构便是生成Docx文档的基本结构。</p><p>3、Mathml</p><p>这是一种数学标记语言，与html标签非常类似，常用于数学公式输出显示，通常可以跟omml互转。<br/></p><p>4、Mathjax</p><p>这是一种专门在浏览器端把Latex渲染成数学公式的JS插件引擎，支持几乎所有现代浏览器，实际测试效果非常棒。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
