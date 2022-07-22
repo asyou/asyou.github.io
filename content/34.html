@@ -135,7 +135,7 @@ oInit.InitSubTable&nbsp;=&nbsp;function&nbsp;(index,&nbsp;row,&nbsp;$detail)&nbs
 &nbsp;&nbsp;&nbsp;&nbsp;});
 };
 //&nbsp;为表格绑定事件
-Table.api.bindevent(table);</pre><p><strong>二、后台代码</strong></p><p>后台代码默认的查询条件，只查询最顶一级的数据，比如pid为0表示为省/直辖市/特区等，当有pid参数传回来时，就只查询对应数据即可。</p><p>代码略。</p>            </div>
+Table.api.bindevent(table);</pre><p><strong>二、后台代码</strong></p><p>后台代码默认的查询条件，只查询最顶一级的数据，比如pid为0表示为省/直辖市/特区等，当有pid参数传回来时，就只查询对应数据即可。</p><p>代码略。</p><p><strong>三、说明</strong></p><p>1、子表的字段结构可以跟主表一样，也可以不一样；</p><p>2、子表参数toolbar要设置为false，否则会跟主表的工具栏冲突而报错；</p><p>3、如果子表也要支持父子表，跟主表一样要加上onExpandRow方法。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
