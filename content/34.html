@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>bootstrap父子表功能实现的方法，支持循环父子表 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content="bootstrap,父子表,联动"/>
+<meta name="description" content="bootstrap实现父子表功能的方法" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
+<script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    img {
+        max-width: 100%;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav">
+								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+		</div>
+	</div>
+</nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>bootstrap父子表功能实现的方法，支持循环父子表</h1>
+            <span class="date"><small>2022-07-22</small></span>
+            <div class="mt-4">
+                <p>在很多数据模型中，用父子表来展示数据要比普通排序列表要好很多，因为可以自上而下一级一级地展示数据。比如下图是全国行政地区数据：</p><p><img src="http://git.github.hk/uploads/20220722/42c1b0b52e36b6044e4565d99543bdcf.png"/></p><p>最顶级只展示省/省级市和特区等一级数据，点击左侧＋号可以往下分别展开市级、区县级、街道级和居委会等，这样从上往下检索的方式比搜索快得多，也直观得多。</p><p>下面就来看这个父子表是如何实现的。</p><p><strong>一、JS代码</strong></p><pre class="javascript">//&nbsp;index.js
+var&nbsp;table&nbsp;=&nbsp;$(&quot;#table&quot;);
+var&nbsp;oInit&nbsp;=&nbsp;new&nbsp;Object();&nbsp;//&nbsp;一定要加这个
+//&nbsp;初始化表格
+table.bootstrapTable({
+&nbsp;&nbsp;&nbsp;&nbsp;url:&nbsp;$.fn.bootstrapTable.defaults.extend.index_url,
+&nbsp;&nbsp;&nbsp;&nbsp;pk:&nbsp;&#39;id&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;sortName:&nbsp;&#39;id&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;sortOrder:&nbsp;&#39;ASC&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;detailView:&nbsp;true,&nbsp;//&nbsp;true表示父子表
+&nbsp;&nbsp;&nbsp;&nbsp;columns:&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{checkbox:&nbsp;true},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;id&#39;,&nbsp;title:&nbsp;__(&#39;Id&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;pid&#39;,&nbsp;title:&nbsp;__(&#39;Pid&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;level&#39;,&nbsp;title:&nbsp;__(&#39;Level&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;area_code&#39;,&nbsp;title:&nbsp;__(&#39;Area_code&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;zip_code&#39;,&nbsp;title:&nbsp;__(&#39;Zip_code&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;city_code&#39;,&nbsp;title:&nbsp;__(&#39;City_code&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;name&#39;,&nbsp;title:&nbsp;__(&#39;Name&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;short_name&#39;,&nbsp;title:&nbsp;__(&#39;Short_name&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;merger_name&#39;,&nbsp;title:&nbsp;__(&#39;Merger_name&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;pinyin&#39;,&nbsp;title:&nbsp;__(&#39;Pinyin&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;lng&#39;,&nbsp;title:&nbsp;__(&#39;Lng&#39;),&nbsp;operate:&#39;BETWEEN&#39;},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;lat&#39;,&nbsp;title:&nbsp;__(&#39;Lat&#39;),&nbsp;operate:&#39;BETWEEN&#39;},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;operate&#39;,&nbsp;title:&nbsp;__(&#39;Operate&#39;),&nbsp;table:&nbsp;table,&nbsp;events:&nbsp;Table.api.events.operate,&nbsp;formatter:&nbsp;Table.api.formatter.operate}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]
+&nbsp;&nbsp;&nbsp;&nbsp;],
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;加上这个方法，指定方法处理每一行的子数据
+&nbsp;&nbsp;&nbsp;&nbsp;onExpandRow:&nbsp;function&nbsp;(index,&nbsp;row,&nbsp;$detail)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;oInit.InitSubTable(index,&nbsp;row,&nbsp;$detail);
+&nbsp;&nbsp;&nbsp;&nbsp;}
+});
+//&nbsp;实现父子表的核心代码
+oInit.InitSubTable&nbsp;=&nbsp;function&nbsp;(index,&nbsp;row,&nbsp;$detail)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;parentid&nbsp;=&nbsp;row.id;
+&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;cur_table&nbsp;=&nbsp;$detail.html(&#39;&lt;table&gt;&lt;/table&gt;&#39;).find(&#39;table&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;$(cur_table).bootstrapTable({
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;url:&nbsp;&#39;/tools/area/index&#39;,&nbsp;//&nbsp;加载子表数据的URL
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toolbar:&nbsp;false,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;showColumns:&nbsp;false,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;showToggle:&nbsp;false,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;showExport:&nbsp;false,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;search:&nbsp;false,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commonSearch:&nbsp;false,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sortOrder:&nbsp;&#39;ASC&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;queryParams:&nbsp;function(params){
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;tmp&nbsp;=&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;limit:&nbsp;params.limit,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;offset:&nbsp;params.offset,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;order:&nbsp;params.order,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pid:&nbsp;parentid&nbsp;//&nbsp;一定要把pid参数传回后台
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;tmp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;detailView:&nbsp;true,&nbsp;//&nbsp;子表同样支持父子表
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;columns:&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{checkbox:&nbsp;true},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;id&#39;,&nbsp;title:&nbsp;__(&#39;Id&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;pid&#39;,&nbsp;title:&nbsp;__(&#39;Pid&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;level&#39;,&nbsp;title:&nbsp;__(&#39;Level&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;area_code&#39;,&nbsp;title:&nbsp;__(&#39;Area_code&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;zip_code&#39;,&nbsp;title:&nbsp;__(&#39;Zip_code&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;city_code&#39;,&nbsp;title:&nbsp;__(&#39;City_code&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;name&#39;,&nbsp;title:&nbsp;__(&#39;Name&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;short_name&#39;,&nbsp;title:&nbsp;__(&#39;Short_name&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;merger_name&#39;,&nbsp;title:&nbsp;__(&#39;Merger_name&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;pinyin&#39;,&nbsp;title:&nbsp;__(&#39;Pinyin&#39;)},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;lng&#39;,&nbsp;title:&nbsp;__(&#39;Lng&#39;),&nbsp;operate:&#39;BETWEEN&#39;},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;lat&#39;,&nbsp;title:&nbsp;__(&#39;Lat&#39;),&nbsp;operate:&#39;BETWEEN&#39;},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{field:&nbsp;&#39;operate&#39;,&nbsp;title:&nbsp;__(&#39;Operate&#39;),&nbsp;table:&nbsp;table,&nbsp;events:&nbsp;Table.api.events.operate,&nbsp;formatter:&nbsp;Table.api.formatter.operate}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;onExpandRow:&nbsp;function&nbsp;(index,&nbsp;row,&nbsp;$Subdetail)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;oInit.InitSubTable(index,&nbsp;row,&nbsp;$Subdetail);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;});
+};
+//&nbsp;为表格绑定事件
+Table.api.bindevent(table);</pre><p><strong>二、后台代码</strong></p><p>后台代码默认的查询条件，只查询最顶一级的数据，比如pid为0表示为省/直辖市/特区等，当有pid参数传回来时，就只查询对应数据即可。</p><p>代码略。</p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2022 254555778@qq.com</div>
+</footer>
+</body>
+</html>
