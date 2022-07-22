@@ -57,7 +57,7 @@
             <h1>bootstrap父子表功能实现的方法，支持循环父子表</h1>
             <span class="date"><small>2022-07-22</small></span>
             <div class="mt-4">
-                <p>在很多数据模型中，用父子表来展示数据要比普通排序列表要好很多，因为可以自上而下一级一级地展示数据。比如下图是全国行政地区数据：</p><p><img src="http://git.github.hk/uploads/20220722/42c1b0b52e36b6044e4565d99543bdcf.png"/></p><p>最顶级只展示省/省级市和特区等一级数据，点击左侧＋号可以往下分别展开市级、区县级、街道级和居委会等，这样从上往下检索的方式比搜索快得多，也直观得多。</p><p>下面就来看这个父子表是如何实现的。</p><p><strong>一、JS代码</strong></p><pre class="javascript">//&nbsp;index.js
+                <p>在很多数据模型中，用父子表来展示数据要比普通排序列表要好很多，因为可以自上而下一级一级地展示数据。比如下图是全国行政地区数据：</p><p><img src="/uploads/20220722/42c1b0b52e36b6044e4565d99543bdcf.png"/></p><p>最顶级只展示省/省级市和特区等一级数据，点击左侧＋号可以往下分别展开市级、区县级、街道级和居委会等，这样从上往下检索的方式比搜索快得多，也直观得多。</p><p>下面就来看这个父子表是如何实现的。</p><p><strong>一、JS代码</strong></p><pre class="javascript">//&nbsp;index.js
 var&nbsp;table&nbsp;=&nbsp;$(&quot;#table&quot;);
 var&nbsp;oInit&nbsp;=&nbsp;new&nbsp;Object();&nbsp;//&nbsp;一定要加这个
 //&nbsp;初始化表格
