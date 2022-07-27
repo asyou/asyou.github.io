@@ -68,7 +68,7 @@ public&nbsp;function&nbsp;test()
 &nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;echo&nbsp;&#39;open&nbsp;failed.&#39;;
 &nbsp;&nbsp;&nbsp;&nbsp;}
-}</pre><p>通过上述方法，成功拿到了word文档对应的omml数据结构。</p><p>然后兴冲冲地把xml数据拿去用phpword组件重新生成word文档！</p><p><strong>结果失败了～</strong></p><p>翻遍了phpword官方文档，通通都是介绍用普通文本生成word，并没有找到它处理数学公式的说明。</p><p>意思是phpword只能把普通文字内容变成word文档，不能用xml生成，数学公式更是无从谈起。。。</p><p>继续查阅资料，能找到的，都是一些不着边际估计博主自己都未验证的各类技术方案，有让安装Office MathType插件的，复制Latex到Word中会自动变成公式、有让安装Pandoc的，可以在命令行中从某格式文档直接转换成Word、有让安装Tomcat的，提供一个Java应用程序，PHP调用Tomcat来生成Word文档。</p><p>这些，通通都不符合项目需求。</p><p>功夫不负有心人，最终让我找到了解决的终极办法！但出于商业保密原则，我不能透露具体是什么办法，不过提供一些处理转换的伪代码还是可以的。</p><pre class="php">//&nbsp;/index.php
+}</pre><p>通过上述方法，成功拿到了word文档对应的omml数据结构。</p><p>然后兴冲冲地把xml数据拿去用phpword组件重新生成word文档！</p><p><strong>结果失败了～</strong></p><p>翻遍了phpword官方文档，通通都是介绍用普通文本生成word，并没有找到它处理数学公式的说明。</p><p>意味着phpword只能把普通文字内容变成word文档，不能用xml生成，数学公式更是无从谈起。。。</p><p>继续查阅资料，能找到的，都是一些不着边际估计博主自己都未验证的各类技术方案，有让安装Office MathType插件的，复制Latex到Word中会自动变成公式、有让安装Pandoc的，可以在命令行中从某格式文档直接转换成Word、有让安装Tomcat的，提供一个Java应用程序，PHP调用Tomcat来生成Word文档。</p><p>这些，通通都不符合项目需求。</p><p>功夫不负有心人，最终让我找到了解决的终极办法！但出于商业保密原则，我不能透露具体是什么办法，不过提供一些处理转换的伪代码还是可以的。</p><pre class="php">//&nbsp;/index.php
 public&nbsp;function&nbsp;test2()
 {
 &nbsp;&nbsp;&nbsp;&nbsp;require_once(&#39;./Docx.php&#39;);

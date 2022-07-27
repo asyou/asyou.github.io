@@ -57,7 +57,7 @@
             <h1>bootstrap父子表功能实现的方法，支持循环父子表</h1>
             <span class="date"><small>2022-07-22</small></span>
             <div class="mt-4">
-                <p>在很多数据模型中，用父子表来展示数据要比普通排序列表要好很多，因为可以自上而下一级一级地展示数据。比如下图是全国行政地区数据：</p><p><img src="/uploads/20220722/42c1b0b52e36b6044e4565d99543bdcf.png"/></p><p>最顶级只展示省/省级市和特区等一级数据，点击左侧＋号可以往下分别展开市级、区县级、街道级和居委会等，这样从上往下检索的方式比搜索快得多，也直观得多。</p><p>下面就来看这个父子表是如何实现的。</p><p><strong>一、JS代码</strong></p><pre class="javascript">//&nbsp;index.js
+                <p>在很多数据模型中，用父子表来展示数据要比普通排序列表好很多，因为可以自上而下一级一级地展示数据。</p><p>比如下图是全国行政地区数据：</p><p><img src="/uploads/20220722/42c1b0b52e36b6044e4565d99543bdcf.png"/></p><p>最顶级只展示省/省级市和特区等一级数据，点击左侧＋号可以往下分别展开市级、区县级、街道级和居委会等，这样从上往下检索的方式比搜索快得多，也直观得多。</p><p>下面就来看这个父子表是如何实现的。</p><p><strong>一、JS代码</strong></p><pre class="javascript">//&nbsp;index.js
 var&nbsp;table&nbsp;=&nbsp;$(&quot;#table&quot;);
 var&nbsp;oInit&nbsp;=&nbsp;new&nbsp;Object();&nbsp;//&nbsp;一定要加这个
 //&nbsp;初始化表格
@@ -135,7 +135,7 @@ oInit.InitSubTable&nbsp;=&nbsp;function&nbsp;(index,&nbsp;row,&nbsp;$detail)&nbs
 &nbsp;&nbsp;&nbsp;&nbsp;});
 };
 //&nbsp;为表格绑定事件
-Table.api.bindevent(table);</pre><p><strong>二、后台代码</strong></p><p>后台代码默认的查询条件，只查询最顶一级的数据，比如pid为0表示为省/直辖市/特区等，当有pid参数传回来时，就只查询对应数据即可。</p><p>代码略。</p><p><strong>三、说明</strong></p><p>1、子表的字段结构可以跟主表一样，也可以不一样；</p><p>2、子表参数toolbar要设置为false，否则会跟主表的工具栏冲突而报错；</p><p>3、如果子表也要支持父子表，跟主表一样要加上onExpandRow方法。</p>            </div>
+Table.api.bindevent(table);</pre><p><strong>二、后台代码</strong></p><p>后台代码默认的查询条件，只查询最顶一级的数据，比如pid为0表示为省/直辖市/特区等，当有pid参数传回来时，就只查询对应数据即可。</p><p>代码略。</p><p><strong>三、说明</strong></p><p>1、子表的字段结构可以跟主表一样，也可以不一样；</p><p>2、子表参数toolbar要设置为false，否则会跟主表的工具栏冲突而报错；</p><p>3、如果子表也要支持父子表，跟主表一样要加上detailView参数和onExpandRow方法。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
