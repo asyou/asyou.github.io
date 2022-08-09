@@ -165,8 +165,8 @@ public&nbsp;function&nbsp;export($ids=null)
 &nbsp;&nbsp;&nbsp;&nbsp;success:&nbsp;function(data)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;创建链接并模拟点击下载
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;$link&nbsp;=&nbsp;$(&quot;&lt;a&gt;&quot;);
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$link.attr(&quot;href&quot;,&nbsp;ret.file);
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$link.attr(&quot;download&quot;,&nbsp;ret.filename);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$link.attr(&quot;href&quot;,&nbsp;data.file);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$link.attr(&quot;download&quot;,&nbsp;data.filename);
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$(&quot;body&quot;).append($link);
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$link[0].click();
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$link.remove();
