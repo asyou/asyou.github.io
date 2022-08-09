@@ -58,7 +58,11 @@
             <h1>在uniapp网页H5和APP中把latex处理成数学公式显示</h1>
             <span class="date"><small>2022-08-09</small></span>
             <div class="mt-4">
-                <p>本文简单介绍在普通PC网页、uniapp网页H5和APP中使用MathJax把latex渲染成数学公式显示的方法。</p><p>在PC网页中处理latex转数学公式显示非常简单，只需要加载MathJax的一个JS文件，即可把整个页面中的latex全部自动转换成公式显示。<br/></p><p><strong>一、在PC网页中使用</strong></p><pre class="javascript">&lt;script&nbsp;type=&quot;text/javascript&quot;&nbsp;src=&quot;http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML&quot;&gt;
+                <p>本文简单介绍在普通PC网页、uniapp网页H5和APP中使用MathJax把latex格式渲染成数学公式显示的方法。</p><p>在PC网页中处理latex转数学公式显示非常简单，只需要加载MathJax的一个JS文件，即可把页面中所有的latex格式全部自动转换成公式显示。<br/></p><p>测试题目</p><pre>将二次函数$y=2(x-4)^{2}-1$先上平移3个单位，再向左平移4个单位后的解析式是()
+A.$y=2(x-1)^{2}+3$
+B.$y=2x^{2}-4$
+C.$y=2x^{2}+2$
+D.$y=2(x-8)^{2}+2$</pre><p><strong>一、在PC网页中使用</strong></p><pre class="javascript">&lt;script&nbsp;type=&quot;text/javascript&quot;&nbsp;src=&quot;http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML&quot;&gt;
 &nbsp;&nbsp;MathJax.Hub.Config({
 &nbsp;&nbsp;&nbsp;&nbsp;tex2jax:&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inlineMath:&nbsp;[[&#39;$&#39;,&#39;$&#39;],&nbsp;[&#39;\\(&#39;,&#39;\\)&#39;]],&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;行内显示
@@ -66,7 +70,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;processEscapes:&nbsp;true
 &nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;});
-&lt;/script&gt;</pre><p>注意链接后面的config参数不能省略！如果加载慢也可以把JS文件下载到本地并引用。</p><p>运行效果：</p><p><img src="/uploads/20220809/3f4b3ba9016b7226b72db36a7c9b1bc5.png"/></p><p><strong>二、在uniapp网页H5和APP中使用</strong></p><p>由于uniapp是一套代码统一各端（H5、小程序、APP等），这个时候就要考虑不同端对MathJax的支持了。<strong><br/></strong></p><p>H5其实跟PC网页中的处理方式差不多，引用MathJax即可，但在APP端却不可以这样用，因为APP端不支持普通的window对象即DOM，不过好在uniapp提供了一个renderjs方式，可以解决这个问题。</p><pre class="javascript">//&nbsp;test.vue
+&lt;/script&gt;</pre><p>注意链接后面的config参数不能省略！如果加载慢也可以把JS文件下载到本地并引用。</p><p>运行效果：</p><p><img src="/uploads/20220809/3f4b3ba9016b7226b72db36a7c9b1bc5.png"/></p><p><strong>二、在uniapp网页H5和APP中使用</strong></p><p>由于uniapp是一套代码统一各端（H5、小程序、APP等），这个时候就要考虑不同端对MathJax的支持了。<strong><br/></strong></p><p>H5其实跟PC网页中的处理方式差不多，引用MathJax即可，但在APP端却不可以这样用，因为APP端不支持普通的window对象即DOM。不过好在uniapp提供了一个renderjs方式，经测试可以解决这个问题。</p><pre class="javascript">//&nbsp;test.vue
 &lt;view&nbsp;class=&quot;example&quot;&gt;
 &nbsp;&nbsp;&nbsp;&nbsp;&lt;view&gt;将二次函数$y=2(x-4)^{2}-1$先上平移3个单位，再向左平移4个单位后的解析式是()&lt;/view&gt;
 &nbsp;&nbsp;&nbsp;&nbsp;&lt;view&gt;A.$y=2(x-1)^{2}+3$&lt;/view&gt;
@@ -102,7 +106,7 @@
 	&nbsp;&nbsp;&nbsp;&nbsp;})();
 	}
 &nbsp;&nbsp;&nbsp;&nbsp;}
-&lt;/script&gt;</pre><p>运行效果：</p><p><img src="/uploads/20220809/1e6e1ac082426137347253c585afb870.png"/></p><p>可见renderjs方式完全能满足要求。</p><p><strong>三、已发现的问题</strong></p><pre class="javascript">require(&#39;@/static/text-svg.js&#39;)</pre><p>1、这一行在H5中会报一个语法错误，查看网络连接是[object%20Object]，这明显不对，但运行效果却没有问题，原因未知，替换成在线的就没有问题；</p><p>2、遗憾的是该方式仅支持H5和APP，不支持小程序，需要在小程序上实现同样效果的话，还得想办法再折腾折腾。</p>            </div>
+&lt;/script&gt;</pre><p>运行效果：</p><p><img src="/uploads/20220809/1e6e1ac082426137347253c585afb870.png"/></p><p>可见renderjs方式完全能满足要求，实现效果跟PC网页完全一样。</p><p><strong>三、已发现的问题</strong></p><pre class="javascript">require(&#39;@/static/text-svg.js&#39;)</pre><p>1、这一行在H5中会报一个语法错误，查看网络连接是[object%20Object]，这明显不对，但运行效果却没有问题，原因未知；</p><p>2、替换成在线的JS后，不报上述错误了，但页面公式渲染耗时变长，有时候要很久才能渲染完成，这点不可接受；</p><p>3、遗憾的是uniapp的renderjs方式仅支持H5和APP，不支持小程序，需要在小程序上实现同样效果的话，还得想办法再折腾折腾。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
