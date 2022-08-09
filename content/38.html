@@ -70,7 +70,7 @@ D.$y=2(x-8)^{2}+2$</pre><p><strong>一、在PC网页中使用</strong></p><pre c
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;processEscapes:&nbsp;true
 &nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;});
-&lt;/script&gt;</pre><p>注意链接后面的config参数不能省略！如果加载慢也可以把JS文件下载到本地并引用。</p><p>运行效果：</p><p><img src="/uploads/20220809/3f4b3ba9016b7226b72db36a7c9b1bc5.png"/></p><p><strong>二、在uniapp网页H5和APP中使用</strong></p><p>由于uniapp是一套代码统一各端（H5、小程序、APP等），这个时候就要考虑不同端对MathJax的支持了。<strong><br/></strong></p><p>H5其实跟PC网页中的处理方式差不多，引用MathJax即可，但在APP端却不可以这样用，因为APP端不支持普通的window对象即DOM。不过好在uniapp提供了一个renderjs方式，经测试可以解决这个问题。</p><pre class="javascript">//&nbsp;test.vue
+&lt;/script&gt;</pre><p>注意链接后面的config参数不能省略！如果加载慢也可以把JS文件下载到本地并引用。</p><p>运行效果：</p><p><img src="/uploads/20220809/3f4b3ba9016b7226b72db36a7c9b1bc5.png"/></p><p><strong>二、在uniapp网页H5和APP中使用</strong></p><p>由于uniapp是一套代码统一各端（H5、小程序、APP等），这个时候就要考虑不同端对MathJax的支持了。<strong><br/></strong></p><p>H5其实跟PC网页中的处理方式差不多，引用MathJax即可，但在APP端却不可以这样用，因为APP端不支持普通的window对象DOM。不过好在uniapp提供了一个renderjs方式，经测试可以解决这个问题。</p><pre class="javascript">//&nbsp;test.vue
 &lt;view&nbsp;class=&quot;example&quot;&gt;
 &nbsp;&nbsp;&nbsp;&nbsp;&lt;view&gt;将二次函数$y=2(x-4)^{2}-1$先上平移3个单位，再向左平移4个单位后的解析式是()&lt;/view&gt;
 &nbsp;&nbsp;&nbsp;&nbsp;&lt;view&gt;A.$y=2(x-1)^{2}+3$&lt;/view&gt;
@@ -96,17 +96,68 @@ D.$y=2(x-8)^{2}+2$</pre><p><strong>一、在PC网页中使用</strong></p><pre c
 		&nbsp;&nbsp;&nbsp;&nbsp;scale:&nbsp;1
 		}
 	&nbsp;&nbsp;&nbsp;&nbsp;};
-	&nbsp;&nbsp;&nbsp;&nbsp;(function()&nbsp;{
-		var&nbsp;script&nbsp;=&nbsp;document.createElement(&#39;script&#39;)
-		//&nbsp;下面链接后面换成text-chtml.js也行，但显示效果不如svg
-		//&nbsp;script.src&nbsp;=&nbsp;&#39;https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js&#39;
-		//&nbsp;下面是下载到本地的JS文件
-		script.src&nbsp;=&nbsp;require(&#39;@/static/tex-svg.js&#39;)
-		document.head.appendChild(script)
-	&nbsp;&nbsp;&nbsp;&nbsp;})();
-	}
+	&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;script&nbsp;=&nbsp;document.createElement(&#39;script&#39;)
+	&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;下面链接后面换成text-chtml.js也行，但显示效果不如svg
+	&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;script.src&nbsp;=&nbsp;&#39;https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js&#39;
+	&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;下面是下载到本地的JS文件
+	&nbsp;&nbsp;&nbsp;&nbsp;script.src&nbsp;=&nbsp;require(&#39;@/static/tex-svg.js&#39;)
+	&nbsp;&nbsp;&nbsp;&nbsp;document.head.appendChild(script)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;}
-&lt;/script&gt;</pre><p>运行效果：</p><p><img src="/uploads/20220809/1e6e1ac082426137347253c585afb870.png"/></p><p>可见renderjs方式完全能满足要求，实现效果跟PC网页完全一样。</p><p><strong>三、已发现的问题</strong></p><pre class="javascript">require(&#39;@/static/text-svg.js&#39;)</pre><p>1、这一行在H5中会报一个语法错误，查看网络连接是[object%20Object]，这明显不对，但运行效果却没有问题，原因未知；</p><p>2、替换成在线的JS后，不报上述错误了，但页面公式渲染耗时变长，有时候要很久才能渲染完成，这点不可接受；</p><p>3、遗憾的是uniapp的renderjs方式仅支持H5和APP，不支持小程序，需要在小程序上实现同样效果的话，还得想办法再折腾折腾。</p>            </div>
+&lt;/script&gt;</pre><p>运行效果：</p><p><img src="/uploads/20220809/1e6e1ac082426137347253c585afb870.png"/></p><p>可见renderjs方式完全能满足要求，实现效果跟PC网页完全一样。</p><p><strong>三、已发现的问题</strong></p><pre class="javascript">require(&#39;@/static/text-svg.js&#39;)</pre><p>1、这一行在H5中会报一个语法错误，查看网络连接是[object%20Object]，这明显不对，但运行效果却没有问题，原因猜测是非模块化JS引起；</p><p>2、替换成在线的JS后，不报上述错误了，但页面公式渲染耗时变长（tex-svg.js压缩版都有2.1M），有时候要很久才能渲染完成，这点不可接受。</p><p>为了解决这个问题，继续改进一番。</p><p>新建一个loadJs.js文件放在common目录，内容如下</p><pre class="javascript">function&nbsp;loadJs()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;new&nbsp;Promise((resolve,&nbsp;reject)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;script&nbsp;=&nbsp;document.createElement(&#39;script&#39;)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;script.type&nbsp;=&nbsp;&quot;text/javascript&quot;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;#ifdef&nbsp;APP-PLUS
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;script.src&nbsp;=&nbsp;&#39;./static/tex-svg.js&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;#endif
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;#ifdef&nbsp;H5
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;script.src&nbsp;=&nbsp;&#39;../../static/tex-svg.js&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;#endif
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.body.appendChild(script)
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;script.onload&nbsp;=&nbsp;()&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resolve()
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;script.onerror&nbsp;=&nbsp;()&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reject()
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;})
+}
+
+export&nbsp;default&nbsp;loadJs</pre><p>原理就是通过标准的es5规范JS模块文件引用tex-svg.js，这样在页面上import该JS文件即可！</p><p>上面为什么用了条件编译是因为经过实测发现H5与APP运行后的static目录并不统一，也就是说编译后目录结构会有差异。</p><pre class="javascript">//&nbsp;test.vue
+&lt;view&nbsp;class=&quot;example&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;view&gt;将二次函数$y=2(x-4)^{2}-1$先上平移3个单位，再向左平移4个单位后的解析式是()&lt;/view&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;view&gt;A.$y=2(x-1)^{2}+3$&lt;/view&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;view&gt;B.$y=2x^{2}-4$&lt;/view&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;view&gt;C.$y=2x^{2}+2$&lt;/view&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;view&gt;D.$y=2(x-8)^{2}+2$&lt;/view&gt;
+&lt;/view&gt;
+&lt;script&nbsp;module=&quot;MathJax&quot;&nbsp;lang=&quot;renderjs&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;export&nbsp;default&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mounted()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;window.MathJax&nbsp;=&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tex:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inlineMath:&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&#39;$&#39;,&nbsp;&#39;$&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&#39;\\(&#39;,&nbsp;&#39;\\)&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;displayMath:&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&#39;$$&#39;,&nbsp;&#39;$$&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&#39;\\[&#39;,&nbsp;&#39;\\]&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;svg:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;scale:&nbsp;1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;};
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;loadJs().then((res)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;console.log(&#39;success&#39;)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}).catch((err)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;console.log(&#39;error&#39;)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&lt;/script&gt;</pre><p>现在不报错了，H5端与APP端也都正常。</p><p><strong>四、其他</strong></p><p>遗憾的是uniapp的renderjs方式仅支持H5和APP，不支持小程序，需要在小程序上实现同样效果的话，还得想办法再折腾折腾。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
