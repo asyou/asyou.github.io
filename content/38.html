@@ -158,7 +158,7 @@ export&nbsp;default&nbsp;loadJs</pre><p>原理就是通过标准的es5规范JS�
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;console.log(&#39;error&#39;)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
 &nbsp;&nbsp;&nbsp;&nbsp;}
-&lt;/script&gt;</pre><p>现在不报错了，H5端与APP端也都正常。</p><p><strong>四、其他</strong></p><p>遗憾的是uniapp的renderjs方式仅支持H5和APP，不支持小程序，需要在小程序上实现同样效果的话，还得想办法再折腾折腾。</p><p><strong>五、微信小程序中渲染方法（补充）</strong></p><p>微信小程序中处理latex，需要用到一个towxml插件，gitbub地址：<a href="https://github.com/sbfkcel/towxml/wiki" target="_blank">点击前往</a></p><p>根据官方文档说明进行构建，把最终生成的towxml文件夹放入到static文件夹中。<br/></p><p>1、在main.js中引用<br/></p><pre>//&nbsp;main.js
+&lt;/script&gt;</pre><p>现在不报错了，H5端与APP端也都正常。</p><p><strong>四、其他</strong></p><p>遗憾的是uniapp的renderjs方式仅支持H5和APP，不支持小程序，需要在小程序上实现同样效果的话，还得想办法再折腾折腾。</p><p><strong>五、微信小程序中渲染方法（补充）</strong></p><p>微信小程序中处理latex，需要用到一个towxml插件，github地址：<a href="https://github.com/sbfkcel/towxml/wiki" target="_blank">点击前往</a></p><p>根据官方文档说明进行构建，把最终生成的towxml文件夹放入到static文件夹中。<br/></p><p>1、在main.js中引用<br/></p><pre>//&nbsp;main.js
 //&nbsp;#ifdef&nbsp;MP-WEIXIN
 Vue.prototype.towxml&nbsp;=&nbsp;require(&#39;./static/towxml/index.js&#39;)
 //&nbsp;#endif</pre><p>2、在需要用到的页面中<br/></p><pre>//&nbsp;test.vue
@@ -177,7 +177,7 @@ Vue.prototype.towxml&nbsp;=&nbsp;require(&#39;./static/towxml/index.js&#39;)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;towxml
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;}
-&lt;/script&gt;</pre><p>渲染公式要用到towxml组件，第一个参数为包含latex的内容，第二个参数有markdown、html可选，渲染公式必须是markdown</p><p>3、运行效果</p><p><img src="/uploads/20220809/0e54a82f31b29b5ab859534eb942f2a1.png"/></p><p>可见在小程序中也完全达到了预期效果。</p><p>完美收工！</p>            </div>
+&lt;/script&gt;</pre><p>渲染公式要用到towxml组件，第一个参数为包含latex的内容，第二个参数有markdown、html可选，渲染公式必须是markdown</p><p>3、运行效果</p><p><img src="/uploads/20220809/0e54a82f31b29b5ab859534eb942f2a1.png"/></p><p>可见在小程序中也完全达到了预期效果。</p><p>1、与MathJax的处理方式不同，towxml并非主动查找页面上的latex进行替换并渲染，而是要通过towxml组件输出内容；</p><p>2、不足之处，似乎只支持解析内联公式，块级公式无法解析（即以$$包裹的latex无法解析）。</p><p>但瑕不掩瑜，这都是小问题了，完美收工！</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
