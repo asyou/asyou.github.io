@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>在uniapp网页H5和APP中把latex处理成数学公式显示 - 王维的博客</title>
+<title>在uniapp网页H5、APP和微信小程序中处理latex并渲染成数学公式 - 王维的博客</title>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="keywords" content="uniapp,h5,latex,数学公式"/>
-<meta name="description" content="在H5和APP中处理latex并显示数学公式" />
+<meta name="description" content="在H5、APP和微信小程序中处理latex并渲染成数学公式" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
 <script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
@@ -55,10 +55,10 @@
 </nav>
     <div class="container">
         <div class="content mt-3">
-            <h1>在uniapp网页H5和APP中把latex处理成数学公式显示</h1>
+            <h1>在uniapp网页H5、APP和微信小程序中处理latex并渲染成数学公式</h1>
             <span class="date"><small>2022-08-09</small></span>
             <div class="mt-4">
-                <p>本文简单介绍在普通PC网页、uniapp网页H5和APP中使用MathJax把latex格式渲染成数学公式显示的方法。</p><p>在PC网页中处理latex转数学公式显示非常简单，只需要加载MathJax的一个JS文件，即可把页面中所有的latex格式全部自动转换成公式显示。<br/></p><p>测试题目</p><pre>将二次函数$y=2(x-4)^{2}-1$先上平移3个单位，再向左平移4个单位后的解析式是()
+                <p>本文简单介绍在普通PC网页、uniapp网页H5、APP、微信小程序中处理latex并渲染成数学公式显示的方法。</p><p>在PC网页中处理latex转数学公式显示非常简单，只需要加载MathJax的一个JS文件，即可把页面中所有的latex格式全部自动转换成公式显示。<br/></p><p>测试题目</p><pre>将二次函数$y=2(x-4)^{2}-1$先上平移3个单位，再向左平移4个单位后的解析式是()
 A.$y=2(x-1)^{2}+3$
 B.$y=2x^{2}-4$
 C.$y=2x^{2}+2$
@@ -158,7 +158,26 @@ export&nbsp;default&nbsp;loadJs</pre><p>原理就是通过标准的es5规范JS�
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;console.log(&#39;error&#39;)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
 &nbsp;&nbsp;&nbsp;&nbsp;}
-&lt;/script&gt;</pre><p>现在不报错了，H5端与APP端也都正常。</p><p><strong>四、其他</strong></p><p>遗憾的是uniapp的renderjs方式仅支持H5和APP，不支持小程序，需要在小程序上实现同样效果的话，还得想办法再折腾折腾。</p>            </div>
+&lt;/script&gt;</pre><p>现在不报错了，H5端与APP端也都正常。</p><p><strong>四、其他</strong></p><p>遗憾的是uniapp的renderjs方式仅支持H5和APP，不支持小程序，需要在小程序上实现同样效果的话，还得想办法再折腾折腾。</p><p><strong>五、微信小程序中渲染方法（补充）</strong></p><p>微信小程序中处理latex，需要用到一个towxml插件，gitbub地址：<a href="https://github.com/sbfkcel/towxml/wiki" target="_blank">点击前往</a></p><p>根据官方文档说明进行构建，把最终生成的towxml文件夹放入到static文件夹中。<br/></p><p>1、在main.js中引用<br/></p><pre>//&nbsp;main.js
+//&nbsp;#ifdef&nbsp;MP-WEIXIN
+Vue.prototype.towxml&nbsp;=&nbsp;require(&#39;./static/towxml/index.js&#39;)
+//&nbsp;#endif</pre><p>2、在需要用到的页面中<br/></p><pre>//&nbsp;test.vue
+&lt;template&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;towxml&nbsp;:nodes=&quot;towxml(&#39;将二次函数$y=2(x-4)^{2}-1$先上平移3个单位,再向左平移4个单位后的解析式是()&#39;,&#39;markdown&#39;)&quot;&gt;&lt;/towxml&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;towxml&nbsp;:nodes=&quot;towxml(&#39;$y=2(x-1)^{2}+3$&#39;,&#39;markdown&#39;)&quot;&gt;&lt;/towxml&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;towxml&nbsp;:nodes=&quot;towxml(&#39;$y=2x^{2}-4$&#39;,&#39;markdown&#39;)&quot;&gt;&lt;/towxml&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;towxml&nbsp;:nodes=&quot;towxml(&#39;$y=2x^{2}+2$&#39;,&#39;markdown&#39;)&quot;&gt;&lt;/towxml&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;towxml&nbsp;:nodes=&quot;towxml(&#39;$y=2(x-8)^{2}+2$&#39;,&#39;markdown&#39;)&quot;&gt;&lt;/towxml&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;import&nbsp;towxml&nbsp;from&nbsp;&#39;@/static/towxml/towxml&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;export&nbsp;default&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;components:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;towxml
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&lt;/script&gt;</pre><p>渲染公式要用到towxml组件，第一个参数为包含latex的内容，第二个参数有markdown、html可选，渲染公式必须是markdown</p><p>3、运行效果</p><p><img src="/uploads/20220809/0e54a82f31b29b5ab859534eb942f2a1.png"/></p><p>可见在小程序中也完全达到了预期效果。</p><p>完美收工！</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
