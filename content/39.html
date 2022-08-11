@@ -65,10 +65,12 @@ formatter:&nbsp;function&nbsp;(value)&nbsp;{
 formatter:function&nbsp;(value)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;content&nbsp;=&nbsp;&#39;&#39;;
 &nbsp;&nbsp;&nbsp;&nbsp;$.each(value.split(&#39;$&#39;),&nbsp;function(i,o)&nbsp;{
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(escape(o).indexOf(&quot;%u&quot;)&nbsp;&lt;&nbsp;0)&nbsp;{
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;content&nbsp;+=&nbsp;&#39;&lt;img&nbsp;src=&quot;http://latex.codecogs.com/gif.latex?&#39;+o+&#39;&quot;&gt;&#39;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;content&nbsp;+=&nbsp;o
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(o)&nbsp;{&nbsp;//&nbsp;为空则不处理，解决以公式为开头或结尾，或仅有公式的问题
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(escape(o).indexOf(&quot;%u&quot;)&nbsp;&lt;&nbsp;0)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;content&nbsp;+=&nbsp;&#39;&lt;img&nbsp;src=&quot;http://latex.codecogs.com/gif.latex?&#39;+o+&#39;&quot;&gt;&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;content&nbsp;+=&nbsp;o
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;})
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;content;
