@@ -62,15 +62,33 @@
 A.$y=2(x-1)^{2}+3$
 B.$y=2x^{2}-4$
 C.$y=2x^{2}+2$
-D.$y=2(x-8)^{2}+2$</pre><p><strong>一、在PC网页中使用</strong></p><pre class="javascript">&lt;script&nbsp;type=&quot;text/javascript&quot;&nbsp;src=&quot;http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML&quot;&gt;
-&nbsp;&nbsp;MathJax.Hub.Config({
-&nbsp;&nbsp;&nbsp;&nbsp;tex2jax:&nbsp;{
+D.$y=2(x-8)^{2}+2$</pre><p><strong>一、在PC网页中使用</strong></p><pre>&lt;script&nbsp;type=&quot;text/javascript&quot;&gt;
+&nbsp;&nbsp;window.MathJax&nbsp;=&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;tex:&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inlineMath:&nbsp;[[&#39;$&#39;,&#39;$&#39;],&nbsp;[&#39;\\(&#39;,&#39;\\)&#39;]],&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;行内显示
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;displayMath:&nbsp;[[&#39;$$&#39;,&#39;$$&#39;],&nbsp;[&#39;\\[&#39;,&#39;\\]&#39;]],&nbsp;//&nbsp;块级显示
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;processEscapes:&nbsp;true
+&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;svg:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fontCache:&nbsp;&#39;global&#39;
 &nbsp;&nbsp;&nbsp;&nbsp;}
-&nbsp;&nbsp;});
-&lt;/script&gt;</pre><p>注意链接后面的config参数不能省略！如果加载慢也可以把JS文件下载到本地并引用。</p><p>运行效果：</p><p><img src="/uploads/20220809/3f4b3ba9016b7226b72db36a7c9b1bc5.png"/></p><p><strong>二、在uniapp网页H5和APP中使用</strong></p><p>由于uniapp是一套代码统一各端（H5、小程序、APP等），这个时候就要考虑不同端对MathJax的支持了。<strong><br/></strong></p><p>H5其实跟PC网页中的处理方式差不多，引用MathJax即可，但在APP端却不可以这样用，因为APP端不支持普通的window对象DOM。不过好在uniapp提供了一个renderjs方式，经测试可以解决这个问题。</p><pre class="javascript">//&nbsp;test.vue
+&nbsp;&nbsp;};
+&lt;/script&gt;
+&lt;script&nbsp;type=&quot;text/javascript&quot;&nbsp;src=&quot;https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js&quot;&gt;&lt;/script&gt;</pre><p>也可以写入一个js文件再调用</p><pre>//&nbsp;load-mathjax.js
+window.MathJax&nbsp;=&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;tex:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inlineMath:&nbsp;[[&#39;$&#39;,&#39;$&#39;],&nbsp;[&#39;\\(&#39;,&#39;\\)&#39;]],&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;行内显示
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;displayMath:&nbsp;[[&#39;$$&#39;,&#39;$$&#39;],&nbsp;[&#39;\\[&#39;,&#39;\\]&#39;]],&nbsp;//&nbsp;块级显示
+&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;svg:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fontCache:&nbsp;&#39;global&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+};
+(function&nbsp;()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;script&nbsp;=&nbsp;document.createElement(&#39;script&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;script.src&nbsp;=&nbsp;&#39;https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;script.async&nbsp;=&nbsp;true;
+&nbsp;&nbsp;&nbsp;&nbsp;document.head.appendChild(script);
+})();</pre><pre>&lt;script&nbsp;type=&quot;text/javascript&quot;&nbsp;src=&quot;load-mathjax.js&quot;&nbsp;async&gt;&lt;/script&gt;</pre><p>如果加载慢也可以把tex-svg.js文件下载到本地并引用。</p><p>运行效果：</p><p><img src="/uploads/20220809/3f4b3ba9016b7226b72db36a7c9b1bc5.png"/></p><p><strong>二、在uniapp网页H5和APP中使用</strong></p><p>由于uniapp是一套代码统一各端（H5、小程序、APP等），这个时候就要考虑不同端对MathJax的支持了。<strong><br/></strong></p><p>H5其实跟PC网页中的处理方式差不多，引用MathJax即可，但在APP端却不可以这样用，因为APP端不支持普通的window对象DOM。不过好在uniapp提供了一个renderjs方式，经测试可以解决这个问题。</p><pre class="javascript">//&nbsp;test.vue
 &lt;view&nbsp;class=&quot;example&quot;&gt;
 &nbsp;&nbsp;&nbsp;&nbsp;&lt;view&gt;将二次函数$y=2(x-4)^{2}-1$先上平移3个单位，再向左平移4个单位后的解析式是()&lt;/view&gt;
 &nbsp;&nbsp;&nbsp;&nbsp;&lt;view&gt;A.$y=2(x-1)^{2}+3$&lt;/view&gt;
