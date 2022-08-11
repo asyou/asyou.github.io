@@ -58,14 +58,13 @@
             <h1>fastadmin后台动态渲染latex为数学公式</h1>
             <span class="date"><small>2022-08-11</small></span>
             <div class="mt-4">
-                <p>最近都在研究latex公式渲染的问题，包括PC网页、vue小程序、uniapp混合App中的渲染。<br/></p><p>本文记录的是如何在Fastadmin后台动态渲染latex为公式的问题。</p><p>先说前提，Fastadmin后台的数据列表，不是传统的展示方式，它是JS通过Ajax加载的方式来展示的，换句话说就是在普通网页中能用的MathJax公式渲染方式在这个后台并不起作用，需要另想办法。</p><p>仔细研究了下，Fa提供了单个字段特殊渲染的方式，比如渲染图片可以用formatter: Table.api.formatter.image，这个也支持使用function自定义渲染。</p><p>既然支持自定义function渲染，就有办法了，直接在function里面return一个MathJax线上latex转图片不就行了？</p><pre class="javascript">//&nbsp;test.js
-formatter:function&nbsp;(value)&nbsp;{
+                <p>最近都在研究latex公式渲染的问题，包括PC网页、vue小程序、uniapp混合App中的渲染。<br/></p><p>本文记录的是如何在Fastadmin后台动态渲染latex为公式的问题。</p><p>先说背景，Fastadmin后台的数据列表，不是传统的展示方式，它是用JS通过Ajax加载的方式来展示的，换句话说就是在普通网页中能用的MathJax公式渲染方式在这个后台并不起作用，需要另想办法。</p><p>仔细研究了下，Fa提供了单个字段特殊渲染的方式，比如渲染图片可以用</p><pre class="javascript">formatter:&nbsp;Table.api.formatter.image</pre><p style="white-space: normal;">来渲染，这个formatter也支持使用自定义function方式。</p><p style="white-space: normal;">既然支持自定义function方式，就有办法了，直接在function里面return一个MathJax线上latex转图片不就行了？</p><pre class="javascript">//&nbsp;test.js
+formatter:&nbsp;function&nbsp;(value)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&#39;&lt;img&nbsp;src=&quot;http://latex.codecogs.com/gif.latex?&#39;+value+&#39;&quot;&gt;&#39;
-}</pre><p>结果发现不太行，如果字段全是latex公式不包含其他字符的话确实可以，但实际上数学题目往往是这样的：已知二次函数$y=-x^{2}+2x+4$则下列关于这个函数图象和性质的说法,正确的是()，既有公式也有文字，这种方式转换会出现错误。</p><p>解决思路：</p><p>1、因为公式都是统一用$符号包裹的，所以可以利用这个符号对字符串进行split切割成数组；</p><p>2、再循环判断每个子字符串中是否包含中文（公式中是不会出现中文的）；</p><p>3、如果包含中文则不处理，否则进行公式转换；</p><p>4、最后按顺序组装各个子字符串。</p><pre class="javascript">//&nbsp;test.js
+}</pre><p>结果发现不太行，如果字段是完整的latex公式不包含其他字符的话确实可以，但实际上数学题目往往是这样的：</p><pre>已知二次函数$y=-x^{2}+2x+4$则下列关于这个函数图象和性质的说法,正确的是()</pre><p>题目中既有公式也有文字，这种方式直接转换会出现错误。</p><p>解决思路：</p><p>1、因为后台latex公式都是统一用$符号包裹的，所以可以利用这个符号使用split切割成数组；</p><p>2、再循环判断数组中每个子字符串是否包含中文（公式中间是不会出现中文的）；</p><p>3、如果子项包含中文则不处理，否则进行公式转换；</p><p>4、最后按顺序拼接各个子字符串。</p><pre class="javascript">//&nbsp;test.js
 formatter:function&nbsp;(value)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;content&nbsp;=&nbsp;&#39;&#39;;
-&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;arr&nbsp;=&nbsp;value.split(&#39;$&#39;);
-&nbsp;&nbsp;&nbsp;&nbsp;$.each(arr,&nbsp;function(i,o)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;$.each(value.split(&#39;$&#39;),&nbsp;function(i,o)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(escape(o).indexOf(&quot;%u&quot;)&nbsp;&lt;&nbsp;0)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;content&nbsp;+=&nbsp;&#39;&lt;img&nbsp;src=&quot;http://latex.codecogs.com/gif.latex?&#39;+o+&#39;&quot;&gt;&#39;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
@@ -73,7 +72,7 @@ formatter:function&nbsp;(value)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;})
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;content;
-}</pre><p>运行结果：</p><p><img src="/uploads/20220811/e2e4d97d13cbbdbe815903347cf050f5.png"/></p><p>经过实际测试，完全达到了预期效果！</p><p><br/></p>            </div>
+}</pre><p>运行结果：</p><p><img src="/uploads/20220811/e2e4d97d13cbbdbe815903347cf050f5.png"/></p><p>经过实际测试，完全达到了预期效果！</p><p>总结：</p><p>1、实际测试只有首次加载会进行转换，来回翻页时有缓存效果并不会再次转换；</p><p>2、由于公式转换依赖在线服务，转换可能需要点时间，当服务不可用时会转换失败；</p><p>3、本例因后台latex全是内联公式，如需要处理块级公式（即以$$包裹的latex）需要稍微修改下。</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
