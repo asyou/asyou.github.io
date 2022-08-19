@@ -61,7 +61,7 @@
                 <p>最近都在研究latex公式渲染的问题，包括PC网页、vue小程序、uniapp混合App中的渲染。<br/></p><p>本文记录的是如何在Fastadmin后台动态渲染latex为公式的问题。</p><p>先说背景，Fastadmin后台的数据列表，不是传统的展示方式，它是用JS通过Ajax加载的方式来展示的，换句话说就是在普通网页中能用的MathJax公式渲染方式在这个后台并不起作用，需要另想办法。</p><p>仔细研究了下，Fa提供了单个字段特殊渲染的方式，比如渲染图片可以用</p><pre class="javascript">formatter:&nbsp;Table.api.formatter.image</pre><p style="white-space: normal;">来渲染，这个formatter也支持使用自定义function方式。</p><p style="white-space: normal;">既然支持自定义function方式，就有办法了，直接在function里面return一个MathJax线上latex转图片不就行了？</p><pre class="javascript">//&nbsp;test.js
 formatter:&nbsp;function&nbsp;(value)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&#39;&lt;img&nbsp;src=&quot;http://latex.codecogs.com/gif.latex?&#39;+value+&#39;&quot;&gt;&#39;
-}</pre><p>结果发现不太行，如果字段是完整的latex公式不包含其他字符的话确实可以，但实际上数学题目往往是这样的：</p><pre>已知二次函数$y=-x^{2}+2x+4$则下列关于这个函数图象和性质的说法,正确的是()</pre><p>题目中既有公式也有文字，这种方式直接转换会出现错误。</p><p>解决思路：</p><p>1、因为后台latex公式都是统一用$符号包裹的，所以可以利用这个符号使用split切割成数组；</p><p>2、再循环判断数组中每个子字符串是否包含中文（公式中间是不会出现中文的）；</p><p>3、如果子项包含中文则不处理，否则进行公式转换；</p><p>4、最后按顺序拼接各个子字符串。</p><pre class="javascript">//&nbsp;test.js
+}</pre><p>结果发现不太行，此方式仅支持latex公式，公式与文字混合会转换失败，实际上数学题目往往是这样的：</p><pre>已知二次函数$y=-x^{2}+2x+4$则下列关于这个函数图象和性质的说法,正确的是()</pre><p>题目中既有公式也有文字，这种方式直接转换会出现错误。</p><p>解决思路：</p><p>1、因为后台latex公式都是统一用$符号包裹的，所以可以利用这个符号使用split切割成数组；</p><p>2、再循环判断数组中每个子字符串是否包含中文（公式中间是不会出现中文的）；</p><p>3、如果子项包含中文则不处理，否则进行公式转换；</p><p>4、最后按顺序拼接各个子字符串。</p><pre class="javascript">//&nbsp;test.js
 formatter:function&nbsp;(value)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;content&nbsp;=&nbsp;&#39;&#39;;
 &nbsp;&nbsp;&nbsp;&nbsp;$.each(value.split(&#39;$&#39;),&nbsp;function(i,o)&nbsp;{
