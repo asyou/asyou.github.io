@@ -126,7 +126,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Layer.close(index)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;});
-})</pre><p>至此，普通输入框右侧按钮弹出公式编辑器也完成了。<br/></p><p><strong>四、总结与说明</strong></p><p>1、本例后台使用的是Fastadmin-v1.3.4版，在其他的后台系统中只需要稍加修改也一样用；</p><p>2、本例的公式弹出编辑器是直接扒了latexlive.com的代码，有点不道德的赶脚...望轻拍砖，海涵🙏</p>            </div>
+})</pre><p>至此，普通输入框右侧按钮弹出公式编辑器也完成了。<br/></p><p><strong>四、总结与说明</strong></p><p>1、本例后台使用的是Fastadmin-v1.3.4版，在其他的后台系统中只需要稍加修改也一样用；</p><p>2、仔细看会发现，编辑器/input/textarea向弹出层的iframe传递参数，用的是iframe地址传参，而反过来从iframe传递参数回来，是在父页面获取子窗口（iframe）的HTML中的值，并没有修改latexlive中的任何文件，这样做的好处是latexlive目录的文件无需任何修改，方便在任何地方引用；</p><p>3、本例的公式弹出编辑器是直接扒了latexlive.com的代码，有点不道德的赶脚...望轻拍砖，海涵🙏</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
