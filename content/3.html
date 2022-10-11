@@ -66,7 +66,8 @@
 public&nbsp;function&nbsp;get_lottery_result()
 {
 &nbsp;&nbsp;&nbsp;&nbsp;$prize_arr&nbsp;=&nbsp;$this-&gt;lotteryModel-&gt;field([&#39;id&#39;,&#39;name&#39;,&#39;icon&#39;,&#39;type&#39;,&#39;range&#39;])-&gt;order([&#39;id&#39;=&gt;&#39;ASC&#39;])-&gt;where([&#39;range&#39;=&gt;[&#39;GT&#39;,&#39;0&#39;],&#39;numbers&#39;=&gt;[&#39;GT&#39;,&#39;0&#39;],&#39;status&#39;=&gt;&#39;1&#39;])-&gt;select();
-&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(count($prize_arr)&nbsp;&#39;所有奖品都没有库存了！&#39;];
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(count($prize_arr))&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;[&#39;msg&#39;=&gt;&#39;所有奖品都没有库存了！&#39;];
 &nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;$rid&nbsp;=&nbsp;$this-&gt;get_lottery_rand($prize_arr);
 &nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($rid)&nbsp;{

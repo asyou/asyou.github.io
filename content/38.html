@@ -112,6 +112,14 @@ window.MathJax&nbsp;=&nbsp;{
 		},
 		svg:&nbsp;{
 		&nbsp;&nbsp;&nbsp;&nbsp;scale:&nbsp;1
+		},
+		startup:&nbsp;{
+		&nbsp;&nbsp;&nbsp;&nbsp;ready:&nbsp;()&nbsp;=&gt;&nbsp;{
+			window.MathJax.startup.defaultReady()
+			window.MathJax.startup.promise.then(()&nbsp;=&gt;&nbsp;{
+			&nbsp;&nbsp;&nbsp;&nbsp;console.log(&#39;MathJax&nbsp;initial&nbsp;typesetting&nbsp;complete&#39;)
+			})
+		&nbsp;&nbsp;&nbsp;&nbsp;}
 		}
 	&nbsp;&nbsp;&nbsp;&nbsp;};
 	&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;script&nbsp;=&nbsp;document.createElement(&#39;script&#39;)
@@ -120,6 +128,12 @@ window.MathJax&nbsp;=&nbsp;{
 	&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;下面是下载到本地的JS文件
 	&nbsp;&nbsp;&nbsp;&nbsp;script.src&nbsp;=&nbsp;require(&#39;@/static/tex-svg.js&#39;)
 	&nbsp;&nbsp;&nbsp;&nbsp;document.head.appendChild(script)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},
+	updated()&nbsp;{&nbsp;//&nbsp;此处解决下拉加载更多出来的公式渲染问题
+	&nbsp;&nbsp;&nbsp;&nbsp;const&nbsp;MathJax&nbsp;=&nbsp;window.MathJax
+	&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(MathJax)&nbsp;{
+		MathJax.typesetPromise&nbsp;&amp;&amp;&nbsp;MathJax.typesetPromise()
+	&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;}
 &lt;/script&gt;</pre><p>运行效果：</p><p><img src="/uploads/20220809/1e6e1ac082426137347253c585afb870.png"/></p><p>可见renderjs方式完全能满足要求，实现效果跟PC网页完全一样。</p><p><strong>三、已发现的问题</strong></p><pre class="javascript">require(&#39;@/static/text-svg.js&#39;)</pre><p>1、这一行在H5中会报一个语法错误，查看网络连接是[object%20Object]，这明显不对，但运行效果却没有问题，原因猜测是非模块化JS引起；</p><p>2、替换成在线的JS后，不报上述错误了，但页面公式渲染耗时变长（tex-svg.js压缩版都有2.1M），有时候要很久才能渲染完成，这点不可接受。</p><p>为了解决这个问题，继续改进一番。</p><p>新建一个loadJs.js文件放在common目录，内容如下</p><pre class="javascript">function&nbsp;loadJs()&nbsp;{
