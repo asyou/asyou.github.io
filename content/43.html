@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>uniapp实现公众号H5、小程序和App微信授权登录功能 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content="uniapp,授权,h5,小程序,App,微信登录"/>
+<meta name="description" content="uniapp开发的公众号H5、小程序和App微信一键授权登录" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
+<script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    img {
+        max-width: 100%;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav">
+								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+		</div>
+	</div>
+</nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>uniapp实现公众号H5、小程序和App微信授权登录功能</h1>
+            <span class="date"><small>2022-12-09</small></span>
+            <div class="mt-4">
+                <p>本文介绍在使用uniapp开发的H5、小程序和App中使用微信授权登录的方法。<br/></p><p>由于微信的公众号、小程序和App是相对独立的体系，同一个用户在这些不同的端中授权所返回的openid是不一样的，这个时候就必须在微信开放平台注册账号，并把对应的公众号、小程序和移动应用绑定上去，在授权的时候就能返回一个unionid了，这样就可以在后台识别到是同一个用户了。</p><p>前期要准备的工作：</p><p>1、申请公众号、小程序和微信开放平台，并拿到对应平台的appid和secret；</p><p>2、H5网页授权还要在公众号后台设置网页授权域名；</p><p>3、小程序的接口域名必须启用https，且要设置request、download合法域名等；</p><p>4、App必须在微信开放平台申请应用并绑定。</p><p>上述工作准备好后，就可以开干了！</p><p><strong>一、H5网页授权</strong></p><p>1、授权按钮<br/></p><pre class="html">//&nbsp;official.vue
+&lt;u-button&nbsp;class=&quot;button&quot;&nbsp;type=&quot;success&quot;&nbsp;@click=&quot;getWeChatCode&quot;&gt;立即授权&lt;/u-button&gt;</pre><p>2、js代码</p><pre class="html">//&nbsp;official.vue
+onLoad(options)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(options.scope)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.scope&nbsp;=&nbsp;options.scope
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(this.$wechat&nbsp;&amp;&amp;&nbsp;this.$wechat.isWechat())&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;uni.setStorageSync(&#39;scope&#39;,&nbsp;this.scope)
+	let&nbsp;code&nbsp;=&nbsp;this.getUrlCode(&#39;code&#39;)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(code)&nbsp;{
+	&nbsp;&nbsp;&nbsp;&nbsp;this.checkWeChatCode(code)
+	}&nbsp;else&nbsp;{
+	&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(this.scope&nbsp;==&nbsp;&#39;snsapi_base&#39;)&nbsp;{
+		this.getWeChatCode()
+	&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+},
+methods:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;getUrlCode(name)&nbsp;{
+	return&nbsp;decodeURIComponent((new&nbsp;RegExp(&#39;[?|&amp;]&#39;&nbsp;+&nbsp;name&nbsp;+&nbsp;&#39;=&#39;&nbsp;+&nbsp;&#39;([^&amp;;]+?)(&amp;|#|;|$)&#39;).exec(location.href)&nbsp;||&nbsp;[,&nbsp;&#39;&#39;])[1].replace(/\+/g,&nbsp;&#39;%20&#39;))&nbsp;||&nbsp;null
+&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;getWeChatCode()&nbsp;{
+	if&nbsp;(this.$wechat&nbsp;&amp;&amp;&nbsp;this.$wechat.isWechat())&nbsp;{
+	&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;appid&nbsp;=&nbsp;&#39;公众号appid&#39;
+	&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;local&nbsp;=&nbsp;encodeURIComponent(window.location.href)
+	&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;scope&nbsp;=&nbsp;uni.getStorageSync(&#39;scope&#39;)
+	&nbsp;&nbsp;&nbsp;&nbsp;window.location.href&nbsp;=&nbsp;`https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appid}&amp;redirect_uri=${local}&amp;response_type=code&amp;scope=${scope}&amp;state=1#wechat_redirect`
+	}&nbsp;else&nbsp;{
+	&nbsp;&nbsp;&nbsp;&nbsp;uni.showModal({
+		content:&nbsp;&#39;请在微信中打开&#39;,
+		showCancel:&nbsp;false
+	&nbsp;&nbsp;&nbsp;&nbsp;})
+	}
+&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;checkWeChatCode(code)&nbsp;{
+	if&nbsp;(code)&nbsp;{
+	&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;scope&nbsp;=&nbsp;uni.getStorageSync(&#39;scope&#39;)
+	&nbsp;&nbsp;&nbsp;&nbsp;this.$http.post(&#39;/wechat/login&#39;,&nbsp;{
+		code,
+		scope,
+		type:&nbsp;1
+	}).then(res&nbsp;=&gt;&nbsp;{
+	&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(res.code&nbsp;==&nbsp;1)&nbsp;{
+		if&nbsp;(scope&nbsp;==&nbsp;&#39;snsapi_userinfo&#39;)&nbsp;{
+		&nbsp;&nbsp;&nbsp;&nbsp;this.login(res.data.userinfo)
+		&nbsp;&nbsp;&nbsp;&nbsp;uni.navigateBack()
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+	&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+		uni.showModal({
+		&nbsp;&nbsp;&nbsp;&nbsp;content:&nbsp;res.msg,
+		&nbsp;&nbsp;&nbsp;&nbsp;showCancel:&nbsp;false
+		})
+	&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}).catch(err&nbsp;=&gt;&nbsp;{
+	&nbsp;&nbsp;&nbsp;&nbsp;uni.showModal({
+		content:&nbsp;err.msg,
+		showCancel:&nbsp;false
+	&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}</pre><p>注意，1、公众号授权scope有两种方式：snsapi_base和snsapi_userinfo，前者静默授权不会有授权弹窗，后者必须用户点击授权弹窗按钮授权才行；</p><p>2、网页授权是需要跳转到微信服务器上，然后携带code再跳回来，所以在跳回来后还需要用到的变量比如scope必须用缓存保存起来，否则会读取不到；</p><p>3、跳转回来的页面就是发起授权的页面，所以在页面的onload方法中要判断url是否携带有code，避免重复跳转授权的死循环（会提示code已被使用）；</p><p>4、授权后拿code去后台通过微信请求换取用户信息。</p><p><strong>二、小程序授权</strong></p><p>1、授权按钮，必须是button，且设置</p><pre class="html">//&nbsp;mp.vue
+&lt;u-button&nbsp;type=&quot;success&quot;&nbsp;@click=&quot;getUserProfile()&quot;&gt;微信授权登录&lt;/u-button&gt;</pre><p>2、js代码<br/></p><pre class="html">getUserProfile()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;uni.getUserProfile({
+	desc:&nbsp;&#39;使用微信登录&#39;,
+	lang:&nbsp;&#39;zh_CN&#39;,
+	success:&nbsp;(a)&nbsp;=&gt;&nbsp;{
+	&nbsp;&nbsp;&nbsp;&nbsp;uni.login({
+		provider:&nbsp;&#39;weixin&#39;,
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;success:&nbsp;(b)&nbsp;=&gt;&nbsp;{
+		&nbsp;&nbsp;&nbsp;&nbsp;this.loading&nbsp;=&nbsp;true
+		&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;userInfo&nbsp;=&nbsp;a.userInfo
+		&nbsp;&nbsp;&nbsp;&nbsp;userInfo.code&nbsp;=&nbsp;b.code
+		&nbsp;&nbsp;&nbsp;&nbsp;userInfo.type&nbsp;=&nbsp;2
+		&nbsp;&nbsp;&nbsp;&nbsp;this.$http.post(&#39;/wechat/login&#39;,&nbsp;userInfo).then(c&nbsp;=&gt;&nbsp;{
+			this.loading&nbsp;=&nbsp;false
+			this.login(c.data.userinfo)
+			uni.navigateBack()
+		&nbsp;&nbsp;&nbsp;&nbsp;}).catch(err&nbsp;=&gt;&nbsp;{
+			this.loading&nbsp;=&nbsp;false
+			uni.showModal({
+			&nbsp;&nbsp;&nbsp;&nbsp;content:&nbsp;err.msg,
+			&nbsp;&nbsp;&nbsp;&nbsp;showCancel:&nbsp;false
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+		&nbsp;&nbsp;&nbsp;&nbsp;})
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fail:&nbsp;(err)&nbsp;=&gt;&nbsp;{
+		&nbsp;&nbsp;&nbsp;&nbsp;console.error(err)
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+	&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fail:&nbsp;(err)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;console.error(err)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;})
+}</pre><p>说明：1、授权后会得到code和userInfo，里面有昵称、头像、性别、地域等字段，没有openid；</p><p>2、把code和userInfo传回后台，再通过code换取用户的openid和unionid。</p><p><strong>三、App授权</strong></p><p>1、授权按钮</p><pre class="html">//&nbsp;app.vue
+&lt;u-button&nbsp;class=&quot;button&quot;&nbsp;type=&quot;success&quot;&nbsp;@click=&quot;onAppAuth&quot;&gt;确定授权&lt;/u-button&gt;</pre><p>2、js代码</p><pre class="html">//&nbsp;app.vue
+onAppAuth()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;uni.getProvider({
+	service:&nbsp;&#39;oauth&#39;,
+	success:&nbsp;(a)&nbsp;=&gt;&nbsp;{
+	&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(~a.provider.indexOf(&#39;weixin&#39;))&nbsp;{
+		uni.login({
+		&nbsp;&nbsp;&nbsp;&nbsp;provider:&nbsp;&#39;weixin&#39;,
+		&nbsp;&nbsp;&nbsp;&nbsp;onlyAuthorize:&nbsp;true,&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;注意此参数
+		&nbsp;&nbsp;&nbsp;&nbsp;success:&nbsp;(b)&nbsp;=&gt;&nbsp;{
+			if&nbsp;(b.code)&nbsp;{
+			&nbsp;&nbsp;&nbsp;&nbsp;this.$http.post(&#39;/wechat/login&#39;,&nbsp;{
+				code:&nbsp;b.code,
+				type:&nbsp;3
+			&nbsp;&nbsp;&nbsp;&nbsp;}).then(c&nbsp;=&gt;&nbsp;{
+				this.loading&nbsp;=&nbsp;false
+				this.login(c.data.userinfo)
+				uni.navigateBack()
+			&nbsp;&nbsp;&nbsp;&nbsp;}).catch(err&nbsp;=&gt;&nbsp;{
+				this.loading&nbsp;=&nbsp;false
+				uni.showModal({
+				&nbsp;&nbsp;&nbsp;&nbsp;content:&nbsp;&#39;授权登录失败&#39;,
+				&nbsp;&nbsp;&nbsp;&nbsp;showCancel:&nbsp;false
+				})
+			&nbsp;&nbsp;&nbsp;&nbsp;})
+			}&nbsp;else&nbsp;{
+			&nbsp;&nbsp;&nbsp;&nbsp;uni.getUserInfo({
+				success:&nbsp;(c)&nbsp;=&gt;&nbsp;{
+				&nbsp;&nbsp;&nbsp;&nbsp;this.loading&nbsp;=&nbsp;true
+				&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;userInfo&nbsp;=&nbsp;c.userInfo
+				&nbsp;&nbsp;&nbsp;&nbsp;userInfo.type&nbsp;=&nbsp;3
+				&nbsp;&nbsp;&nbsp;&nbsp;this.$http.post(&#39;/wechat/login&#39;,　userInfo).then(d&nbsp;=&gt;&nbsp;{
+					this.loading&nbsp;=&nbsp;false
+					this.login(d.data.userinfo)
+					uni.navigateBack()
+				&nbsp;&nbsp;&nbsp;&nbsp;}).catch(err&nbsp;=&gt;&nbsp;{
+					this.loading&nbsp;=&nbsp;false
+					uni.showModal({
+					&nbsp;&nbsp;&nbsp;&nbsp;content:&nbsp;&#39;授权登录失败&#39;,
+					&nbsp;&nbsp;&nbsp;&nbsp;showCancel:&nbsp;false
+					})
+				&nbsp;&nbsp;&nbsp;&nbsp;})
+				},
+				fail:&nbsp;(err)&nbsp;=&gt;&nbsp;{
+				&nbsp;&nbsp;&nbsp;&nbsp;console.error(err)
+				}
+			&nbsp;&nbsp;&nbsp;&nbsp;})
+			}
+		&nbsp;&nbsp;&nbsp;&nbsp;},
+		&nbsp;&nbsp;&nbsp;&nbsp;fail:&nbsp;(err)&nbsp;=&gt;&nbsp;{
+			console.error(err)
+		&nbsp;&nbsp;&nbsp;&nbsp;}
+		})
+	&nbsp;&nbsp;&nbsp;&nbsp;}
+	},
+	fail:&nbsp;(err)&nbsp;=&gt;&nbsp;{
+	&nbsp;&nbsp;&nbsp;&nbsp;console.error(err)
+	}
+&nbsp;&nbsp;&nbsp;&nbsp;})
+}</pre><p>注意：微信在App中授权有两种方式，</p><p>1、第一种是uni.login里面的onlyAuthorize为false，此时直接调用uni.getUserInfo方法即可直接在前端获取到用户信息。但此方式有个问题，即必须把App的secret配置在manifest.json文件当中，并且会被打包进apk/ipa中，存在泄漏的风险！所以不推荐此种方式；</p><p>2、第二种是onlyAuthorize设置为true，则uni.login只返回code，跟小程序一样传到后台去换取用户信息。</p><pre class="html">//&nbsp;后台代码
+public&nbsp;function&nbsp;login()
+{
+&nbsp;&nbsp;&nbsp;&nbsp;$params&nbsp;=&nbsp;$this-&gt;request-&gt;param();
+&nbsp;&nbsp;&nbsp;&nbsp;switch&nbsp;($params[&#39;type&#39;])&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;1&#39;:&nbsp;&nbsp;&nbsp;//&nbsp;公众号
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$wechat&nbsp;=&nbsp;Config::get(&#39;wechat.h5&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$access_token&nbsp;=&nbsp;Http::sendRequest(&#39;https://api.weixin.qq.com/sns/oauth2/access_token?appid=&#39;.$wechat[&#39;appid&#39;].&#39;&amp;secret=&#39;.$secret[&#39;secret&#39;].&#39;&amp;code=&#39;.$params[&#39;code&#39;].&#39;&amp;grant_type=authorization_code&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$msg&nbsp;=&nbsp;json_decode($access_token[&#39;msg&#39;],&nbsp;true);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($params[&#39;scope&#39;]&nbsp;==&nbsp;&#39;snsapi_userinfo&#39;)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$userinfo&nbsp;=&nbsp;Http::sendRequest(&#39;https://api.weixin.qq.com/sns/userinfo?access_token=&#39;.$msg[&#39;access_token&#39;].&#39;&amp;openid=&#39;.$msg[&#39;openid&#39;].&#39;&amp;lang=zh_CN&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$info&nbsp;=&nbsp;json_decode($userinfo[&#39;msg&#39;],&nbsp;true);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$wechat_member&nbsp;=&nbsp;$this-&gt;memberModel-&gt;field([&#39;user_id&#39;,&#39;headimgurl&#39;])-&gt;where([&#39;openid&#39;=&gt;$info[&#39;openid&#39;]])-&gt;find();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$member&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;type&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;unionid&#39;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$info[&#39;unionid&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;openid&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$info[&#39;openid&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;nickname&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$info[&#39;nickname&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;sex&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$info[&#39;sex&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;language&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$info[&#39;language&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;country&#39;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$info[&#39;country&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;province&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$info[&#39;province&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;city&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$info[&#39;city&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;headimgurl&#39;&nbsp;=&gt;&nbsp;$info[&#39;headimgurl&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;判断是否需要注册或更新数据
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($wechat_member)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;如果该用户已经存在，则只更新数据
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;否则的话先用unionid判断有无其他微信记录，再进行更新或注册
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$data[&#39;openid&#39;]&nbsp;=&nbsp;$info[&#39;openid&#39;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$this-&gt;success(&#39;获取成功&#39;,$data);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;2&#39;:&nbsp;&nbsp;&nbsp;//&nbsp;小程序
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$app&nbsp;=&nbsp;Factory::miniProgram(Config::get(&#39;wechat.mini&#39;));
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$info&nbsp;=&nbsp;$app-&gt;auth-&gt;session($params[&#39;code&#39;]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$wechat_member&nbsp;=&nbsp;$this-&gt;memberModel-&gt;field([&#39;user_id&#39;,&#39;headimgurl&#39;])-&gt;where([&#39;openid&#39;=&gt;$info[&#39;openid&#39;]])-&gt;find();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$member&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;type&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;unionid&#39;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$info[&#39;unionid&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;openid&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$info[&#39;openid&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;nickname&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;nickName&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;sex&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;gender&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;language&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;language&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;country&#39;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;country&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;province&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;province&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;city&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;city&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;headimgurl&#39;&nbsp;=&gt;&nbsp;$params[&#39;avatarUrl&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;判断是否需要注册或更新数据
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($wechat_member)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;如果该用户已经存在，则只更新数据
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;否则的话先用unionid判断有无其他微信记录，再进行更新或注册
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;3&#39;:&nbsp;&nbsp;&nbsp;//&nbsp;app
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(isset($params[&#39;code&#39;]))&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;request参数:&nbsp;$type=3,$code
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;$msg&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;access_token&#39;&nbsp;=&gt;&nbsp;&#39;access_token&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;expires_in&#39;&nbsp;=&gt;&nbsp;&#39;7200&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;refresh_token&#39;&nbsp;=&gt;&nbsp;&#39;refresh_token&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;openid&#39;&nbsp;=&gt;&nbsp;&#39;openid&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;scope&#39;&nbsp;=&gt;&nbsp;&#39;snsapi_userinfo&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;unionid&#39;&nbsp;=&gt;&nbsp;&#39;unionid&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$app&nbsp;=&nbsp;Config::get(&#39;wechat.app&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$access_token&nbsp;=&nbsp;Http::sendRequest(&#39;https://api.weixin.qq.com/sns/oauth2/access_token?appid=&#39;.$app[&#39;app_id&#39;].&#39;&amp;secret=&#39;.$app[&#39;secret&#39;].&#39;&amp;code=&#39;.$params[&#39;code&#39;].&#39;&amp;grant_type=authorization_code&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$msg&nbsp;=&nbsp;json_decode($access_token[&#39;msg&#39;],&nbsp;true);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$wechat_member&nbsp;=&nbsp;$this-&gt;memberModel-&gt;field([&#39;user_id&#39;,&#39;headimgurl&#39;])-&gt;where([&#39;openid&#39;=&gt;$msg[&#39;openid&#39;]])-&gt;find();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$member&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;type&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;unionid&#39;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$msg[&#39;unionid&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;openid&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$msg[&#39;openid&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;nickname&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;isset($msg[&#39;nickName&#39;])&nbsp;?&nbsp;$msg[&#39;nickName&#39;]&nbsp;:&nbsp;&#39;微信用户&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;sex&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;isset($msg[&#39;gender&#39;])&nbsp;?&nbsp;$msg[&#39;gender&#39;]&nbsp;:&nbsp;&#39;0&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;language&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;isset($msg[&#39;language&#39;])&nbsp;?&nbsp;$msg[&#39;language&#39;]&nbsp;:&nbsp;&#39;&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;country&#39;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;isset($msg[&#39;country&#39;])&nbsp;?&nbsp;$msg[&#39;country&#39;]&nbsp;:&nbsp;&#39;&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;province&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;isset($msg[&#39;province&#39;])&nbsp;?&nbsp;$msg[&#39;province&#39;]&nbsp;:&nbsp;&#39;&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;city&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;isset($msg[&#39;city&#39;])&nbsp;?&nbsp;$msg[&#39;city&#39;]&nbsp;:&nbsp;&#39;&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;headimgurl&#39;&nbsp;=&gt;&nbsp;isset($msg[&#39;avatarUrl&#39;])&nbsp;?&nbsp;$msg[&#39;avatarUrl&#39;]&nbsp;:&nbsp;&#39;&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$wechat_member&nbsp;=&nbsp;$this-&gt;memberModel-&gt;field([&#39;user_id&#39;,&#39;headimgurl&#39;])-&gt;where([&#39;openid&#39;=&gt;$params[&#39;openId&#39;]])-&gt;find();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$member&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;type&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;type&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;unionid&#39;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;unionId&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;openid&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;openId&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;nickname&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;nickName&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;sex&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;gender&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;language&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;isset($params[&#39;language&#39;])&nbsp;?&nbsp;$params[&#39;language&#39;]&nbsp;:&nbsp;&#39;&#39;,&nbsp;//&nbsp;app微信wx.getUserInfo授权未返回此字段
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;country&#39;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;country&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;province&#39;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;province&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;city&#39;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;$params[&#39;city&#39;],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;headimgurl&#39;&nbsp;=&gt;&nbsp;$params[&#39;avatarUrl&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;判断是否需要注册或更新数据
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($wechat_member)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;如果该用户已经存在，则只更新数据
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;否则的话先用unionid判断有无其他微信记录，再进行更新或注册
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}</pre><p>至此，微信公众号H5、小程序和App授权登录全部流程结束。</p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2022 254555778@qq.com</div>
+</footer>
+</body>
+</html>
