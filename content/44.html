@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>PHP递归算法简单应用 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content="PHP,递归"/>
+<meta name="description" content="PHP使用递归方法解决实际问题" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.1.3/css/bootstrap.min.css" rel="stylesheet">
+<script src="/bootstrap-5.1.3/js/bootstrap.bundle.min.js"></script>
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    img {
+        max-width: 100%;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav">
+								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+		</div>
+	</div>
+</nav>
+    <div class="container">
+        <div class="content mt-3">
+            <h1>PHP递归算法简单应用</h1>
+            <span class="date"><small>2022-12-17</small></span>
+            <div class="mt-4">
+                <p>递归算法是一种很常见的代码算法，用来整理一些数组/对象深度层级未知或不固定的情况尤其有用。</p><p>递归算法一般需要配合循环算法来使用，没有了循环的递归算法是没有灵魂的！本文简单实现了一个递归算法，用来从A表取数据整理后插入到B表，数据字段有id/pid/name三项。</p><pre class="php">//&nbsp;test.php
+public&nbsp;function&nbsp;test()
+{
+&nbsp;&nbsp;&nbsp;&nbsp;$points&nbsp;=&nbsp;\think\Db::name(&#39;category&#39;)-&gt;field([&#39;id&#39;,&#39;pid&#39;,&#39;name&#39;])-&gt;select();
+&nbsp;&nbsp;&nbsp;&nbsp;$data&nbsp;=&nbsp;self::tree($points);
+&nbsp;&nbsp;&nbsp;&nbsp;foreach&nbsp;($data&nbsp;as&nbsp;$val)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$row&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;pid&#39;&nbsp;=&gt;&nbsp;&#39;0&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;name&#39;&nbsp;=&gt;&nbsp;$val[&#39;name&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$id&nbsp;=&nbsp;\think\Db::name(&#39;points&#39;)-&gt;insertGetId($row);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$this-&gt;getChild($id,&nbsp;$val[&#39;children&#39;]);
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}
+//&nbsp;递归处理子项
+private&nbsp;function&nbsp;getChild($id,&nbsp;$data)
+{
+&nbsp;&nbsp;&nbsp;&nbsp;foreach&nbsp;($data&nbsp;as&nbsp;$val)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$row&nbsp;=&nbsp;[
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;pid&#39;&nbsp;=&gt;&nbsp;$id,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#39;name&#39;&nbsp;=&gt;&nbsp;$val[&#39;name&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$pid&nbsp;=&nbsp;\think\Db::name(&#39;points&#39;)-&gt;insertGetId($row);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(isset($val[&#39;children&#39;]))&nbsp;self::getChild($pid,&nbsp;$val[&#39;children&#39;]);
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}
+//&nbsp;递归整理所有数据
+private&nbsp;function&nbsp;tree($array,&nbsp;$pid=0)
+{
+&nbsp;&nbsp;&nbsp;&nbsp;$tree&nbsp;=&nbsp;[];
+&nbsp;&nbsp;&nbsp;&nbsp;foreach&nbsp;($array&nbsp;as&nbsp;$key=&gt;$value)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($value[&#39;pid&#39;]&nbsp;==&nbsp;$pid)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$value[&#39;children&#39;]&nbsp;=&nbsp;self::tree($array,$value[&#39;id&#39;]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(!$value[&#39;children&#39;])&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;unset($value[&#39;children&#39;]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$tree[]&nbsp;=&nbsp;$value;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;$tree;
+}</pre><p>功能需求与实现过程：</p><ol class=" list-paddingleft-2" style="list-style-type: decimal;"><li><p>从A表中查询出所有数据，此时的数据结构是一个二维数组，没有办法直接入库B表；</p></li><li><p>通过tree方法把二维数组根据id与pid转换成带有children项的多维数组，这个多维数组的层级深度可能非常多；</p></li><li><p>数据转换成多维数组后，先通过循环算法把父一级整理入B表，接着就把子项children丢给getChild方法进行递归处理与入库，因为数组的层级深度未知所以需要判断是否有children项；</p></li><li><p>执行完成后，数据就顺利地从A表转换写入了B表。</p></li></ol>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2022 254555778@qq.com</div>
+</footer>
+</body>
+</html>
