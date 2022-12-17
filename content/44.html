@@ -98,7 +98,7 @@ private&nbsp;function&nbsp;tree($array,&nbsp;$pid=0)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;$tree;
-}</pre><p>功能需求与实现过程：</p><ol class=" list-paddingleft-2" style="list-style-type: decimal;"><li><p>从A表中查询出所有数据，此时的数据结构是一个二维数组，没有办法直接入库B表；</p></li><li><p>通过tree方法把二维数组根据id与pid转换成带有children项的多维数组，这个多维数组的层级深度可能非常多；</p></li><li><p>数据转换成多维数组后，先通过循环算法把父一级整理入B表，接着就把子项children丢给getChild方法进行递归处理与入库，因为数组的层级深度未知所以需要判断是否有children项；</p></li><li><p>执行完成后，数据就顺利地从A表转换写入了B表。</p></li></ol>            </div>
+}</pre><p>功能需求与实现过程：</p><ol class=" list-paddingleft-2" style="list-style-type: decimal;"><li><p>从A表中查询出所有数据，此时的数据结构是一个二维数组，没有办法直接入库B表；</p></li><li><p>通过tree方法把二维数组根据id与pid转换成带有children项的多维数组，这个多维数组的层级深度可能非常多；</p></li><li><p>数据转换成多维数组后，先通过循环算法把父一级整理入B表，接着就把子项children丢给getChild方法进行递归处理与入库，因为数组的层级深度未知所以需要判断是否有children项；</p></li><li><p>执行完成后，数据就顺利地从A表转换写入了B表；</p></li><li><p>本文例子是需要把父id实时更新到children项的pid，所以用到了实时插入表的逻辑，实际上在数据大的情况下会造成严重的性能问题，况且递归算法的性能也非常差，所以在一些不必要实时入库的场景下应该把数据保存成规范的二维数组，再使用save方法一次性写入数据库。</p></li></ol>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
