@@ -44,11 +44,11 @@
 		<div class="collapse navbar-collapse" id="navbarNav">
 			<ul class="navbar-nav">
 								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
-								<li class="nav-item"><a class="nav-link " href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/php.html">PHP</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
-								<li class="nav-item"><a class="nav-link active" href="/categories/notes.html">随手笔记</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
 							</ul>
 		</div>
 	</div>
@@ -58,7 +58,7 @@
             <h1>ueditor集成数学公式编辑功能</h1>
             <span class="date"><small>2022-09-26</small></span>
             <div class="mt-4">
-                <p>最近都在研究数学公式在线编辑，先说需求，我需要实现在网站后台题库管理当中可自由添加、编辑试卷题目，因为数学试题涉及到公式，这是一个比较棘手的功能，因为数学公式的在线编辑跟普通文本编辑不一样，需要专用的工具。</p><p>找了一圈，网上都是推荐MathType编辑器，看了一下官网，这是一个桌面客户端，并不能应用于网站后台。</p><p>搜索网页数学编辑器，找到了一个看上去不错的JMEditor，如图：</p><p><img src="/uploads/20220926/ab6edf70881cad6b0053b71779955f4c.png"/></p><p>它包含了一些常用的数学公式模板，以及常用字母和符号，乍一看初步满足项目需求，只要集成一下即可。但经过实测它有一些无法弥补的缺陷，一是公式模板不够多，比如没有向量公式；二是复杂些的公式无法输入，输入了也无法显示，果断弃用。</p><p>接着找，找到了一个国产且开源的公式编辑器，地址：<a href="https://latexlive.com/home" target="_blank">latexlive.com</a>，如图：<br/></p><p><img src="/uploads/20220926/dd2f395ac2aa6c019d2cdf8579e6aac9.png"/></p><p>该公式编辑器包含快捷输入公式、公式模板和图片识别，模板数量多且非常完善，完全能满足项目需求，二话不说直接拿下。</p><p>项目的核心需求就是能够在线编辑数学公式，具体到操作到上，我的想法是，数学题目因为可能包含表格、图片等，所以必须要用编辑器来实现；其次是答案选项，因为选项一般都是文本＋公式，所以不必用编辑器，那就在输入框后面加个按钮，点击弹出一个公式编辑窗口，编辑完后放回到输入框即可。</p><p><strong>为实现这些，则要做如下几件事：</strong></p><p>1、封装一个弹出式的公式编辑器（即把上面这个公式编辑器封装成一个弹出层供随处调用）；</p><p>2、在后台ueditor编辑器中自定义工具栏按钮，集成这个数学公式的弹出层功能。</p><p>结果如下图所示，点击图1编辑器工具栏或下方输入框右侧的∑符号，即可弹出下方图2的数学公式编辑器，编辑完后点确定即把内容放回编辑器或指定的输入框中。</p><p><img src="/uploads/20220926/70311b75bbbcac6b0e9ba6a8a44aee3f.png"/></p><p><img src="/uploads/20220926/cd096634cc1eae6f64ca01b0e5f54a9c.png"/></p><p>实现起来稍微有点难度，但并非不可实现。</p><p><strong>一、封装公式编辑器</strong></p><p>1、这一步其实就是把latexlive.com网页html和相关的js、css、图片等文件下载过来，放入项目中，文件夹命名为latexlive，在别外通过iframe的方式弹出来；</p><p>2、下载过来的js要做相应的修改，把js、css和图片相关的路径修改成自己项目的实际路径，具体修改过程略。</p><p><strong>二、ueditor自定义工具栏集成公式编辑器</strong></p><p>1、先进入ueditor目录，找到ueditor.config.js，在toolbars中添加一个“matheditor”</p><pre class="javascript">toolbars:[...,&#39;matheditor&#39;]</pre><p>2、其次找到ueditor.all.min.js，在btnCmds里添加一个“matheditor”<br/></p><pre class="javascript">btnCmds:[...,&#39;matheditor&#39;]</pre><p>3、按照ueditor官方的文档说明，接着添加按钮的事件，代码如下</p><pre class="javascript">UE.registerUI(&#39;matheditor&#39;,function(editor,uiName)&nbsp;{
+                <p>最近都在研究数学公式在线编辑，先说需求，我需要实现在网站后台题库管理当中可自由添加、编辑试卷题目，因为数学试题涉及到公式，这是一个比较棘手的功能，因为数学公式的在线编辑跟普通文本编辑不一样，需要专用的工具。</p><p>找了一圈，网上都是推荐MathType编辑器，看了一下官网，这是一个桌面客户端，并不能应用于网站后台。</p><p>搜索网页数学编辑器，找到了一个看上去不错的JMEditor，如图：</p><p><img src="/uploads/20220926/ab6edf70881cad6b0053b71779955f4c.png"/></p><p>它包含了一些常用的数学公式模板，以及常用字母和符号，乍一看初步满足项目需求，只要集成一下即可。但经过实测它有一些无法弥补的缺陷，一是公式模板不够多，比如没有向量公式；二是复杂些的公式无法输入，输入了也无法显示，果断弃用。</p><p>接着找，找到了一个国产且免费的公式编辑器，地址：<a href="https://latexlive.com/home" target="_blank">latexlive.com</a>，如图：<br/></p><p><img src="/uploads/20220926/dd2f395ac2aa6c019d2cdf8579e6aac9.png"/></p><p>该公式编辑器包含快捷输入公式、公式模板和图片识别，模板数量多且非常完善，完全能满足项目需求，二话不说直接拿下。</p><p>项目的核心需求就是能够在线编辑数学公式，具体到操作到上，我的想法是，数学题目因为可能包含表格、图片等，所以必须要用编辑器来实现；其次是答案选项，因为选项一般都是文本＋公式，所以不必用编辑器，那就在输入框后面加个按钮，点击弹出一个公式编辑窗口，编辑完后放回到输入框即可。</p><p><strong>为实现这些，则要做如下几件事：</strong></p><p>1、封装一个弹出式的公式编辑器（即把上面这个公式编辑器封装成一个弹出层供随处调用）；</p><p>2、在后台ueditor编辑器中自定义工具栏按钮，集成这个数学公式的弹出层功能。</p><p>结果如下图所示，点击图1编辑器工具栏或下方输入框右侧的∑符号，即可弹出下方图2的数学公式编辑器，编辑完后点确定即把内容放回编辑器或指定的输入框中。</p><p><img src="/uploads/20220926/70311b75bbbcac6b0e9ba6a8a44aee3f.png"/></p><p><img src="/uploads/20220926/cd096634cc1eae6f64ca01b0e5f54a9c.png"/></p><p>实现起来稍微有点难度，但并非不可实现。</p><p><strong>一、封装公式编辑器</strong></p><p>1、这一步其实就是把latexlive.com网页html和相关的js、css、图片等文件下载过来，放入项目中，文件夹命名为latexlive，在别外通过iframe的方式弹出来；</p><p>2、下载过来的js要做相应的修改，把js、css和图片相关的路径修改成自己项目的实际路径，具体修改过程略。</p><p><strong>二、ueditor自定义工具栏集成公式编辑器</strong></p><p>1、先进入ueditor目录，找到ueditor.config.js，在toolbars中添加一个“matheditor”</p><pre class="javascript">toolbars:[...,&#39;matheditor&#39;]</pre><p>2、其次找到ueditor.all.min.js，在btnCmds里添加一个“matheditor”<br/></p><pre class="javascript">btnCmds:[...,&#39;matheditor&#39;]</pre><p>3、按照ueditor官方的文档说明，接着添加按钮的事件，代码如下</p><pre class="javascript">UE.registerUI(&#39;matheditor&#39;,function(editor,uiName)&nbsp;{
 &nbsp;&nbsp;var&nbsp;dialog&nbsp;=&nbsp;new&nbsp;UE.ui.Dialog({
 &nbsp;&nbsp;&nbsp;&nbsp;editor:&nbsp;editor,
 &nbsp;&nbsp;&nbsp;&nbsp;name:&nbsp;uiName,
@@ -126,7 +126,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Layer.close(index)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;});
-})</pre><p>至此，普通输入框右侧按钮弹出公式编辑器也完成了。<br/></p><p><strong>四、总结与说明</strong></p><p>1、本例后台使用的是Fastadmin-v1.3.4版，在其他的后台系统中只需要稍加修改也一样用；</p><p>2、仔细看会发现，编辑器/input/textarea向弹出层的iframe传递参数，用的是iframe地址传参，而反过来从iframe传递参数回来，是在父页面获取子窗口（iframe）的HTML中的值，并没有修改latexlive中的任何文件，这样做的好处是latexlive目录的文件无需任何修改，方便在任何地方引用；</p><p>3、本例的公式弹出编辑器是直接扒了latexlive.com的代码，有点不道德的赶脚...望轻拍砖，海涵????</p>            </div>
+})</pre><p>至此，普通输入框右侧按钮弹出公式编辑器也完成了。<br/></p><p><strong>四、总结与说明</strong></p><p>1、本例后台使用的是Fastadmin-v1.3.4版，在其他的后台系统中只需要稍加修改也一样用；</p><p>2、仔细看会发现，编辑器/input/textarea向弹出层的iframe传递参数，用的是iframe地址传参，而反过来从iframe传递参数回来，是在父页面获取子窗口（iframe）的HTML中的值，并没有修改latexlive中的任何文件，这样做的好处是latexlive目录的文件无需任何修改，方便在任何地方引用；</p><p>3、本例的公式弹出编辑器是直接扒了latexlive.com的代码，有点不道德的赶脚...望轻拍砖，海涵😬😬😬</p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
