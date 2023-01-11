@@ -70,7 +70,7 @@ if&nbsp;(uni.getSystemInfoSync().platform&nbsp;==&nbsp;&#39;ios&#39;)&nbsp;{
 2、http://m.xxx.com/pages/payment/pay/order?id=1</pre><p>则支付授权目录必须是</p><pre class="javascript">1、http://m.xxx.com/pages/payment/&nbsp;
 2、http://m.xxx.com/pages/payment/pay/</pre><p>否则唤起支付时一定会提示当前页面url未注册；<br/></p><p>2、支付授权目录下的任何页面都可以唤起支付，例如我配置的目录为</p><pre class="javascript">http://m.xxx.com/pages/payment/</pre><p>则/pages/payment/目录下的任意页面</p><pre class="javascript">http://m.xxx.com/pages/payment/pay?order_id=xxx&amp;uid=yyy
 http://m.xxx.com/pages/payment/order?id=xxx&amp;uid=yyy
-http://m.xxx.com/pages/payment/recharge?uid=xxx</pre><p>都可以正常唤起支付。<br/></p>            </div>
+http://m.xxx.com/pages/payment/recharge?uid=xxx</pre><p>都可以正常唤起支付，但要注意/pages/payment/后面的参数不能再出现斜杠/，否则参考第1条重新配置。<br/></p>            </div>
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
