@@ -30,10 +30,10 @@
 								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
 							</ul>
-            <form class="d-flex" role="search">
-                <input class="form-control me-2" type="search" placeholder="搜索文章" aria-label="search">
+            <div class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="搜索文章" aria-label="search" id="input">
                 <button class="btn btn-outline-success text-nowrap" type="button" id="search">搜索</button>
-            </form>
+            </div>
 		</div>
 	</div>
 </nav>
@@ -43,13 +43,13 @@
         function getItems(json, keywords) {
             var arr = []
             for (var i=0;i<json.length;i++) {
-                if (json[i].title.indexOf(keywords) != -1) {
+                if ((json[i].title).toLowerCase().indexOf((keywords).toLowerCase()) != -1) {
                     arr.push(json[i]);
                 }
             }
             return arr;
         }
-        $(document).on('click', '#search', function() {
+        function onSearch() {
             var keywords = $('input[type="search"]').val();
             if (keywords) {
                 var obj = $('.list-group').length
@@ -86,7 +86,13 @@
             } else {
                 window.location.reload()
             }
-        })
+        }
+        $(document).on('click', '#search', function() {
+            onSearch();
+        });
+        $(document).on('keydown', '#input', function(event) {
+            if (event.keyCode == 13) onSearch();
+        });
     })
 </script>
     <div class="container content">
