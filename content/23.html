@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>thinkphp5生成静态html - 王维的博客</title>
+<title>ThinkPHP5生成静态html - 王维的博客</title>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="keywords" content="thinkphp,thinkphp5,生成静态"/>
-<meta name="description" content="thinkphp5生成全站静态html" />
+<meta name="keywords" content="ThinkPHP,ThinkPHP5,生成静态"/>
+<meta name="description" content="ThinkPHP5生成全站静态html" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.3.0/css/bootstrap.min.css" rel="stylesheet">
 <script src="/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
@@ -52,7 +52,7 @@
 							</ul>
             <div class="d-flex" role="search">
                 <input class="form-control me-2" type="search" placeholder="搜索文章" aria-label="search" id="input">
-                <button class="btn btn-outline-success text-nowrap" type="button" id="search">搜索</button>
+                <button class="btn btn-outline-light text-nowrap" type="button" id="search">搜索</button>
             </div>
 		</div>
 	</div>
@@ -61,10 +61,10 @@
 <script src="/common/search.js"></script>
     <div class="container content">
         <div class="mt-3">
-            <h1>thinkphp5生成静态html</h1>
+            <h1>ThinkPHP5生成静态html</h1>
             <span class="date"><small>2022-05-05</small></span>
             <div class="mt-4">
-                <p>本文介绍如何利用thinkphp5生成全站静态html，自动处理栏目列表、分页和详情页，所有操作一键生成。</p><p>先介绍下背景，Github支持搭建免费个人博客，但只支持纯静态网站，不支持php、jsp等动态语言。刚开始完全可以自行处理文章列表、文章详情，以及分页展示。但随着文章列表越来越多，单纯靠手工去挨个修改每个静态页已显得不适合了，所以花了点时间用thinkphp搭建了一个静态生成功能，经测试完全达到预期要求。</p><p>简单介绍一下博客架构，导航处有若干菜单分类，每个菜单分类对应一个文章列表，每个分类列表（含首页）都有其分页，所有详情页统一在一个文件夹内，按ID号生成文档，结构大致如下：</p><p>/</p><p>|--categories</p><p>|--|--分类1.html</p><p>|--|--分类2.html</p><p>|--|--分类*.html</p><p>|--common&nbsp;公共JS、CSS文件</p><p>|--content</p><p>|--|--1.html</p><p>|--|--2.html</p><p>|--|--*.html</p><p>|--uploads&nbsp;图片等附件</p><p>|--index.html</p><p>|--index_2.html</p><p>|--index_*.html</p><p>本例用的后台是Fastadmin后台管理系统，结合ThinkPHP5.0开发而来，如果对Fastadmin不熟，可参考本站博文：<a href="11.html">Fastadmin后台框架的使用心得与分享</a>，先使用该后台系统搭建好博客基本的结构，分类表、文章表等。</p><p><strong>一、生成静态方法</strong></p><p>生成静态HTML主要依赖thinkphp的buildHtml()方法，早期的版本自带了此方法，不过在后来的版本中移除了，现在需要移回来。</p><pre class="php">//&nbsp;/thinkphp/library/think/Controller.php
+                <p>本文介绍如何利用ThinkPHP5生成全站静态html，自动处理栏目列表、分页和详情页，所有操作一键生成。</p><p>先介绍下背景，Github支持搭建免费个人博客，但只支持纯静态网站，不支持php、jsp等动态语言。刚开始完全可以自行处理文章列表、文章详情，以及分页展示。但随着文章列表越来越多，单纯靠手工去挨个修改每个静态页已显得不适合了，所以花了点时间用ThinkPHP搭建了一个静态生成功能，经测试完全达到预期要求。</p><p>简单介绍一下博客架构，导航处有若干菜单分类，每个菜单分类对应一个文章列表，每个分类列表（含首页）都有其分页，所有详情页统一在一个文件夹内，按ID号生成文档，结构大致如下：</p><p>/</p><p>|--categories</p><p>|--|--分类1.html</p><p>|--|--分类2.html</p><p>|--|--分类*.html</p><p>|--common&nbsp;公共JS、CSS文件</p><p>|--content</p><p>|--|--1.html</p><p>|--|--2.html</p><p>|--|--*.html</p><p>|--uploads&nbsp;图片等附件</p><p>|--index.html</p><p>|--index_2.html</p><p>|--index_*.html</p><p>本例用的后台是Fastadmin后台管理系统，结合ThinkPHP5.0开发而来，如果对Fastadmin不熟，可参考本站博文：<a href="11.html">Fastadmin后台框架的使用心得与分享</a>，先使用该后台系统搭建好博客基本的结构，分类表、文章表等。</p><p><strong>一、生成静态方法</strong></p><p>生成静态HTML主要依赖thinkphp的buildHtml()方法，早期的版本自带了此方法，不过在后来的版本中移除了，现在需要移回来。</p><pre class="php">//&nbsp;/thinkphp/library/think/Controller.php
 /**
 &nbsp;*&nbsp;生成静态页面
 &nbsp;*&nbsp;@access&nbsp;protected

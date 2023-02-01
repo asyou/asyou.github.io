@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>thinkphp搜索功能使用union联表查询，以及分页处理 - 王维的博客</title>
+<title>ThinkPHP搜索功能使用union联表查询，以及分页处理 - 王维的博客</title>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="keywords" content="thinkphp,union,联表查询"/>
+<meta name="keywords" content="ThinkPHP,union,联表查询"/>
 <meta name="description" content="多表联合查询的字段及以分页解决方案" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.3.0/css/bootstrap.min.css" rel="stylesheet">
@@ -52,7 +52,7 @@
 							</ul>
             <div class="d-flex" role="search">
                 <input class="form-control me-2" type="search" placeholder="搜索文章" aria-label="search" id="input">
-                <button class="btn btn-outline-success text-nowrap" type="button" id="search">搜索</button>
+                <button class="btn btn-outline-light text-nowrap" type="button" id="search">搜索</button>
             </div>
 		</div>
 	</div>
@@ -61,10 +61,10 @@
 <script src="/common/search.js"></script>
     <div class="container content">
         <div class="mt-3">
-            <h1>thinkphp搜索功能使用union联表查询，以及分页处理</h1>
+            <h1>ThinkPHP搜索功能使用union联表查询，以及分页处理</h1>
             <span class="date"><small>2022-05-14</small></span>
             <div class="mt-4">
-                <p>项目中有一个全局搜索功能，需要通过关键词查询三个表的数据，并需要使用thinkphp自带的paginate进行分页，通过官方文档或搜索来的资料，都不太接地气，写得不明不白，结合官方文档折腾了半天后最终解决了。<br/></p><p>其实这个功能是有两个核心需要解决的！</p><p>一是多表union查询时，必须保证查询的字段名、顺序完全一致，官方文档是这么说的：注意：UNION 内部的 SELECT 语句必须拥有相同数量的列。列也必须拥有相似的数据类型。同时，每条 SELECT 语句中的列的顺序必须相同。</p><p>二是多表union查询时，如果需要使用官方的paginate进行数据分页，需要使用buildSql子查询（这点很关键）！</p><p>也就是说，这个全局搜索功能要最终实现，是要区分使用场景的！PC端一般是MVC模式用的是分页按钮，移动端一般采用触底加载分页，下面针对这两种场景分别给出示例代码。</p><p><strong>一、前后端分离时，移动端api的请求</strong></p><pre class="php">//&nbsp;api/search/search
+                <p>项目中有一个全局搜索功能，需要通过关键词查询三个表的数据，并需要使用ThinkPHP自带的paginate进行分页，通过官方文档或搜索来的资料，都不太接地气，写得不明不白，结合官方文档折腾了半天后最终解决了。<br/></p><p>其实这个功能是有两个核心需要解决的！</p><p>一是多表union查询时，必须保证查询的字段名、顺序完全一致，官方文档是这么说的：注意：UNION 内部的 SELECT 语句必须拥有相同数量的列。列也必须拥有相似的数据类型。同时，每条 SELECT 语句中的列的顺序必须相同。</p><p>二是多表union查询时，如果需要使用官方的paginate进行数据分页，需要使用buildSql子查询（这点很关键）！</p><p>也就是说，这个全局搜索功能要最终实现，是要区分使用场景的！PC端一般是MVC模式用的是分页按钮，移动端一般采用触底加载分页，下面针对这两种场景分别给出示例代码。</p><p><strong>一、前后端分离时，移动端api的请求</strong></p><pre class="php">//&nbsp;api/search/search
 $params&nbsp;=&nbsp;$this-&gt;request-&gt;param();
 $limit&nbsp;=&nbsp;$params[&#39;limit&#39;];
 $offset&nbsp;=&nbsp;($params[&#39;pages&#39;]-1)*$limit;
