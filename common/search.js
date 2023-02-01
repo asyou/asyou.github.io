@@ -24,7 +24,7 @@ $(function(){
                     $.each(items, function(i, o) {
                         var tags = '';
                         $.each(o.tags, function(index,item) {
-                            tags += '<span class="badge me-1 bg-'+item.color+'">'+item.name+'</span>';
+                            tags += '<span class="badge me-1 text-bg-'+item.color+'">'+item.name+'</span>';
                         })
                         html += '<a href="'+o.url+'" class="list-group-item list-group-item-action">\
                             <div class="d-flex w-100 justify-content-between">\
