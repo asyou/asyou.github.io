@@ -64,10 +64,10 @@
             <h1>Mac安装PHP以及自带Apache配置文件httpd.conf配置参考</h1>
             <span class="date"><small>2023-02-02</small></span>
             <div class="mt-4">
-                <p>苹果MacOS12之前的系统版本内置了python2和php7，作为使用python和php的开发者来说非常方便。</p><p>但是在MacOS12中php模块被移除了，需要自行安装。本文记录一下在12系统上安装php7.4，以及本机的配置apache相关配置、虚拟机多网站等。<br/></p><p><strong>一、安装Homebrew</strong><br/></p><pre class="bash">/bin/zsh&nbsp;-c&nbsp;&quot;$(curl&nbsp;-fsSL&nbsp;https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)&quot;</pre><p>安装完后执行一下更新：</p><pre class="bash">brew&nbsp;update</pre><p><strong>二、安装php7.4</strong><br/></p><pre class="bash">brew&nbsp;install&nbsp;php@7.4</pre><p>安装成功后会输出如下信息：</p><pre class="bash">To&nbsp;enable&nbsp;PHP&nbsp;in&nbsp;Apache&nbsp;add&nbsp;the&nbsp;following&nbsp;to&nbsp;httpd.conf&nbsp;and&nbsp;restart&nbsp;Apache:
+                <p>苹果MacOS12之前的系统版本内置了python2和php7，作为使用python和php的开发者来说非常方便。</p><p>但是在MacOS12中php模块被移除了，需要自行安装。本文记录一下在12系统上安装php7.4，以及本机apache相关配置、vhost多站点等。<br/></p><p><strong>一、安装Homebrew</strong>，已安装则跳过<br/></p><pre class="bash">/bin/zsh&nbsp;-c&nbsp;&quot;$(curl&nbsp;-fsSL&nbsp;https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)&quot;</pre><p>安装完后执行一下更新：</p><pre class="bash">brew&nbsp;update</pre><p><strong>二、安装php7.4</strong><br/></p><pre class="bash">brew&nbsp;install&nbsp;php@7.4</pre><p>安装成功后会输出如下信息：</p><pre class="bash">To&nbsp;enable&nbsp;PHP&nbsp;in&nbsp;Apache&nbsp;add&nbsp;the&nbsp;following&nbsp;to&nbsp;httpd.conf&nbsp;and&nbsp;restart&nbsp;Apache:
 &nbsp;&nbsp;&nbsp;&nbsp;LoadModule&nbsp;php7_module&nbsp;/usr/local/opt/php@7.4/lib/httpd/modules/libphp7.so
 
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;FilesMatch&nbsp;I.php$&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;FilesMatch&nbsp;\.php$&gt;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SetHandler&nbsp;application/x-httpd-php
 &nbsp;&nbsp;&nbsp;&nbsp;&lt;/FilesMatch&gt;
 
@@ -77,12 +77,12 @@ Finally,&nbsp;check&nbsp;DirectoryIndex&nbsp;includes&nbsp;index.php
 The&nbsp;php.ini&nbsp;and&nbsp;php-fpm.ini&nbsp;file&nbsp;can&nbsp;be&nbsp;found&nbsp;in:
 &nbsp;&nbsp;&nbsp;&nbsp;/usr/local/etc/php/7.4/
 
-php@7.4&nbsp;is&nbsp;keg-only,&nbsp;which&nbsp;means&nbsp;it&nbsp;was&nbsp;not&nbsp;symlinked&nbsp;into&nbsp;/us/local,
+php@7.4&nbsp;is&nbsp;keg-only,&nbsp;which&nbsp;means&nbsp;it&nbsp;was&nbsp;not&nbsp;symlinked&nbsp;into&nbsp;/usr/local,
 because&nbsp;this&nbsp;is&nbsp;an&nbsp;alternate&nbsp;version&nbsp;of&nbsp;another&nbsp;formula.
 
 If&nbsp;you&nbsp;need&nbsp;to&nbsp;have&nbsp;php@7.4&nbsp;first&nbsp;in&nbsp;your&nbsp;PATH,&nbsp;run:
-&nbsp;&nbsp;&nbsp;&nbsp;echo&nbsp;&#39;export&nbsp;PATH-&quot;/usr/local/opt/php@7.4/bin:$PATH&quot;&nbsp;&gt;&gt;&nbsp;~/.zshrc
-&nbsp;&nbsp;&nbsp;&nbsp;echo&nbsp;&#39;export&nbsp;PATH-&quot;/usr/local/opt/php@7.4/sbin:$PATH&quot;&nbsp;&gt;&gt;&nbsp;~/.zshrc
+&nbsp;&nbsp;&nbsp;&nbsp;echo&nbsp;&#39;export&nbsp;PATH-&quot;/usr/local/opt/php@7.4/bin:$PATH&quot;&#39;&nbsp;&gt;&gt;&nbsp;~/.zshrc
+&nbsp;&nbsp;&nbsp;&nbsp;echo&nbsp;&#39;export&nbsp;PATH-&quot;/usr/local/opt/php@7.4/sbin:$PATH&quot;&#39;&nbsp;&gt;&gt;&nbsp;~/.zshrc
 
 For&nbsp;compilers&nbsp;to&nbsp;find&nbsp;php@7.4&nbsp;you&nbsp;may&nbsp;need&nbsp;to&nbsp;set:
 &nbsp;&nbsp;&nbsp;&nbsp;export&nbsp;LDFLAGS=&quot;-L/usr/local/opt/php@7.4/lib&quot;
@@ -93,15 +93,15 @@ To&nbsp;have&nbsp;launch&nbsp;start&nbsp;ph@7.4&nbsp;now&nbsp;and&nbsp;restart&n
 Or,&nbsp;if&nbsp;you&nbsp;don&#39;t&nbsp;want/need&nbsp;a&nbsp;background&nbsp;service&nbsp;you&nbsp;can&nbsp;just&nbsp;run:
 &nbsp;&nbsp;&nbsp;&nbsp;php-fom
 ==&gt;&nbsp;Summary
-🍺&nbsp;&nbsp;/usr/local/Cellar/php@7.4/7.4.21_1:&nbsp;497&nbsp;files,&nbsp;72.4MB</pre><p>1、控制台如下提示信息逐一复制并执行确保后续使用php相关命令正常。<br/></p><pre class="bash">echo&nbsp;&#39;export&nbsp;PATH=&quot;/usr/local/opt/php@7.4/bin:$PATH&quot;&#39;&nbsp;&gt;&gt;&nbsp;~/.zshrc
+🍺&nbsp;&nbsp;/usr/local/Cellar/php@7.4/7.4.32_1:&nbsp;497&nbsp;files,&nbsp;72.4MB</pre><p>1、控制台如下提示信息逐一复制并执行确保后续使用php相关命令正常。<br/></p><pre class="bash">echo&nbsp;&#39;export&nbsp;PATH=&quot;/usr/local/opt/php@7.4/bin:$PATH&quot;&#39;&nbsp;&gt;&gt;&nbsp;~/.zshrc
 echo&nbsp;&#39;export&nbsp;PATH=&quot;/usr/local/opt/php@7.4/sbin:$PATH&quot;&#39;&nbsp;&gt;&gt;&nbsp;~/.zshrc
 export&nbsp;LDFLAGS=&quot;-L/usr/local/opt/php@7.4/lib&quot;
 export&nbsp;CPPFLAGS=&quot;-I/usr/local/opt/php@7.4/include&quot;
-brew&nbsp;services&nbsp;start&nbsp;php@7.4</pre><p>也可以把.zshrc改成.bash_profile，效果一样。</p><p>保存后执行命令重载一下以让其生效：</p><pre class="bash">source&nbsp;~/.zshrc&nbsp;#或者.bash_profile</pre><p>2、检查一下php版本，输入命令：</p><pre class="bash">wangwei@iMac&nbsp;~&nbsp;%&nbsp;php&nbsp;-v
+brew&nbsp;services&nbsp;start&nbsp;php@7.4</pre><p>也可以把.zshrc改成.bash_profile，效果一样。</p><p>保存后执行重载命令让其生效：</p><pre class="bash">source&nbsp;~/.zshrc&nbsp;#或者.bash_profile</pre><p>2、检查一下php版本，输入命令：</p><pre class="bash">wangwei@iMac&nbsp;~&nbsp;%&nbsp;php&nbsp;-v
 PHP&nbsp;7.4.32&nbsp;(cli)&nbsp;(built:&nbsp;Sep&nbsp;29&nbsp;2022&nbsp;11:04:22)&nbsp;(&nbsp;NTS&nbsp;)
 Copyright&nbsp;(c)&nbsp;The&nbsp;PHP&nbsp;Group
 Zend&nbsp;Engine&nbsp;v3.4.0,&nbsp;Copyright&nbsp;(c)&nbsp;Zend&nbsp;Technologies
-&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;Zend&nbsp;OPcache&nbsp;v7.4.32,&nbsp;Copyright&nbsp;(c),&nbsp;by&nbsp;Zend&nbsp;Technologies</pre><p>如显示上述信息，则php安装正常。</p><p><strong>三、给php模块签名</strong></p><p><strong>这一步非常重要，由于MacOS12系统的安全限制升级，php安装完后并不能直接配置到httpd.conf中，会报错！</strong></p><p>1、打开系统工具，找到“钥匙串访问”并打开，在菜单栏中点击“钥匙串访问”找到“证书助理”，从中选择“创建证书颁发机构”，弹出框如下：</p><p><img src="/uploads/20230202/8ff9978fd1a54c90bfdc2d170ddd3c6e.png"/></p><p>名称和邮件必填，但内容随意。</p><p>创建好后，在“我的证书”中找到刚刚创建的证书，双击打开，在“信任”那一栏中全部选择“始终信任”。<br/></p><p>2、用创建的证书给php模块签名：</p><pre class="bash">wangwei@iMac&nbsp;~&nbsp;%&nbsp;sudo&nbsp;codesign&nbsp;--sign&nbsp;“iMacCA”&nbsp;--force&nbsp;--keychain&nbsp;~/Library/Keychains/login.keychain-db&nbsp;/usr/local/opt/php@7.4/lib/httpd/modules/libphp7.so</pre><p>其中“iMacCA”是刚创建的证书名称，不能写错。</p><p><strong>四、修改httpd.conf</strong><br/></p><p>1、打开终端，输入命令：</p><pre class="bash">wangwei@iMac&nbsp;~&nbsp;%&nbsp;sudo&nbsp;vi&nbsp;/etc/apache2/httpd.conf</pre><p>回车后输入密码进入编辑，找到如下几项，把前面的#号删除</p><pre class="bash">LoadModule&nbsp;vhost_alias_module&nbsp;libexec/apache2/mod_vhost_alias.so
+&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;Zend&nbsp;OPcache&nbsp;v7.4.32,&nbsp;Copyright&nbsp;(c),&nbsp;by&nbsp;Zend&nbsp;Technologies</pre><p>如显示上述信息，则php安装正常。</p><p><strong>三、给php模块签名</strong></p><p><strong>这一步非常重要，由于MacOS12系统的安全限制升级，php安装完后并不能直接配置到httpd.conf中，运行apache会报错！</strong></p><p>1、打开系统工具，找到“钥匙串访问”并打开，在菜单栏中点击“钥匙串访问”找到“证书助理”，从中选择“创建证书颁发机构”，弹出框如下：</p><p><img src="/uploads/20230202/8ff9978fd1a54c90bfdc2d170ddd3c6e.png"/></p><p>名称和邮件必填，但内容随意。</p><p>创建好后，在“我的证书”中找到刚刚创建的证书，双击打开，在“信任”那一栏中全部选择“始终信任”。<br/></p><p>2、用创建的证书给php模块签名：</p><pre class="bash">wangwei@iMac&nbsp;~&nbsp;%&nbsp;sudo&nbsp;codesign&nbsp;--sign&nbsp;“iMacCA”&nbsp;--force&nbsp;--keychain&nbsp;~/Library/Keychains/login.keychain-db&nbsp;/usr/local/opt/php@7.4/lib/httpd/modules/libphp7.so</pre><p>其中“iMacCA”是刚创建的证书名称，不能写错。</p><p><strong>四、修改httpd.conf</strong><br/></p><p>1、打开终端，输入命令：</p><pre class="bash">wangwei@iMac&nbsp;~&nbsp;%&nbsp;sudo&nbsp;vi&nbsp;/etc/apache2/httpd.conf</pre><p>回车后输入密码进入编辑，找到如下几项，把前面的#号删除</p><pre class="bash">LoadModule&nbsp;vhost_alias_module&nbsp;libexec/apache2/mod_vhost_alias.so
 LoadModule&nbsp;rewrite_module&nbsp;libexec/apache2/mod_rewrite.so
 Include&nbsp;/private/etc/apache2/extra/httpd-vhosts.conf</pre><p>第一个和第三个表示启用vhost虚拟机，第二个表示启用php url重写。</p><p>2、添加php模块，找到LoadModule结尾处，添加如下</p><pre class="bash">#PHP&nbsp;was&nbsp;deprecated&nbsp;in&nbsp;macOS&nbsp;11&nbsp;and&nbsp;removed&nbsp;from&nbsp;macOS&nbsp;12
 LoadModule&nbsp;php7_module&nbsp;/usr/local/opt/php@7.4/lib/httpd/modules/libphp7.so&nbsp;&quot;iMacCA&quot;</pre><p>这个就是上面安装的php模块，后面的“iMacCA”是刚刚创建的证书名称，确保名称一致且正确。<br/></p><p>3、其他需要修改的地方</p><pre class="bash">&lt;Directory&nbsp;/&gt;
