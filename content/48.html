@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="keywords" content="Mac,php,apache,httpd.conf"/>
-<meta name="description" content="在Mac安装php7、httpd.conf配置参考以及虚拟机多站点配置" />
+<meta name="description" content="在Mac上安装php7、httpd.conf配置参考以及虚拟机多站点配置" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.3.0/css/bootstrap.min.css" rel="stylesheet">
 <link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
@@ -68,7 +68,7 @@
 PHP&nbsp;7.4.32&nbsp;(cli)&nbsp;(built:&nbsp;Sep&nbsp;29&nbsp;2022&nbsp;11:04:22)&nbsp;(&nbsp;NTS&nbsp;)
 Copyright&nbsp;(c)&nbsp;The&nbsp;PHP&nbsp;Group
 Zend&nbsp;Engine&nbsp;v3.4.0,&nbsp;Copyright&nbsp;(c)&nbsp;Zend&nbsp;Technologies
-&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;Zend&nbsp;OPcache&nbsp;v7.4.32,&nbsp;Copyright&nbsp;(c),&nbsp;by&nbsp;Zend&nbsp;Technologies</pre><p>如显示上述信息，则安装正常。</p><p>三、给php模块签名</p><p><strong>这一步非常重要，由于MacOS12系统的安全限制升级，php安装完后并不能直接配置到httpd.conf中，会报错！</strong></p><p>打开系统工具，找到“钥匙串访问”并打开，在菜单栏中点击“钥匙串访问”找到“证书助理”，从中选择“创建证书颁发机构”，弹出框如下：</p><p><img src="/uploads/20230202/8ff9978fd1a54c90bfdc2d170ddd3c6e.png"/></p><p>名称和邮件必填，但内容随意。</p><p>创建好后，在“我的证书”中找到刚刚创建的证书，双击打开，在“信任”那一栏中全部选择“始终信任”。<br/></p><p>三、修改httpd.conf<br/></p><p>1、打开终端，输入命令：</p><pre class="bash">wangwei@iMac&nbsp;~&nbsp;%&nbsp;sudo&nbsp;vi&nbsp;/etc/apache2/httpd.conf</pre><p>回车后输入密码进入编辑，找到如下几项，把前面的#号删除</p><pre class="bash">LoadModule&nbsp;vhost_alias_module&nbsp;libexec/apache2/mod_vhost_alias.so
+&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;Zend&nbsp;OPcache&nbsp;v7.4.32,&nbsp;Copyright&nbsp;(c),&nbsp;by&nbsp;Zend&nbsp;Technologies</pre><p>如显示上述信息，则安装正常。</p><p>三、给php模块签名</p><p><strong>这一步非常重要，由于MacOS12系统的安全限制升级，php安装完后并不能直接配置到httpd.conf中，会报错！</strong></p><p>1、打开系统工具，找到“钥匙串访问”并打开，在菜单栏中点击“钥匙串访问”找到“证书助理”，从中选择“创建证书颁发机构”，弹出框如下：</p><p><img src="/uploads/20230202/8ff9978fd1a54c90bfdc2d170ddd3c6e.png"/></p><p>名称和邮件必填，但内容随意。</p><p>创建好后，在“我的证书”中找到刚刚创建的证书，双击打开，在“信任”那一栏中全部选择“始终信任”。<br/></p><p>2、用创建的证书给php模块签名：</p><pre class="bash">wangwei@iMac&nbsp;~&nbsp;%&nbsp;sudo&nbsp;codesign&nbsp;--sign&nbsp;“iMacCA”&nbsp;--force&nbsp;--keychain&nbsp;~/Library/Keychains/login.keychain-db&nbsp;/usr/local/opt/php@7.4/lib/httpd/modules/libphp7.so</pre><p>其中“iMacCA”是刚创建的证书名称，不能写错。</p><p>三、修改httpd.conf<br/></p><p>1、打开终端，输入命令：</p><pre class="bash">wangwei@iMac&nbsp;~&nbsp;%&nbsp;sudo&nbsp;vi&nbsp;/etc/apache2/httpd.conf</pre><p>回车后输入密码进入编辑，找到如下几项，把前面的#号删除</p><pre class="bash">LoadModule&nbsp;vhost_alias_module&nbsp;libexec/apache2/mod_vhost_alias.so
 LoadModule&nbsp;rewrite_module&nbsp;libexec/apache2/mod_rewrite.so
 Include&nbsp;/private/etc/apache2/extra/httpd-vhosts.conf</pre><p>第一个和第三个表示启用vhost虚拟机，第二个表示启用php重写，</p><p>2、添加php模块，找到LoadModule结尾处，添加如下</p><pre class="bash">#PHP&nbsp;was&nbsp;deprecated&nbsp;in&nbsp;macOS&nbsp;11&nbsp;and&nbsp;removed&nbsp;from&nbsp;macOS&nbsp;12
 LoadModule&nbsp;php7_module&nbsp;/usr/local/opt/php@7.4/lib/httpd/modules/libphp7.so&nbsp;&quot;iMacCA&quot;</pre><p>这个就是上面安装的php模块，后面的“iMacCA”是刚刚创建的证书名称，确保名称一致且正确。<br/></p><p>3、其他需要修改的地方</p><pre class="bash">&lt;Directory&nbsp;/&gt;
