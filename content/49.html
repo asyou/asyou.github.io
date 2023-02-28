@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Word文档着重号与web端兼容处理方案与技术指导 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content="Word,着重号"/>
+<meta name="description" content="上传Word文档并识别文本内容，解析文本段落及着重号，兼容web网页端。" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.3.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="/common/jquery.min.js"></script>
+<script src="/common/search.js"></script>
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    img {
+        max-width: 100%;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav me-auto">
+								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+            <div class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="搜索文章" aria-label="search" id="input">
+                <button class="btn btn-outline-light text-nowrap" type="button" id="search">搜索</button>
+            </div>
+		</div>
+	</div>
+</nav>
+    <div class="container content">
+        <div class="mt-3">
+            <h1>Word文档着重号与web端兼容处理方案与技术指导</h1>
+            <span class="date"><small>2023-02-28</small></span>
+            <div class="mt-4">
+                <p><strong>一、功能简述</strong></p><p>1．文本添加着重号功能是微软公司推出的标准，在Word文档中可以方便地对文本进行着重号标注，以让指定文本突出让阅读者知悉内容重点；</p><p>2．不过需要注意的是，着重号是微软公司推出的标准，在其Word产品中得以体现，它并不是一个web标准，即它不是一个W3C标准，在网页端无论是html标签、css当中并无相关实现。虽然在web中可以很方便地利用css标准语法实现类似的文本着重号标注功能，但与Word文档中的着重号实现原理并不相同，不能相互兼容。</p><p><br/></p><p><strong>二、功能需求</strong></p><p>1．实现在web端上传Word文档，并读取出文档内容，识别并保留其带有的着重号标识，经相应处理后保存入库；</p><p>2．实现在web端导出html内容到Word文档，将带有着重号的内容输出到Word文档中后能正常显示着重号。</p><p><br/></p><p><strong>三、技术分析</strong></p><p>1．Word技术标准实现原理</p><p>（1）微软Word文档本质上是一种特殊的压缩包，原理就是把xml内容、所附带的图片等内容压缩成一个包后得到doc/docx文档，通过技术手段读取其原始内容是一种特殊的xml结构体，类似web中的html标签，采用标签与内容混合的结构，具体见下方技术实现一节；</p><p>（2）“着重号”本质上与给文本内容添加下划线、波浪线原理一样，其与一些特殊的内容结构存在互斥关系，例如无法给数学公式添加下划线或着重号。</p><p>2．Web技术实现原理</p><p>（1）网页web上实现文本着重号的功能相对简单。第一步，使用行内标签包裹住需要添加着重号的内容，并在该标签上添加一个指定类名。这一步在支持二次开发的网页web编辑器上实现非常简单。</p><p>（2）第二步，为上述添加好的标签类名编写样式，即可完全实现网页端文本着重号的功能。具体见下方技术实现一节。</p><p><br/></p><p><strong>四、技术实现</strong></p><p>1．准备好一个Word文档，并在其内容中添加若干着重号：</p><p><img src="/uploads/20230228/210de135f713c29212f3ff24f004f5db.png"/></p><p style="text-align: center;">图一</p><p>2．读取Word文档原始内容，以PHP语文为例，实现代码参考：</p><p><img src="/uploads/20230228/14ab7d6f8832be2dcc47f6b9b02e6cb7.png"/></p><p style="text-align: center;">图二</p><p>3．上述代码执行成功后得到的xml内容（部分）：</p><p><img src="/uploads/20230228/fd8cd0a1454d5f72f46c4997965b40ee.png"/></p><p style="text-align: center;">图三</p><p>4．如图，Word中以w:r/w:rPr等特殊xml标签来标记内容，并以此为最终的渲染提供依据。用w:r表示文字块，w:rPr表示文本设置，w:t表示该段内容是文本内容。</p><p>5．对比图一和图三，其中“万物生长”四个字是标注了着重号的，在xml文字块当中相比其他文字块多了w:sz/w:em两个标签，具体含义&lt;w:sz w:val=&quot;21&quot; /&gt;是设置文字大小为21；&lt;w:em w:val=&quot;dot&quot; /&gt;表示该段文字需要添加着重号，关键就在这里。</p><p>6．通过以上几个步骤，我们知道了如何从Word文档中读取xml，并且了解了其中内容标识着重号的规则和原理，接下来即可编写代码，以实现Word文档上传/xml内容读取与解析/保存入库等操作（具体代码略）。</p><p>7．Web中实现文本内容着重号，分为两步：</p><p>1) 在网页编辑器中实现选中文本后，点击工具栏自定义按钮添加着重号，以ueditor编辑器为例：</p><p><img src="/uploads/20230228/302a39c2dc9b0de0ee7453467d8b50b9.png"/></p><p style="text-align: center;">图四</p><p>上述代码实现了在编辑器中选中文本后，点击自定义按钮添加着重号，实际上就是给选中的文本包裹一个类名为.dots的span标签。</p><p>2) 在需展示对应内容的网页中编写css代码：</p><p><img src="/uploads/20230228/cfd84fb9750d56e17488db6c3cc143e5.png"/></p><p style="text-align: center;">图五</p><p>8．至此，已经可以实现Word文档读取/解析内容保存入库、web端模拟Word实现着重号并在网页中展示等功能。反过来如果希望在网页中实现的文本着重号在导入Word文档后仍然保留着重号，即保持web网页端与Word文档相互兼容，则只需要按照图三的xml结构组装文本内容并输出保存到docx文档中即可，具体实现方式和代码略。</p><p>五、参考文献</p><ol class=" list-paddingleft-2" style="list-style-type: decimal;"><li><p>《word2007-xml存储标签属性说明文件》，https://wenku.baidu.com/view/eb985b5d312b3169a451a455?aggId=7491c172bd23482fb4daa58da0116c175f0e1e20</p></li><li><p>《ueditor编辑器》，http://fex.baidu.com/ueditor/<br/></p></li></ol>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2023</div>
+</footer>
+</body>
+</html>
