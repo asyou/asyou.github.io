@@ -87,13 +87,6 @@ $(&quot;#jstree&quot;).jstree({
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
 &nbsp;&nbsp;&nbsp;&nbsp;}
-}).on(&#39;changed.jstree&#39;,&nbsp;function(e,&nbsp;data)&nbsp;{
-&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;i,&nbsp;j,&nbsp;ids&nbsp;=&nbsp;[],&nbsp;names&nbsp;=&nbsp;[];
-&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;ids&nbsp;=&nbsp;[];
-&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;(i=0,j=data.selected.length;&nbsp;i&lt;j;&nbsp;i++)&nbsp;{
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ids.push(data.instance.get_node(data.selected[i]).id)
-&nbsp;&nbsp;&nbsp;&nbsp;}
-&nbsp;&nbsp;&nbsp;&nbsp;$(&#39;input[name=&quot;project_ids&quot;]&#39;).val(ids);
 });
 //&nbsp;实现树控件搜索
 $(document).on(&#39;keyup&#39;,&nbsp;&#39;#search&#39;,&nbsp;function()&nbsp;{
