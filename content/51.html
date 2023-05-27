@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Fastadmin后台筛选字段改成下拉框搜索 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content="Fastadmin,筛选"/>
+<meta name="description" content="Fastadmin后台筛选字段改成下拉框搜索" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.3.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="/common/jquery.min.js"></script>
+<script src="/common/search.js"></script>
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    img {
+        max-width: 100%;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav me-auto">
+								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+            <div class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="搜索文章" aria-label="search" id="input">
+                <button class="btn btn-outline-light text-nowrap" type="button" id="search">搜索</button>
+            </div>
+		</div>
+	</div>
+</nav>
+    <div class="container content">
+        <div class="mt-3">
+            <h1>Fastadmin后台筛选字段改成下拉框搜索</h1>
+            <span class="date"><small>2023-05-27</small></span>
+            <div class="mt-4">
+                <p>Fastadmin非常强大，一键CRUD会根据字段设置规则自动生成全局搜索的下拉选择框，不过关联表不行，关联表生成的是文本搜索。</p><p>本文记录下模型生成后关联表生默认的文本搜索修改成下拉搜索。</p><p>根据官方文档说明，对应的js文件中的searchList可以使用$.getJSON()方法实现，虽然下拉框显示是正常的，但实际搜索的时候传递到后台的参数是name字段，这显然是错误的，因为关联表需要查询的是id字段，只能使用其他方式实现。</p><p>本文实现在用户表中使用下拉框选择用户组来筛选数据，使用模板组件的方式来实现。</p><p><strong>一、添加模板</strong></p><p>在对应模块的模板文件夹中找到index.html文件，在尾部添加如下代码：</p><pre class="html">&lt;!--&nbsp;index.html&nbsp;--&gt;
+&lt;script&nbsp;id=&quot;grouptpl&quot;&nbsp;type=&quot;text/html&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;div&nbsp;class=&quot;row&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div&nbsp;class=&quot;col-xs-12&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div&nbsp;class=&quot;&quot;&nbsp;data-toggle=&quot;cxselect&quot;&nbsp;data-selects=&quot;group&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;select&nbsp;class=&quot;group&nbsp;form-control&quot;&nbsp;id=&quot;group_id&quot;&nbsp;name=&quot;group_id&quot;&nbsp;data-url=&quot;user/Group/getGroup&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;option&nbsp;value=&quot;&quot;&gt;请选择&lt;/option&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/select&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;input&nbsp;type=&quot;hidden&quot;&nbsp;class=&quot;operate&quot;&nbsp;data-name=&quot;group_id&quot;&nbsp;value=&quot;=&quot;&nbsp;/&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;
+&lt;/script&gt;</pre><p>说明：上述name和data-name即需要关联查询的字段名称，data-url是查询用户组的方法（查询后赋值给select）。</p><p><strong>二、查询用户组方法</strong></p><pre class="php">//&nbsp;group.php
+public&nbsp;function&nbsp;getGroup()
+{
+&nbsp;&nbsp;&nbsp;&nbsp;$list&nbsp;=&nbsp;$this-&gt;model-&gt;field([&#39;id&nbsp;as&nbsp;value&#39;,&#39;name&#39;,&#39;status&#39;])-&gt;select();
+&nbsp;&nbsp;&nbsp;&nbsp;$this-&gt;success(&#39;&#39;,&nbsp;null,&nbsp;$list);
+}</pre><p><strong>三、修改user.js</strong></p><pre class="javascript">//&nbsp;user.js
+{field:&nbsp;&#39;group.name&#39;,&nbsp;title:&nbsp;__(&#39;Group&#39;),&nbsp;searchList:&nbsp;function(column){return&nbsp;Template(&#39;grouptpl&#39;,{})}},</pre><p>说明：在对应的字段后添加上searchList，注意方法直接使用了模板方式。</p><p><strong>四、最终效果</strong></p><p><img src="/uploads/20230527/fd14572ff6ad85a02f542dfc84158d30.png"/></p><p>可见完美实现了需求。</p><p><strong>五、其他说明</strong></p><p>本文实现的是动态查询，如果筛选字段是固定的，searchList也可以直接使用json数组的形式。</p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2023</div>
+</footer>
+</body>
+</html>
