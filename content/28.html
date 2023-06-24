@@ -128,7 +128,7 @@ define(&#39;BIND_MODULE&#39;,&#39;swoole/WebSocket&#39;);
 //&nbsp;加载框架引导文件
 require&nbsp;__DIR__&nbsp;.&nbsp;&#39;/../thinkphp/start.php&#39;;</pre><p>2、在项目根目录中以下面的方式启动：<br/></p><pre class="php">php&nbsp;public/swoole.php&nbsp;start</pre><p>或者进入public目录，执行：</p><pre class="php">php&nbsp;swoole.php&nbsp;start</pre><p>即可！是不是简洁多了～</p><p><strong>六、前端JS代码</strong></p><p>前端连接WebSocket的代码都大同小异，以下为简单示例：<br/></p><pre class="php">var&nbsp;ws&nbsp;=&nbsp;new&nbsp;WebSocket(&quot;ws://127.0.0.1:9501&quot;);
 ws.onopen&nbsp;=&nbsp;function()&nbsp;{
-&nbsp;&nbsp;&nbsp;&nbsp;console.log(&#39;WebSocket&nbsp;connect&nbsp;success.&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;console.log(&#39;WebSocket&nbsp;connect&nbsp;success.&#39;);
 &nbsp;&nbsp;&nbsp;&nbsp;ws.send(&#39;连接成功后，发送用户鉴权信息&#39;);
 };
 ws.onerror&nbsp;=&nbsp;function()&nbsp;{
