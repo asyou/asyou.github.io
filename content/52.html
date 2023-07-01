@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Vue封装Websocket支持心跳检测和断线重连 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content="websocket,心跳检测,断线重连"/>
+<meta name="description" content="封装一个Websocket类，支持心跳检测和断线重连" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.3.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="/common/jquery.min.js"></script>
+<script src="/common/search.js"></script>
+<script src="/highlight/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    img {
+        max-width: 100%;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav me-auto">
+								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+            <div class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="搜索文章" aria-label="search" id="input">
+                <button class="btn btn-outline-light text-nowrap" type="button" id="search">搜索</button>
+            </div>
+		</div>
+	</div>
+</nav>
+    <div class="container content">
+        <div class="mt-3">
+            <h1>Vue封装Websocket支持心跳检测和断线重连</h1>
+            <span class="date"><small>2023-07-01</small></span>
+            <div class="mt-4">
+                <p>Websocket在开发中很常见，本文记录在Vue中封装Websocket的方法。</p><p>一、在Vue项目或Uniapp项目根目录utils新建一个websocket.js，代码如下：</p><pre class="javascript">/**
+&nbsp;*&nbsp;WebSocket&nbsp;封装
+&nbsp;*&nbsp;主要功能：
+&nbsp;*&nbsp;1.&nbsp;心跳检测
+&nbsp;*&nbsp;2.&nbsp;自动重连；
+&nbsp;*/
+export&nbsp;default&nbsp;class&nbsp;websocket&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;WebSocket&nbsp;实例
+&nbsp;&nbsp;&nbsp;&nbsp;ws
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;相关配置项
+&nbsp;&nbsp;&nbsp;&nbsp;options
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;心跳检测
+&nbsp;&nbsp;&nbsp;&nbsp;heartBeat
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;错误消息队列
+&nbsp;&nbsp;&nbsp;&nbsp;errorStack&nbsp;=&nbsp;[]
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;是否正在重连
+&nbsp;&nbsp;&nbsp;&nbsp;isReconnectLoading&nbsp;=&nbsp;false
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;定时器超时重连&nbsp;ID
+&nbsp;&nbsp;&nbsp;&nbsp;timeId&nbsp;=&nbsp;null
+
+&nbsp;&nbsp;&nbsp;&nbsp;constructor(options)&nbsp;{
+	/**
+	&nbsp;*&nbsp;options&nbsp;支持传入参数
+	&nbsp;*&nbsp;url&nbsp;websocket请求地址
+	&nbsp;*&nbsp;node:&nbsp;&#39;player&#39;,
+	&nbsp;*&nbsp;mode:&nbsp;&#39;audio&#39;,
+	&nbsp;*&nbsp;debug:&nbsp;true,
+	&nbsp;*&nbsp;flushingTime:&nbsp;0,
+	&nbsp;*&nbsp;reconnectDelay:&nbsp;3000,
+	&nbsp;*&nbsp;onopen,
+	&nbsp;*&nbsp;onmessage,
+	&nbsp;*&nbsp;onerror,
+	&nbsp;*&nbsp;onclose
+	&nbsp;*/
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.options&nbsp;=&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;isErrorReconnect:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...options
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.init()
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;/**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;初始化&nbsp;WebSocket
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*/
+&nbsp;&nbsp;&nbsp;&nbsp;init()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(&#39;WebSocket&#39;&nbsp;in&nbsp;window)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.ws&nbsp;=&nbsp;new&nbsp;WebSocket(this.options.url)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.ws.binaryType&nbsp;=&nbsp;this.options.binaryType
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.onOpen(this.options.onopen)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.onMessage(this.options.onmessage)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.onError(this.options.onerror)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.onClose(this.options.onclose)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;console.error(&#39;该浏览器不支持WebSocket!&#39;)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;获取&nbsp;WebSocket&nbsp;实例
+&nbsp;&nbsp;&nbsp;&nbsp;get&nbsp;getWebSocket()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;this.ws
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;/**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;设置连接成功后的回调函数
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;@param&nbsp;{*}&nbsp;callback
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*/
+&nbsp;&nbsp;&nbsp;&nbsp;onOpen(callback)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.ws.onopen&nbsp;=&nbsp;()&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.handHeartBeat()
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;发送成功连接之前所发送失败的消息
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.errorStack.forEach(message&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.send(message)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;callback&nbsp;&amp;&amp;&nbsp;callback()
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.errorStack&nbsp;=&nbsp;[]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.isReconnectLoading&nbsp;=&nbsp;false
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;/**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;设置接收&nbsp;WebSocket&nbsp;消息的回调函数
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;@param&nbsp;{*}&nbsp;callback&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*/
+&nbsp;&nbsp;&nbsp;&nbsp;onMessage(callback)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;try&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.ws.onmessage&nbsp;=&nbsp;callback
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;catch&nbsp;(err)&nbsp;{
+	&nbsp;&nbsp;&nbsp;&nbsp;console.error(&#39;error:&nbsp;&#39;,&nbsp;err)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;/**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;设置连接失败后的回调函数
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;@param&nbsp;{*}&nbsp;callback&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*/
+&nbsp;&nbsp;&nbsp;&nbsp;onError(callback)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.ws.onerror&nbsp;=&nbsp;(err)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;callback&nbsp;&amp;&amp;&nbsp;callback(err)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(!this.options.isErrorReconnect)&nbsp;return
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.onReconnection()
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.isReconnectLoading&nbsp;=&nbsp;false
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clearInterval(this.heartBeat)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;/**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;设置连接关闭后的回调函数
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;@param&nbsp;{*}&nbsp;callback&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*/
+&nbsp;&nbsp;&nbsp;&nbsp;onClose(callback)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.ws.onclose&nbsp;=&nbsp;()&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;用户手动关闭的不重连
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(this.isCustomClose)&nbsp;return
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;callback&nbsp;&amp;&amp;&nbsp;callback()
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.onReconnection()
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.isReconnectionLoading&nbsp;=&nbsp;false
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clearInterval(this.heartBeat)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;/**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;请求连接异常重连
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;@returns&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*/
+&nbsp;&nbsp;&nbsp;&nbsp;onReconnection()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;重连请求延时
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const&nbsp;delay&nbsp;=&nbsp;this.options.reconnectDelay&nbsp;||&nbsp;3000
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;防止重复请求
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(this.isReconnectionLoading)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.isReconnectionLoading&nbsp;=&nbsp;true
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clearTimeout(this.timeId)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.timeId&nbsp;=&nbsp;setTimeout(()&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.init()
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},&nbsp;delay)
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;handHeartBeat()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.heartBeat&nbsp;=&nbsp;setInterval(()&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.ws.send(JSON.stringify({
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type:&nbsp;&#39;heartbeat&#39;,
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;msg:&nbsp;&#39;ping&#39;
+	&nbsp;&nbsp;&nbsp;&nbsp;}))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},&nbsp;30&nbsp;*&nbsp;1000)
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;/**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;手动发送请求
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;@param&nbsp;{*}&nbsp;message&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;@returns&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*/
+&nbsp;&nbsp;&nbsp;&nbsp;handleSend(message)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;连接失败时的处理
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(this.ws.readyState&nbsp;!==&nbsp;WebSocket.OPEN)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.errorStack.push(message)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.ws.send(message)
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;/**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;手动关闭连接
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*/
+&nbsp;&nbsp;&nbsp;&nbsp;handleClose()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.isCustomClose&nbsp;=&nbsp;true
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.ws.close()
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;/**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;手动开启连接
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*/
+&nbsp;&nbsp;&nbsp;&nbsp;handleStart()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.isCustomClose&nbsp;=&nbsp;false
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.onReconnection()
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;/**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;手动销毁连接实例
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*/
+&nbsp;&nbsp;&nbsp;&nbsp;handleDestroy()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.handleClose()
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.ws&nbsp;=&nbsp;null
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.errorStack&nbsp;=&nbsp;null
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}</pre><p>二、在App.vue中或者需要的页面引用并实例化</p><pre class="javascript">//&nbsp;App.vue
+&lt;script&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;import&nbsp;websocket&nbsp;from&nbsp;&#39;utils/websocket.js&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;export&nbsp;default&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;onLaunch()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;ws&nbsp;=&nbsp;new&nbsp;websocket({
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;url:&nbsp;&#39;ws://127.0.0.1:9501&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;onopen:&nbsp;function(e)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;连接成功后可以做uuid绑定操作
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ws.handleSend(JSON.stringify({
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type:&nbsp;&#39;bind&#39;,
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;msg:&nbsp;&#39;uuid&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}))
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;onmessage:&nbsp;function(e)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;obj&nbsp;=&nbsp;JSON.parse(e.data)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;switch&nbsp;(obj.type)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;bind&#39;:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;heartbeat&#39;:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;console.log(obj.msg)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;&#39;message&#39;:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;接收到服务器下发的消息，根据type处理不同的业务逻辑
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;onShow()&nbsp;{},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;onHide()&nbsp;{}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&lt;/script&gt;</pre><p>三、其他说明</p><p>此为前端代码，必须配合后端Websocket服务使用，可以使用Workman/GateWorker或者Swoole来搭建Websocket服务，本例后端用的是Swoole作为Websocket服务端。</p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2023</div>
+</footer>
+</body>
+</html>
