@@ -202,6 +202,9 @@ export&nbsp;default&nbsp;class&nbsp;websocket&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},&nbsp;delay)
 &nbsp;&nbsp;&nbsp;&nbsp;}
 
+&nbsp;&nbsp;&nbsp;&nbsp;/**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;心跳检测，每30秒发送一次
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*/
 &nbsp;&nbsp;&nbsp;&nbsp;handHeartBeat()&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.heartBeat&nbsp;=&nbsp;setInterval(()&nbsp;=&gt;&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.ws.send(JSON.stringify({

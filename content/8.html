@@ -146,7 +146,7 @@ function&nbsp;createQrcode64($content,$logo=null,$level=&#39;L&#39;,$size=5,$mar
 &nbsp;&nbsp;&nbsp;&nbsp;$imageString&nbsp;=&nbsp;base64_encode(ob_get_contents());
 &nbsp;&nbsp;&nbsp;&nbsp;ob_end_clean();
 &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&quot;data:image/jpg;base64,&quot;.$imageString;
-}</pre><p><strong>在api接口中使用</strong></p><pre class="php">//&nbsp;该函数需要指定二维码图片存放目录，返回二维码图片存放路径
+}</pre><p><strong>第三步、在api接口中使用</strong></p><pre class="php">//&nbsp;该函数需要指定二维码图片存放目录，返回二维码图片存放路径
 $data[&#39;qrcode&#39;]&nbsp;=&nbsp;createQrcode(&#39;http://www.xxx.com/article/detail/id/1.html&#39;,&nbsp;&#39;/qrcode&#39;,&#39;logo.png&#39;);
 //&nbsp;该函数仅返回二维码的base64文件流，前端可直接用img渲染
 $data[&#39;qrcode64&#39;]&nbsp;=&nbsp;createQrcode(&#39;http://www.xxx.com/article/detail/id/1.html&#39;,&#39;logo.png&#39;);
