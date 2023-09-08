@@ -46,8 +46,8 @@
 		<div class="collapse navbar-collapse" id="navbarNav">
 			<ul class="navbar-nav me-auto">
 								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
-								<li class="nav-item"><a class="nav-link active" href="/categories/php.html">PHP</a></li>
-								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/vue.html">Vue</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
@@ -64,12 +64,12 @@
             <h1>uniapp上传并识别二维内容</h1>
             <span class="date"><small>2023-09-08</small></span>
             <div class="mt-4">
-                <p>最近公司项目有这么一个需求，在移动端H5个人推荐信息中添加个人微信二维码，用于在分享的内容中，他人可以快速地识别二维码添加好友。<br/></p><p>我们的想法是由用户自行上传个人微信中的二维码截图，但并不是直接把上传的带有二维码的图片展示出来，因为那样的话，不好看！</p><p>如果能在上传之后自动读取二维内容，并在移动端中使用类似Qrcode的二维码组件重新生成个人微信二维码，则能实现风格简洁统一的分享内容。</p><p>想到就干，首先想到的是用户上传二维后把图片传回后台，由后台进行二维码内容的识别，还真有方法，找到了一个qr-reader插件可以用。</p><p><strong>一、安装插件</strong></p><pre class="cmd">composer&nbsp;require&nbsp;zxing/qr-reader</pre><p><strong>二、调用插件并识别二维内容</strong></p><pre class="php">//&nbsp;test.php
+                <p>最近公司项目有这么一个需求，在移动端H5个人推荐信息中添加个人微信二维码，用于在分享的内容中，他人可以快速地识别二维码添加好友。<br/></p><p>我们的想法是由用户自行上传个人微信中的二维码截图，但并不是直接把上传的带有二维码的图片展示出来，因为那样的话。。。不好看！</p><p>如果能在上传之后自动读取二维码内容，并在移动端H5中使用类似Qrcode的二维码组件重新生成个人微信二维码，则能实现风格简洁统一的分享页面。</p><p>想到就干，首先想到的是用户上传二维码后把图片传回后台，由后台进行二维码内容的识别，还真有方法，找到了一个qr-reader插件可以用。</p><p><strong>一、安装插件</strong></p><pre class="cmd">composer&nbsp;require&nbsp;zxing/qr-reader</pre><p><strong>二、调用插件并识别二维内容</strong></p><pre class="php">//&nbsp;test.php
 $qrcode&nbsp;=&nbsp;new&nbsp;\Zxing\QrReader(&#39;个人微信二维码图片&#39;);
-$text&nbsp;=&nbsp;$qrcode-&gt;text();</pre><p>这样即可正确识别二维码中的内容，先保存到用户表中，用于在移动端中生成对应的二维码。</p><p>但本着不死不休的强迫症习惯，我觉得由用户上传图片到服务器的方式并不好，会因此造成大量的垃圾图片，况且上传图片也会占用大量的服务器带宽，就算是识别之后立即删除图片也觉得难受。</p><p>就琢磨着有没有直接在移动端就完成二维码图片内容的识别方法，这一找还真有，不过大多都是什么调用uniapp的摄像头组件去扫描二维码，不符合要求。</p><p>我想要的是用户上传二维码图片后，直接通过某种方式识别出二维内容，而不需要调用摄像头（因为H5不支持uni.scanCode）。</p><p>结果还真找到一个组件，就是reqrcode.js，下载过来丢到项目中。需要注意的是如果是以这种下载的方式，下载完后需要修改一下源文件。</p><p><strong>三、修改源文件</strong></p><pre class="javascript">//&nbsp;reqrcode.js
+$text&nbsp;=&nbsp;$qrcode-&gt;text();</pre><p>这样即可正确识别二维码中的内容，先保存到用户表中，用于在移动端中生成对应的二维码。</p><p>但本着不死不休的强迫症习惯，我觉得由用户上传图片到服务器的方式并不好，会因此造成大量的垃圾图片，况且上传图片也会占用大量的服务器带宽，就算是识别之后立即把图片删除也觉得难受。</p><p>就琢磨着有没有直接在移动端就完成二维码图片内容识别的方法，这一找还真有，不过大多都是什么调用uniapp的摄像头组件去扫描二维码，不符合要求。</p><p>我想要的是用户上传二维码图片后，直接通过某种方式识别出二维码内容，而不需要调用摄像头（因为H5不支持uni.scanCode）。</p><p>结果还真找到一个组件，就是reqrcode.js，下载过来丢到项目中。需要注意的是如果是以这种下载的方式，下载完后需要修改一下源文件。</p><p><strong>三、修改源文件</strong></p><pre class="javascript">//&nbsp;reqrcode.js
 module.exports&nbsp;=&nbsp;qrcode</pre><p>在文件尾部添加一个暴露方法。<br/></p><p><strong>四、引用插件</strong></p><pre class="javascript">//&nbsp;test.vue
 import&nbsp;reqrcode&nbsp;from&nbsp;&#39;@/utils/reqrcode.js&#39;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;二维码识别
-import&nbsp;uQRCode&nbsp;from&nbsp;&#39;@/uqrcode/uqrcode.js&#39;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;二维码生成</pre><p><strong>五、模板代码</strong></p><pre class="html">//&nbsp;test.vue
+import&nbsp;uQRCode&nbsp;from&nbsp;&#39;@/utils/uqrcode.js&#39;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;二维码生成</pre><p><strong>五、模板代码</strong></p><pre class="html">//&nbsp;test.vue
 &lt;canvas&nbsp;id=&quot;qrcode&quot;&nbsp;canvas-id=&quot;qrcode&quot;&nbsp;class=&quot;canvas-hide&quot;&nbsp;style=&quot;width:200px;height:200px;&quot;&nbsp;/&gt;</pre><p><strong>六、JS代码</strong><br/></p><pre class="javascript">//&nbsp;test.vue
 let&nbsp;_this&nbsp;=&nbsp;this
 reqrcode.decode(&#39;上传图片后得到的临时文件路径&#39;)
@@ -105,7 +105,7 @@ reqrcode.callback&nbsp;=&nbsp;function(res)&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},&nbsp;300)
 &nbsp;&nbsp;&nbsp;&nbsp;}
-}</pre><p><strong>七、CSS代码</strong></p><pre class="css">//&nbsp;test.vue
+}</pre><p><strong>七、CSS代码</strong></p><pre class="css">&lt;!--&nbsp;test.vue&nbsp;--&gt;
 .canvas-hide&nbsp;{
 &nbsp;&nbsp;&nbsp;&nbsp;position:&nbsp;fixed;
 &nbsp;&nbsp;&nbsp;&nbsp;right:&nbsp;100vw;
