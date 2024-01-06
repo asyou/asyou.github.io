@@ -9,10 +9,12 @@
 <meta name="description" content="PHP生成带logo的二维码" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.3.0/css/bootstrap.min.css" rel="stylesheet">
-<script src="/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
 <link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="/common/jquery.min.js"></script>
+<script src="/common/search.js"></script>
 <script src="/highlight/highlight.min.js"></script>
-<script >hljs.initHighlightingOnLoad();</script>
+<script>hljs.initHighlightingOnLoad();</script>
 <style type="text/css">
     body {
         margin-top: 70px;
@@ -42,7 +44,7 @@
 			<span class="navbar-toggler-icon"></span>
 		</button>
 		<div class="collapse navbar-collapse" id="navbarNav">
-			<ul class="navbar-nav">
+			<ul class="navbar-nav me-auto">
 								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
 								<li class="nav-item"><a class="nav-link active" href="/categories/php.html">PHP</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
@@ -50,11 +52,15 @@
 								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
 							</ul>
+            <div class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="搜索文章" aria-label="search" id="input">
+                <button class="btn btn-outline-light text-nowrap" type="button" id="search">搜索</button>
+            </div>
 		</div>
 	</div>
 </nav>
-    <div class="container">
-        <div class="content mt-3">
+    <div class="container content">
+        <div class="mt-3">
             <h1>PHPQrcode生成二维码，支持嵌入logo，支持仅base4输出</h1>
             <span class="date"><small>2022-02-22</small></span>
             <div class="mt-4">
@@ -148,7 +154,7 @@ return&nbsp;$data;</pre><p><strong>说明：</strong></p><p>1、两个函数的�
         </div>
     </div>
     <footer class="footer mt-3 bg-dark">
-    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2024 254555778@qq.com</div>
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2024</div>
 </footer>
 </body>
 </html>

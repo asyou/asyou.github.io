@@ -8,6 +8,8 @@
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.3.0/css/bootstrap.min.css" rel="stylesheet">
 <script src="/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="/common/jquery.min.js"></script>
+<script src="/common/search.js"></script>
 <style type="text/css">
     body {
         margin-top: 70px;
@@ -22,7 +24,7 @@
 			<span class="navbar-toggler-icon"></span>
 		</button>
 		<div class="collapse navbar-collapse" id="navbarNav">
-			<ul class="navbar-nav">
+			<ul class="navbar-nav me-auto">
 								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/php.html">PHP</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
@@ -30,30 +32,38 @@
 								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
 								<li class="nav-item"><a class="nav-link active" href="/categories/notes.html">随手笔记</a></li>
 							</ul>
+            <div class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="搜索文章" aria-label="search" id="input">
+                <button class="btn btn-outline-light text-nowrap" type="button" id="search">搜索</button>
+            </div>
 		</div>
 	</div>
 </nav>
-    <div class="container">
+    <div class="container content">
         <div class="my-3">
             <div class="list-group">
                                 <a href="/content/6.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">聊一聊MacOS系统的设计哲学及使用技巧</h5>
+                        <small class="text-muted">2022-02-14</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-warning">随手笔记</span><span class="badge bg-light text-dark ms-auto">2022-02-14</span></p>
+                    <p class="mb-1">MacOs与windows使用体验</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-warning">随手笔记</span></small>
                 </a>
                                 <a href="/content/1.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">初篇博文，不聊技术，来闲扯些没用的～</h5>
+                        <small class="text-muted">2022-01-10</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-warning">随手笔记</span><span class="badge bg-light text-dark ms-auto">2022-01-10</span></p>
+                    <p class="mb-1">吹水贴</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-warning">随手笔记</span></small>
                 </a>
                             </div>
         </div>
         <nav aria-label="Page navigation"><ul class="pagination mt-3 justify-content-center"><li class="page-item"><a class="page-link" href="/categories/notes.html">«</a></li><li class="page-item"><a class="page-link" href="/categories/notes.html">1</a></li><li class="page-item active"><a class="page-link" href="/categories/notes_2.html">2</a></li><li class="page-item disabled"><span class="page-link">»</span></li></ul></nav>
     </div>
     <footer class="footer mt-3 bg-dark">
-    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2024 254555778@qq.com</div>
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2024</div>
 </footer>
 </body>
 </html>

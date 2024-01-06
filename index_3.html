@@ -8,6 +8,8 @@
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.3.0/css/bootstrap.min.css" rel="stylesheet">
 <script src="/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="/common/jquery.min.js"></script>
+<script src="/common/search.js"></script>
 <style type="text/css">
     body {
         margin-top: 70px;
@@ -22,7 +24,7 @@
 			<span class="navbar-toggler-icon"></span>
 		</button>
 		<div class="collapse navbar-collapse" id="navbarNav">
-			<ul class="navbar-nav">
+			<ul class="navbar-nav me-auto">
 								<li class="nav-item"><a class="nav-link active" href="/index.html">首页</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/php.html">PHP</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
@@ -30,78 +32,102 @@
 								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
 							</ul>
+            <div class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="搜索文章" aria-label="search" id="input">
+                <button class="btn btn-outline-light text-nowrap" type="button" id="search">搜索</button>
+            </div>
 		</div>
 	</div>
 </nav>
-    <div class="container">
+    <div class="container content">
         <div class="my-3">
             <div class="list-group">
                                 <a href="/content/33.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">PHP处理Word数学公式以及生成初/高中数学试卷</h5>
+                        <small class="text-muted">2022-07-19</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2022-07-19</span></p>
+                    <p class="mb-1">使用PHP处理数学公式，并生成word数学试卷</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/32.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">Vue项目封装WebSocket代码</h5>
+                        <small class="text-muted">2022-07-13</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-success">Vue</span><span class="badge bg-light text-dark ms-auto">2022-07-13</span></p>
+                    <p class="mb-1">Vue项目中封装与集成WebSocket</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-success">Vue</span></small>
                 </a>
                                 <a href="/content/31.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">深入理解Gatewayworker的工作原理与多网站部署</h5>
+                        <small class="text-muted">2022-07-02</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2022-07-02</span></p>
+                    <p class="mb-1">深入理解Workerman工作原理，与多网站部署</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/30.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">php获取指定年月日起止时间戳方法</h5>
+                        <small class="text-muted">2022-06-30</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2022-06-30</span></p>
+                    <p class="mb-1">PHP封装一个获取指定年月日起止时间戳的方法</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/29.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">thinkphp5安装redis扩展，以及Mac安装redis服务</h5>
+                        <small class="text-muted">2022-06-24</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2022-06-24</span></p>
+                    <p class="mb-1">thinkphp安装redis扩展，安装redis服务</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/28.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">thinkphp5安装使用swoole，代替workerman实现即时聊天服务</h5>
+                        <small class="text-muted">2022-06-12</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2022-06-12</span></p>
+                    <p class="mb-1">使用swoole替代传统workerman实现即时通讯功能</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/27.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">Websocket实现站内即时消息提醒以及定时任务</h5>
+                        <small class="text-muted">2022-06-10</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2022-06-10</span></p>
+                    <p class="mb-1">Websocket实现即时消息提醒，以及定时任务，取代系统的定时任务</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/26.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">ThinkPHP搜索功能使用union联表查询，以及分页处理</h5>
+                        <small class="text-muted">2022-05-14</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2022-05-14</span></p>
+                    <p class="mb-1">多表联合查询的字段及以分页解决方案</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/25.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">浅谈数据结构系列之二《数据类型》</h5>
+                        <small class="text-muted">2022-05-08</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-warning">随手笔记</span><span class="badge bg-light text-dark ms-auto">2022-05-08</span></p>
+                    <p class="mb-1">数据类型</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-warning">随手笔记</span></small>
                 </a>
                                 <a href="/content/24.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">浅谈数据结构系列之一《数据基础》</h5>
+                        <small class="text-muted">2022-05-07</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-warning">随手笔记</span><span class="badge bg-light text-dark ms-auto">2022-05-07</span></p>
+                    <p class="mb-1">数据结构</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-warning">随手笔记</span></small>
                 </a>
                             </div>
         </div>
         <nav aria-label="Page navigation"><ul class="pagination mt-3 justify-content-center"><li class="page-item"><a class="page-link" href="/index_2.html">«</a></li><li class="page-item"><a class="page-link" href="/index.html">1</a></li><li class="page-item"><a class="page-link" href="/index_2.html">2</a></li><li class="page-item active"><a class="page-link" href="/index_3.html">3</a></li><li class="page-item"><a class="page-link" href="/index_4.html">4</a></li><li class="page-item"><a class="page-link" href="/index_5.html">5</a></li><li class="page-item"><a class="page-link" href="/index_6.html">6</a></li><li class="page-item"><a class="page-link" href="/index_4.html">»</a></li></ul></nav>
     </div>
     <footer class="footer mt-3 bg-dark">
-    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2024 254555778@qq.com</div>
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2024</div>
 </footer>
 </body>
 </html>

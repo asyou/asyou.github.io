@@ -8,6 +8,8 @@
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/bootstrap-5.3.0/css/bootstrap.min.css" rel="stylesheet">
 <script src="/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="/common/jquery.min.js"></script>
+<script src="/common/search.js"></script>
 <style type="text/css">
     body {
         margin-top: 70px;
@@ -22,7 +24,7 @@
 			<span class="navbar-toggler-icon"></span>
 		</button>
 		<div class="collapse navbar-collapse" id="navbarNav">
-			<ul class="navbar-nav">
+			<ul class="navbar-nav me-auto">
 								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
 								<li class="nav-item"><a class="nav-link active" href="/categories/php.html">PHP</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/vue.html">Vue</a></li>
@@ -30,78 +32,102 @@
 								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
 								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
 							</ul>
+            <div class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="搜索文章" aria-label="search" id="input">
+                <button class="btn btn-outline-light text-nowrap" type="button" id="search">搜索</button>
+            </div>
 		</div>
 	</div>
 </nav>
-    <div class="container">
+    <div class="container content">
         <div class="my-3">
             <div class="list-group">
                                 <a href="/content/53.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">uniapp上传并识别二维码内容</h5>
+                        <small class="text-muted">2023-09-08</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge me-1 bg-success">Vue</span><span class="badge bg-light text-dark ms-auto">2023-09-08</span></p>
+                    <p class="mb-1">uniapp,reqrcode,二维码</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span><span class="badge me-1 text-bg-success">Vue</span></small>
                 </a>
                                 <a href="/content/51.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">Fastadmin后台筛选字段改成下拉框搜索</h5>
+                        <small class="text-muted">2023-05-27</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2023-05-27</span></p>
+                    <p class="mb-1">Fastadmin后台筛选字段改成下拉框搜索</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/50.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">jstree树形控件实现右键菜单</h5>
+                        <small class="text-muted">2023-04-19</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2023-04-19</span></p>
+                    <p class="mb-1">jstree树形控件实现不同层级弹出不同右键菜单</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/45.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">PHP读取docx内容并按段落输出html或输出xml</h5>
+                        <small class="text-muted">2023-01-04</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2023-01-04</span></p>
+                    <p class="mb-1">PHP读取docx文档并输出内容或xml</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/44.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">PHP递归算法简单应用</h5>
+                        <small class="text-muted">2022-12-17</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2022-12-17</span></p>
+                    <p class="mb-1">PHP使用递归方法解决实际问题</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/43.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">uniapp实现公众号H5、小程序和App微信授权登录功能</h5>
+                        <small class="text-muted">2022-12-09</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge me-1 bg-success">Vue</span><span class="badge bg-light text-dark ms-auto">2022-12-09</span></p>
+                    <p class="mb-1">uniapp开发的公众号H5、小程序和App微信一键授权登录</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span><span class="badge me-1 text-bg-success">Vue</span></small>
                 </a>
                                 <a href="/content/42.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">ueditor集成数学公式编辑功能</h5>
+                        <small class="text-muted">2022-09-26</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2022-09-26</span></p>
+                    <p class="mb-1">在ueditor编辑器中集成数学公式编辑功能</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/39.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">Fastadmin后台动态渲染Latex为数学公式</h5>
+                        <small class="text-muted">2022-08-11</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2022-08-11</span></p>
+                    <p class="mb-1">Fastadmin后台动态渲染Latex为数学公式</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/37.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">PHPExcel自定义导出数据</h5>
+                        <small class="text-muted">2022-08-09</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2022-08-09</span></p>
+                    <p class="mb-1">PHP导出商品数据到excel</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                                 <a href="/content/34.html" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">bootstrap父子表功能实现的方法，支持循环父子表</h5>
+                        <small class="text-muted">2022-07-22</small>
                     </div>
-                    <p class="my-1 d-flex"><span class="badge me-1 bg-primary">PHP</span><span class="badge bg-light text-dark ms-auto">2022-07-22</span></p>
+                    <p class="mb-1">bootstrap实现父子表功能的方法</p>
+                    <small class="text-muted"><span class="badge me-1 text-bg-primary">PHP</span></small>
                 </a>
                             </div>
         </div>
         <nav aria-label="Page navigation"><ul class="pagination mt-3 justify-content-center"><li class="page-item disabled"><span class="page-link">«</span></li><li class="page-item active"><a class="page-link" href="/categories/php.html">1</a></li><li class="page-item"><a class="page-link" href="/categories/php_2.html">2</a></li><li class="page-item"><a class="page-link" href="/categories/php_3.html">3</a></li><li class="page-item"><a class="page-link" href="/categories/php_2.html">»</a></li></ul></nav>
     </div>
     <footer class="footer mt-3 bg-dark">
-    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2024 254555778@qq.com</div>
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2024</div>
 </footer>
 </body>
 </html>
