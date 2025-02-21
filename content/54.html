@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>NaiveUI表格中渲染头像组 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content="NaiveUI,Vue3,NAvatargroup"/>
+<meta name="description" content="在NaiveUI+Vue3中的数据列表中使用头像组来并列展示多图片" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.3.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="/common/jquery.min.js"></script>
+<script src="/common/search.js"></script>
+<script src="/highlight/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    img {
+        max-width: 100%;
+    }
+    pre {
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav me-auto">
+								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+            <div class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="搜索文章" aria-label="search" id="input">
+                <button class="btn btn-outline-light text-nowrap" type="button" id="search">搜索</button>
+            </div>
+		</div>
+	</div>
+</nav>
+    <div class="container content">
+        <div class="mt-3">
+            <h1>NaiveUI表格中渲染头像组</h1>
+            <span class="date"><small>2025-02-21</small></span>
+            <div class="mt-4">
+                <p>在商城后台开发中经常会需要在表格中渲染图片，如果是传统的B/S架构的项目中直接在表格中写个img标签即可解决。但在前后端分享的C/S架构中要实现起来却没那么方便。</p><p>本文记录在以Vue3+TS+NaiveUI开发的后台架构中处理在数据表格中如何展示头像及头像组的方法，想实现的效果如下：</p><p><img src="/uploads/20250221/858f27949fd5a31468f78a82954715b7.png" style=""/></p><p><img src="/uploads/20250221/2a0302c222c5e32b89c0f024b6c8636b.png" style=""/></p><p>当图片太多时将折叠起来，鼠标滑过图片组时会弹出图片名称，滑过右侧图标时会向上弹出所有图片名称。<br/></p><p>查看NaiveUI官方文档，对于这个功能的实现写得相当模糊，经查阅一些资料后才整理出完整的实现方法，着实不容易。<br/></p><p>该功能适用组件为NAvatar和NAvatarGroup，同时为了显示向上的弹窗提示和下拉菜单，还要引用NTooltip和NDropdown这两个组件，在list.ts中引用如下：</p><pre class="javascript">import&nbsp;{&nbsp;NTag,&nbsp;NAvatar,&nbsp;NAvatarGroup,&nbsp;NTooltip,&nbsp;NDropdown&nbsp;}&nbsp;from&nbsp;&#39;naive-ui&#39;;</pre><p>接着是字段渲染，需要用到render函数<br/></p><pre class="javascript">{
+&nbsp;&nbsp;title:&nbsp;&#39;商品图&#39;,
+&nbsp;&nbsp;key:&nbsp;&#39;goods_images&#39;,
+&nbsp;&nbsp;resizable:&nbsp;true,
+&nbsp;&nbsp;render(row)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;goods_names&nbsp;=&nbsp;row.goods_names.split(&#39;,&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;goods_images&nbsp;=&nbsp;row.goods_images.split(&#39;,&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;options&nbsp;=&nbsp;goods_images.map((item,&nbsp;index)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name:&nbsp;goods_names[index],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;src:&nbsp;item
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;};
+&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(options.length&nbsp;&gt;&nbsp;0)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;h(NAvatarGroup,&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;options:&nbsp;options,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size:&nbsp;30,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;max:&nbsp;3
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;avatar:&nbsp;({&nbsp;option:&nbsp;{&nbsp;name,&nbsp;src&nbsp;}&nbsp;})&nbsp;=&gt;&nbsp;h(NTooltip,&nbsp;null,&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;default:&nbsp;()&nbsp;=&gt;&nbsp;name,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;trigger:&nbsp;()&nbsp;=&gt;&nbsp;h(NAvatar,&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;src:&nbsp;src
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rest:&nbsp;({&nbsp;options,&nbsp;rest&nbsp;})&nbsp;=&gt;&nbsp;h(NDropdown,&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;placement:&nbsp;&#39;top&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;options:&nbsp;options.map((option&nbsp;:&nbsp;any)&nbsp;=&gt;&nbsp;({
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;key:&nbsp;option.name,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;option.name
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;default:&nbsp;()&nbsp;=&gt;&nbsp;h(NAvatar,&nbsp;null,&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;default:&nbsp;()&nbsp;=&gt;&nbsp;`+${rest}`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&#39;-&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;}
+}</pre><p>说明：后端传回来的图片名称和图片字段是都是字符串，分别以逗号分割，所以在前端需要先处理一下，转换成数组再用。</p><p>如果只是想在表格中渲染图片组但不需要弹窗，则可以用以下写法，这个在不需要展示图片名称的地方非常实用</p><pre class="javascript">{
+&nbsp;&nbsp;title:&nbsp;&#39;轮播图&#39;,
+&nbsp;&nbsp;key:&nbsp;&#39;images&#39;,
+&nbsp;&nbsp;resizable:&nbsp;true,
+&nbsp;&nbsp;render(row)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;images_arr&nbsp;=&nbsp;row.images.split(&#39;,&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;images&nbsp;=&nbsp;&lt;any&gt;[];
+&nbsp;&nbsp;&nbsp;&nbsp;images_arr.forEach((item,&nbsp;index)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;images.push({&nbsp;name:&nbsp;index&nbsp;+&nbsp;1,&nbsp;src:&nbsp;item&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;h(NAvatarGroup,&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;options:&nbsp;images,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;max:&nbsp;3,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size:&nbsp;30
+&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;},
+}</pre><p>说明：后端传回来的图片字段也是以逗号分割的字段串，要转换成数组再用。</p><p>通过以上代码就完美实现了需要功能。<br/></p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2025</div>
+</footer>
+</body>
+</html>
