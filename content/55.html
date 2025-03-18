@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>NaiveUI实现微信菜单添加与编辑功能 - 王维的博客</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="keywords" content="NaiveUi,微信菜单"/>
+<meta name="description" content="使用NaiveUi实现微信自定义菜单功能" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/bootstrap-5.3.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="/highlight/styles/a11y-dark.min.css" rel="stylesheet">
+<script src="/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="/common/jquery.min.js"></script>
+<script src="/common/search.js"></script>
+<script src="/highlight/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body {
+        margin-top: 70px;
+    }
+    h1 {
+        font-size: 18px;
+    }
+    h3 {
+        font-size: 16px;
+    }
+    p {
+        font-size: 14px;
+    }
+    img {
+        max-width: 100%;
+    }
+    pre {
+        padding: 10px;
+    }
+    img {
+        max-width: 100%;
+    }
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+	<div class="container">
+		<a class="navbar-brand" href="/index.html">王维的博客</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav me-auto">
+								<li class="nav-item"><a class="nav-link " href="/index.html">首页</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/php.html">PHP</a></li>
+								<li class="nav-item"><a class="nav-link active" href="/categories/vue.html">Vue</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/unicloud.html">uniCloud</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/python.html">Python</a></li>
+								<li class="nav-item"><a class="nav-link " href="/categories/notes.html">随手笔记</a></li>
+							</ul>
+            <div class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="搜索文章" aria-label="search" id="input">
+                <button class="btn btn-outline-light text-nowrap" type="button" id="search">搜索</button>
+            </div>
+		</div>
+	</div>
+</nav>
+    <div class="container content">
+        <div class="mt-3">
+            <h1>NaiveUI实现微信菜单添加与编辑功能</h1>
+            <span class="date"><small>2025-03-18</small></span>
+            <div class="mt-4">
+                <p>在工作中经常有项目会遇到需要开启公众号服务器配置的时候，因为微信启用服务器接入后可以对用户的关注、消息回复等直接在后台自定义而不需要进入公众号去设置，这极大地方便了运营管理。<br/></p><p>要实现微信接入服务器功能，就必须要考虑两点：一是原本在公众号后台的菜单管理功能必须在网站后台实现，二是用户关注、发送消息的自动回复功能也需要在后台实现。这些功能的实现很简单，有现成的第三方插件可以满足快速开发的需求，但自定义菜单的界面实现却少有现成的，像ElementUi/NaiveUi等主流前端框架都没有提供此组件，需要自己写。</p><p>本文记录的就是使用NaiveUI实现自定义菜单的模板功能，想要实现的操作界面如下：</p><p><img src="/uploads/20250318/ef7e659dbf594f7454f894af3692fe52.png"/></p><p><strong>一、仔细分析公众号自定义菜单功能，有如下要求或限制：</strong></p><p>1、主菜单1-3个，每个菜单最多16个字节，换算成汉字为4个；</p><p>2、每个主菜单可附带1-5个子菜单，每个子菜单最多32个字节，换算成汉字为8个；</p><p>注意这些字数要求并非微信有限制，而是考虑到最佳显示效果的约定（应该没有人会想在菜单上放一整篇文章吧？），实际上多出的文字会以省略号代替。</p><p>3、每个菜单都可以设置不同的事件类型，如网页跳转view、点击事件click、跳转小程序miniprogram等，其他不一一列举；</p><p>4、当主菜单有子菜单时，其他绑定的类型会忽略。</p><p><strong>二、功能实现分析</strong></p><p>公众号自定义菜单功能要具体实现的话，有一些基础的逻辑：</p><p>1、主菜单横向排列，当不满足3个菜单时要在右侧显示一个虚拟按钮，点击可以在虚拟按钮左侧新增一个主菜单，当主菜单个数达到3个时虚拟按钮要消失（当主菜单个数小于3个时又要重新显示出来，比如删除某个主菜单后）；当主菜单全部被删除时仅显示一个虚拟按钮，当主菜单个数不同时要动态调整主菜单及子菜单的显示宽度（1个菜单时独占100%，2个菜单时各占50%，3个菜单时各占33.33%）；当没有主菜单时虚拟按钮上方不要显示添加子菜单的虚拟按钮（此时本来就没有主菜单，上哪设置子菜单？）。</p><p>2、子菜单竖向排列，当不满足5个菜单时要在子菜单最下方显示一个虚拟按钮，点击可以在虚拟按钮上方新增一个子菜单，当子菜单个数达到5个时虚拟按钮要消失（当子菜单个数小于5个时又要重新显示出来，比如删除某个子菜单后）；</p><p>3、当点击某个主菜单时其他主菜单上方的子菜单包括虚拟按钮要消失，但该主菜单上方要显示子菜单和虚拟按钮，如没有子菜单也要显示虚拟按钮（否则没办法添加子菜单，运营会提刀来见！），失去焦点后仍然显示不能消失；</p><p>4、当点击某个主菜单或者子菜单时（虚拟按钮除外）需要在右边实时展示该菜单信息，并根据菜单类型自动渲染所对应的信息（菜单名称、菜单类型、跳转链接等）；</p><p>5、至少需要写三个方法来实现不同类型菜单的增加、删除、修改。</p><p>理清上述逻辑之后，接下来就是需要着手写具体实现的代码了，包括用什么组件合适。经过翻看NaiveUI官方文档，发现使用按钮组ButtonGroup+弹出信息Popover即能完美实现想要的功能，下面是实现代码：</p><p>1、模板代码</p><pre class="html">&lt;template&gt;
+&nbsp;&nbsp;&lt;n-form&nbsp;:label-width=&quot;120&quot;&nbsp;:model=&quot;menu&quot;&nbsp;:rules=&quot;rules&quot;&nbsp;ref=&quot;formRef&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-flex&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div&nbsp;style=&quot;width:320px;margin-right:20px;&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;img&nbsp;src=&quot;/src/assets/images/wechat_header_bg.png&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-button-group&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-popover&nbsp;:show=&quot;index&nbsp;==&nbsp;currentMainMenuIndex&nbsp;&amp;&amp;&nbsp;buttons.button.length&nbsp;&gt;&nbsp;1&quot;&nbsp;style=&quot;padding:0&quot;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;width=&quot;trigger&quot;&nbsp;placement=&quot;top&quot;&nbsp;trigger=&quot;click&quot;&nbsp;v-for=&quot;(item,index)&nbsp;in&nbsp;buttons.button&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;template&nbsp;#trigger&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-button&nbsp;:ref=&quot;item.name&quot;&nbsp;type=&quot;default&quot;&nbsp;@click=&quot;onMenuClick(index,null)&quot;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:style=&quot;buttons.button.length==1?&#39;width:320px&#39;:(buttons.button.length==2?&#39;width:160px&#39;:&#39;width:107px&#39;)&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{item.name}}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-button&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/template&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-button-group&nbsp;vertical&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-button&nbsp;type=&quot;default&quot;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:style=&quot;buttons.button.length==1?&#39;width:320px&#39;:(buttons.button.length==2?&#39;width:160px&#39;:&#39;width:107px&#39;)&quot;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v-for=&quot;(items,indexs)&nbsp;in&nbsp;item.sub_button&quot;&nbsp;@click=&quot;onMenuClick(index,indexs)&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{items.name}}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-button&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-button-group&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-popover&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-button-group&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div&nbsp;v-if=&quot;Object.keys(menu).length&nbsp;&gt;&nbsp;0&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-alert&nbsp;type=&quot;warning&quot;&gt;编辑并保存菜单后，需要点击左侧“保存并发布”按钮才会生效&lt;/n-alert&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;br&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-form-item&nbsp;label=&quot;菜单名称&quot;&nbsp;path=&quot;name&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-input&nbsp;placeholder=&quot;输入菜单名称&quot;&nbsp;v-model:value=&quot;menu.name&quot;&nbsp;:maxlength=&quot;currentMenuType==&#39;main&#39;?4:8&quot;&nbsp;show-count
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clearable&nbsp;/&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-form-item&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-form-item&nbsp;label=&quot;菜单类型&quot;&nbsp;path=&quot;type&quot;&nbsp;v-if=&quot;menu.type&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-select&nbsp;placeholder=&quot;选择菜单类型&quot;&nbsp;v-model:value=&quot;menu.type&quot;&nbsp;:options=&quot;menuTypeList&quot;&nbsp;filterable&nbsp;clearable&nbsp;/&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-form-item&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-form-item&nbsp;label=&quot;消息资源(该消息资源对应的内容)&quot;&nbsp;path=&quot;key&quot;&nbsp;v-if=&quot;menu.type==&#39;click&#39;&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-select&nbsp;placeholder=&quot;选择消息资源&quot;&nbsp;v-model:value=&quot;menu.key&quot;&nbsp;:options=&quot;resourceList&quot;&nbsp;filterable&nbsp;clearable&nbsp;/&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-form-item&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-form-item&nbsp;label=&quot;跳转链接&quot;&nbsp;path=&quot;url&quot;&nbsp;v-if=&quot;menu.type==&#39;view&#39;&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-input&nbsp;placeholder=&quot;输入跳转链接&quot;&nbsp;v-model:value=&quot;menu.url&quot;&nbsp;clearable&nbsp;/&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-form-item&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-form-item&nbsp;label=&quot;小程序appid&quot;&nbsp;path=&quot;appid&quot;&nbsp;v-if=&quot;menu.type==&#39;miniprogram&#39;&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-input&nbsp;placeholder=&quot;输入小程序appid&quot;&nbsp;v-model:value=&quot;menu.appid&quot;&nbsp;clearable&nbsp;/&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-form-item&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-form-item&nbsp;label=&quot;小程序页面路径&quot;&nbsp;path=&quot;pagepath&quot;&nbsp;v-if=&quot;menu.type==&#39;miniprogram&#39;&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-input&nbsp;placeholder=&quot;输入小程序页面路径&quot;&nbsp;v-model:value=&quot;menu.pagepath&quot;&nbsp;clearable&nbsp;/&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-form-item&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-form-item&nbsp;label=&quot;跳转链接&quot;&nbsp;path=&quot;url&quot;&nbsp;v-if=&quot;menu.type==&#39;miniprogram&#39;&quot;&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-input&nbsp;placeholder=&quot;输入跳转链接,跳转小程序失败时将跳到此页面&quot;&nbsp;v-model:value=&quot;menu.url&quot;&nbsp;clearable&nbsp;/&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-form-item&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-space&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-button&nbsp;type=&quot;info&quot;&nbsp;secondary&nbsp;@click=&quot;onMenuConfirm&quot;&gt;保存该菜单&lt;/n-button&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-button&nbsp;type=&quot;error&quot;&nbsp;secondary&nbsp;@click=&quot;onMenuRemove&quot;&gt;删除该菜单&lt;/n-button&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-space&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-alert&nbsp;v-else&nbsp;type=&quot;info&quot;&gt;从左侧菜单列表中选择一项后进行编辑&lt;/n-alert&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-flex&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;br&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;div&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-space&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;n-button&nbsp;type=&quot;primary&quot;&nbsp;secondary&nbsp;@click=&quot;handleSubmit&quot;&gt;保存并发布&lt;/n-button&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/n-space&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;
+&nbsp;&nbsp;&lt;/n-form&gt;
+&lt;/template&gt;</pre><p>2、js代码</p><pre class="javascript">&lt;script&nbsp;setup&gt;
+&nbsp;&nbsp;import&nbsp;{&nbsp;defineComponent,&nbsp;reactive,&nbsp;ref,&nbsp;toRefs,&nbsp;onMounted&nbsp;}&nbsp;from&nbsp;&#39;vue&#39;;
+&nbsp;&nbsp;import&nbsp;{&nbsp;useMessage&nbsp;}&nbsp;from&nbsp;&#39;naive-ui&#39;;
+&nbsp;&nbsp;import&nbsp;{&nbsp;PlusOutlined&nbsp;}&nbsp;from&nbsp;&#39;@vicons/antd&#39;;
+&nbsp;&nbsp;import&nbsp;{&nbsp;getConfig,&nbsp;setConfig&nbsp;}&nbsp;from&nbsp;&#39;@/api/wechat/config&#39;;
+&nbsp;&nbsp;import&nbsp;{&nbsp;getList&nbsp;}&nbsp;from&nbsp;&#39;@/api/wechat/resource&#39;;
+
+&nbsp;&nbsp;const&nbsp;rules&nbsp;=&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;name:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;required:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;message:&nbsp;&#39;请输入菜单名称&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;trigger:&nbsp;[&#39;blur&#39;,&nbsp;&#39;input&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;type:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;required:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;message:&nbsp;&#39;请选择菜单类型&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;trigger:&nbsp;[&#39;blur&#39;,&nbsp;&#39;change&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;url:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;required:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;message:&nbsp;&#39;请输入菜单链接&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;trigger:&nbsp;[&#39;blur&#39;,&nbsp;&#39;input&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;appid:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;required:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;message:&nbsp;&#39;请输入小程序ID&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;trigger:&nbsp;[&#39;blur&#39;,&nbsp;&#39;input&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;pagepath:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;required:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;message:&nbsp;&#39;请输入小程序页面路径&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;trigger:&nbsp;[&#39;blur&#39;,&nbsp;&#39;input&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;key:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;required:&nbsp;true,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;message:&nbsp;&#39;请选择消息资源&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;trigger:&nbsp;[&#39;blur&#39;,&nbsp;&#39;change&#39;]
+&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;};
+&nbsp;&nbsp;const&nbsp;formRef&nbsp;:&nbsp;any&nbsp;=&nbsp;ref(null);
+&nbsp;&nbsp;const&nbsp;message&nbsp;=&nbsp;useMessage();
+&nbsp;&nbsp;const&nbsp;currentMainMenuIndex&nbsp;=&nbsp;ref&lt;any&gt;(0);
+&nbsp;&nbsp;const&nbsp;currentSubMenuIndex&nbsp;=&nbsp;ref&lt;any&gt;(null);
+&nbsp;&nbsp;const&nbsp;currentMenuType&nbsp;=&nbsp;ref(&#39;&#39;);
+&nbsp;&nbsp;const&nbsp;menu&nbsp;=&nbsp;reactive({}&nbsp;as&nbsp;any);
+&nbsp;&nbsp;const&nbsp;buttons&nbsp;=&nbsp;reactive([]&nbsp;as&nbsp;any);
+&nbsp;&nbsp;const&nbsp;resourceList&nbsp;=&nbsp;reactive([]);
+&nbsp;&nbsp;const&nbsp;menuTypeList&nbsp;=&nbsp;ref([{
+&nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;&#39;view&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;&#39;跳转网页&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;disabled:&nbsp;false
+&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;&#39;miniprogram&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;&#39;跳转指定小程序&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;disabled:&nbsp;false
+&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;&#39;click&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;&#39;发送消息&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;disabled:&nbsp;false
+&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;&#39;media_id&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;&#39;发送图片&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;disabled:&nbsp;true
+&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;&#39;pic_sysphoto&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;&#39;系统拍照发图&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;disabled:&nbsp;true
+&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;&#39;pic_photo_or_album&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;&#39;拍照或者相册发图&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;disabled:&nbsp;true
+&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;&#39;pic_weixin&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;&#39;微信相册发图&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;disabled:&nbsp;true
+&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;&#39;scancode_push&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;&#39;扫码推事件&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;disabled:&nbsp;true
+&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;&#39;scancode_waitmsg&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;&#39;扫码带提示&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;disabled:&nbsp;true
+&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;&#39;location_select&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;&#39;发送位置&#39;,
+&nbsp;&nbsp;&nbsp;&nbsp;disabled:&nbsp;true
+&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;&quot;view_limited&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;&quot;图文消息&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;disabled:&nbsp;true
+&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;&quot;article_id&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;&quot;发布后的图文消息&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;disabled:&nbsp;true
+&nbsp;&nbsp;},&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;&quot;article_view_limited&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;label:&nbsp;&quot;发布后的图文消息&quot;,
+&nbsp;&nbsp;&nbsp;&nbsp;disabled:&nbsp;true
+&nbsp;&nbsp;}])
+
+&nbsp;&nbsp;//&nbsp;点击菜单事件
+&nbsp;&nbsp;function&nbsp;onMenuClick(index,&nbsp;indexs)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;有子菜单时当前主菜单只有标题，否则可以选择类型
+&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;hasSubMenu&nbsp;=&nbsp;0;
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(buttons.button[index].sub_button)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button[index].sub_button.forEach(item&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(item.name&nbsp;!=&nbsp;&#39;＋&#39;)&nbsp;hasSubMenu&nbsp;+=&nbsp;1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(hasSubMenu&nbsp;&gt;&nbsp;0)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;delete&nbsp;(buttons.button[index].type);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button[index].type&nbsp;=&nbsp;&#39;view&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(indexs&nbsp;!=&nbsp;null)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;如果点击的是添加按钮，则新建子菜单
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(buttons.button[index].sub_button[indexs].name&nbsp;==&nbsp;&#39;＋&#39;)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(buttons.button[index].sub_button.length&nbsp;&lt;&nbsp;5)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button[index].sub_button.splice(buttons.button[index].sub_button.length&nbsp;-&nbsp;1,&nbsp;0,&nbsp;{&nbsp;name:&nbsp;&#39;新建菜单&#39;,&nbsp;type:&nbsp;&#39;view&#39;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button[index].sub_button.splice(indexs,&nbsp;1);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button[index].sub_button.splice(buttons.button[index].sub_button.length&nbsp;-&nbsp;1,&nbsp;0,&nbsp;{&nbsp;name:&nbsp;&#39;新建菜单&#39;,&nbsp;type:&nbsp;&#39;view&#39;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;处理新建菜单自动选中事件
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button[index].sub_button.forEach((item,&nbsp;index)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(item.name&nbsp;==&nbsp;&#39;新建菜单&#39;)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.keys(menu).forEach(key&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;delete&nbsp;(menu[key]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.assign(menu,&nbsp;item);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;currentSubMenuIndex.value&nbsp;=&nbsp;index;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;currentMenuType.value&nbsp;=&nbsp;&#39;sub&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;否则是编辑该子菜单
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;currentMenuType.value&nbsp;=&nbsp;&#39;sub&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;currentMainMenuIndex.value&nbsp;=&nbsp;index;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;currentSubMenuIndex.value&nbsp;=&nbsp;indexs;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.keys(menu).forEach(key&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;delete&nbsp;(menu[key]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.assign(menu,&nbsp;buttons.button[index].sub_button[indexs]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;如果点击是添加按钮，则新建主菜单
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(buttons.button[index].name&nbsp;==&nbsp;&#39;＋&#39;)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(buttons.button.length&nbsp;&lt;&nbsp;3)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button.splice(index,&nbsp;0,&nbsp;{&nbsp;name:&nbsp;&#39;新建菜单&#39;,&nbsp;type:&nbsp;&#39;view&#39;,&nbsp;sub_button:&nbsp;[{&nbsp;name:&nbsp;&#39;＋&#39;,&nbsp;type:&nbsp;&#39;view&#39;&nbsp;}]&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button.splice(index,&nbsp;1);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button.splice(index,&nbsp;0,&nbsp;{&nbsp;name:&nbsp;&#39;新建菜单&#39;,&nbsp;type:&nbsp;&#39;view&#39;,&nbsp;sub_button:&nbsp;[{&nbsp;name:&nbsp;&#39;＋&#39;,&nbsp;type:&nbsp;&#39;view&#39;&nbsp;}]&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;处理新建菜单自动选中事件
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button.forEach((item,&nbsp;index)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(item.name&nbsp;==&nbsp;&#39;新建菜单&#39;)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.keys(menu).forEach(key&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;delete&nbsp;(menu[key]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.assign(menu,&nbsp;item);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;currentMainMenuIndex.value&nbsp;=&nbsp;index;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;currentMenuType.value&nbsp;=&nbsp;&#39;main&#39;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;否则是编辑该主菜单
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;currentMenuType.value&nbsp;=&nbsp;&#39;main&#39;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;currentMainMenuIndex.value&nbsp;=&nbsp;index;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;currentSubMenuIndex.value&nbsp;=&nbsp;null;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.keys(menu).forEach(key&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;delete&nbsp;(menu[key]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.assign(menu,&nbsp;buttons.button[index]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;}
+&nbsp;&nbsp;//&nbsp;保存菜单
+&nbsp;&nbsp;function&nbsp;onMenuConfirm()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;formRef.value.validate((errors&nbsp;:&nbsp;any)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(!errors)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(currentMainMenuIndex.value&nbsp;!=&nbsp;null&nbsp;&amp;&amp;&nbsp;currentSubMenuIndex.value&nbsp;!=&nbsp;null)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.keys(buttons.button[currentMainMenuIndex.value].sub_button[currentSubMenuIndex.value]).forEach(key&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;delete&nbsp;(buttons.button[currentMainMenuIndex.value].sub_button[currentSubMenuIndex.value][key]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.assign(buttons.button[currentMainMenuIndex.value].sub_button[currentSubMenuIndex.value],&nbsp;menu);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.keys(buttons.button[currentMainMenuIndex.value]).forEach(key&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;delete&nbsp;(buttons.button[currentMainMenuIndex.value][key]);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.assign(buttons.button[currentMainMenuIndex.value],&nbsp;menu)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;message.success(&#39;保存成功&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;message.error(&#39;验证失败，请填写完整信息&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;}
+&nbsp;&nbsp;//&nbsp;删除菜单（主菜单/子菜单）
+&nbsp;&nbsp;function&nbsp;onMenuRemove()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(currentMainMenuIndex.value&nbsp;!=&nbsp;null&nbsp;&amp;&amp;&nbsp;currentSubMenuIndex.value&nbsp;!=&nbsp;null)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button[currentMainMenuIndex.value].sub_button.splice(currentSubMenuIndex.value,&nbsp;1);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(buttons.button[currentMainMenuIndex.value].sub_button.length&nbsp;&lt;&nbsp;5)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;hasAddMenu&nbsp;=&nbsp;0;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button[currentMainMenuIndex.value].sub_button.forEach(item&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(item.name&nbsp;==&nbsp;&#39;＋&#39;)&nbsp;hasAddMenu&nbsp;+=&nbsp;1;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(hasAddMenu&nbsp;==&nbsp;0)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button[currentMainMenuIndex.value].sub_button.push({&nbsp;name:&nbsp;&#39;＋&#39;,&nbsp;type:&nbsp;&#39;view&#39;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button.splice(currentMainMenuIndex.value,&nbsp;1);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;currentMainMenuIndex.value&nbsp;=&nbsp;0;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;hasAddMenu&nbsp;=&nbsp;0;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button.forEach(item&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(item.name&nbsp;==&nbsp;&#39;＋&#39;)&nbsp;hasAddMenu&nbsp;+=&nbsp;1;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(buttons.button.length&nbsp;&lt;&nbsp;3&nbsp;&amp;&amp;&nbsp;hasAddMenu&nbsp;==&nbsp;0)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buttons.button.push({&nbsp;name:&nbsp;&#39;＋&#39;,&nbsp;type:&nbsp;&#39;view&#39;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;Object.keys(menu).forEach(key&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;delete&nbsp;(menu[key]);
+&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;}
+&nbsp;&nbsp;//&nbsp;保存并同步菜单
+&nbsp;&nbsp;function&nbsp;handleSubmit()&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;formRef.value.validate((errors&nbsp;:&nbsp;any)&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(!errors)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;setConfig({&nbsp;id:&nbsp;1,&nbsp;menu:&nbsp;buttons.button,&nbsp;type:&nbsp;&#39;menu&#39;&nbsp;}).then(()&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;message.success(&#39;保存成功&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;message.error(&#39;验证失败，请填写完整信息&#39;);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;}
+
+&nbsp;&nbsp;onMounted(()&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;getConfig({&nbsp;id:&nbsp;1&nbsp;}).then(res&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;menu&nbsp;=&nbsp;res.info.menu
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(menu.button.length&nbsp;&gt;&nbsp;0)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;menu.button.forEach(item&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(item.sub_button&nbsp;&amp;&amp;&nbsp;item.sub_button.length&nbsp;&lt;&nbsp;5)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;item.sub_button.push({&nbsp;name:&nbsp;&#39;＋&#39;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(menu.button.length&nbsp;&lt;&nbsp;3)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;menu.button.push({&nbsp;name:&nbsp;&#39;＋&#39;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;menu.button.push({&nbsp;name:&nbsp;&#39;＋&#39;&nbsp;})
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.assign(buttons,&nbsp;menu);
+&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;getList({}).then(res&nbsp;=&gt;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object.assign(resourceList,&nbsp;res.list);
+&nbsp;&nbsp;&nbsp;&nbsp;})
+&nbsp;&nbsp;})
+&lt;/script&gt;</pre><p><strong>四、代码说明：</strong></p><p>1、预设主菜单和子菜单的索引变量，即点击时确定编辑的是哪个主菜单或主菜单；</p><p>2、因总菜单列表与当前编辑项为两个不同数组对象，所以右侧编辑菜单后需要手动保存一次以同步至总菜单列表；</p><p>3、当主菜单或子菜单不足最大个数，在点击提交时会把虚拟按钮也一并提交，所以在后台接收时需要手动去除一下。</p>            </div>
+        </div>
+    </div>
+    <footer class="footer mt-3 bg-dark">
+    <div class="container pt-3 pb-3 text-light text-center">Copyright &copy;王维 2025</div>
+</footer>
+</body>
+</html>
